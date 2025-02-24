@@ -118,7 +118,8 @@ class ProjectTest {
      * @returns {Promise<Buffer | string>}
      */
     async testJest(_config) {
-        const script = `node --experimental-vm-modules node_modules/jest/bin/jest.js --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
+        const jest = this.project.getArpadroidPath() + '/node_modules/jest/bin/jest.js';
+        const script = `node --experimental-vm-modules ${jest} --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
         log.task(this.project.name, 'running jest tests');
         return execSync(script, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
     }

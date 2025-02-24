@@ -15,7 +15,7 @@ import fs from 'fs';
 import path from 'path';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs'; // @ts-ignore
-import StylesheetBundler from '@arpadroid/stylesheet-bundler';
+import { ThemesBundler } from '@arpadroid/stylesheet-bundler';
 import { spawn } from 'child_process';
 import chalk from 'chalk';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
@@ -333,7 +333,9 @@ class Project {
      * @returns {Promise<boolean>}
      */
     async addEntryTypesFile() {
-        const indexContents = readFileSync(`${this.path}/.tmp/.types/index.d.ts`, 'utf8');
+        const base = `${this.path}/.tmp/.types`;
+        const indexFile = fs.existsSync(`${base}/index.d.ts`) ? `${base}/index.d.ts` : `${base}/index.d.mts`;
+        const indexContents = readFileSync(indexFile, 'utf8');
         const typesContents = readFileSync(`${this.path}/.tmp/.types/types.d.ts`, 'utf8');
         const file = `${this.path}/.tmp/.types/types.compiled.d.ts`;
         const contents = `${indexContents}\n\n${typesContents}`;
@@ -491,7 +493,7 @@ class Project {
     /**
      * Bundles the project styles.
      * @param {BuildConfigType} config
-     * @returns {Promise<StylesheetBundler.ThemesBundler | boolean>}
+     * @returns {Promise<ThemesBundler | boolean>}
      */
     async bundleStyles(config = {}) {
         if (!config.buildStyles) {
@@ -506,7 +508,7 @@ class Project {
             style_patterns = style_patterns.split(',').map(pattern => pattern.trim());
         }
         style_patterns = style_patterns.map(pattern => `${this.path}/src/${pattern}`);
-        const bundler = new StylesheetBundler.ThemesBundler({
+        const bundler = new ThemesBundler({
             exportPath: path + '/dist/themes',
             minify,
             patterns: [path + '/src/components/**/*', ...style_patterns],

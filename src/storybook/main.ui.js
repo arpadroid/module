@@ -7,7 +7,8 @@ import Project from '../projectBuilder/project.mjs';
 
 const html = String.raw;
 const cwd = process.cwd();
-const sbRoot = cwd + '/node_modules/@arpadroid/module/node_modules/@storybook';
+const modulesRoot = cwd + '/node_modules/@arpadroid/module/node_modules';
+const sbRoot = modulesRoot + '/@storybook';
 const projectName = basename(cwd);
 const projectConfig = Project._getFileConfig();
 /**
