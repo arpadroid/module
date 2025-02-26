@@ -69,7 +69,8 @@ class ProjectTest {
     async runTest(_config = {}) {
         /** @type {TestArgsType} */
         const config = mergeObjects(this.config, _config);
-        log.arpadroid();
+        const buildConfig = await this.project.getBuildConfig();
+        log.arpadroid(buildConfig?.logo);
         const subjectLog = logStyle.subject(`@arpadroid ${this.project?.name}`);
         this.stories = (config.storybook && globSync(`${this.project.path}/src/**/*.stories.js`)) || [];
         this.jestTests = (config.jest && globSync(`${this.project.path}/src/**/*.test.js`)) || [];

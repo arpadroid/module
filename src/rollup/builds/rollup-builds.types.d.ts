@@ -4,27 +4,29 @@ import { RollupPlugin } from './rollup-builds.mjs';
 import { Preview } from '@storybook/web-components';
 
 export type BuildConfigType = {
-    processBuilds?: (builds: RollupOptions[]) => void;
-    deps?: string[];
-    buildStyles?: boolean;
-    buildJS?: boolean;
-    buildTypes?: boolean;
-    buildI18n?: boolean;
-    buildDeps?: boolean;
-    path?: string;
-    basePath?: string;
-    style_patterns?: string | string[];
-    external?: string[];
-    plugins?: Plugin[];
-    slim?: boolean;
     aliases?: string[];
-    parent?: string;
-    minify?: boolean;
-    logHeading?: boolean;
+    basePath?: string;
+    buildDeps?: boolean;
+    buildI18n?: boolean;
+    buildJS?: boolean;
+    buildStyles?: boolean;
+    buildTypes?: boolean;
+    deps?: string[];
+    external?: string[];
     file?: string;
-    storybook?: {
-        preview?: Preview;
+    isDependency?: boolean;
+    logHeading?: boolean;
+    logo?: string;
+    minify?: boolean;
+    parent?: string;
+    path?: string;
+    plugins?: Plugin[];
+    processBuilds?: (builds: RollupOptions[]) => void;
+    slim?: boolean;
+    storybook?: { 
+        preview?: Preview 
     };
+    style_patterns?: string | string[];
     watch?: boolean;
 };
 

@@ -414,7 +414,7 @@ class Project {
     logBuild(config) {
         const pkgName = '@arpadroid/' + this.name;
         if (!config?.slim) {
-            config.logHeading && log.arpadroid();
+            config.logHeading && log.arpadroid(config.logo);
             console.log(logStyle.heading(`Building project: ${logStyle.pkg(pkgName)} ...`));
         } else {
             log.task(config?.parent ?? this.name, `Building ${logStyle.dep(pkgName)}.`);
@@ -461,11 +461,11 @@ class Project {
 
     /**
      * Builds the project dependencies.
-     * @param {BuildConfigType} config
+     * @param {BuildConfigType} buildConfig
      * @returns {Promise<void>}
      */
-    async buildDependencies(config) {
-        if (config?.buildDeps !== true) {
+    async buildDependencies(buildConfig) {
+        if (buildConfig?.buildDeps !== true) {
             return;
         }
         log.task(this.name, 'Building dependencies.');
@@ -474,11 +474,15 @@ class Project {
 
         const runPromises = async () => {
             for (const project of projects) {
+                /** @type {BuildConfigType} */
                 const config = {
                     slim: true,
                     isDependency: true,
                     parent: this.name
                 };
+                if (buildConfig.buildTypes === false) {
+                    config.buildTypes = false;
+                }
                 await project.build(config);
             }
         };
@@ -501,7 +505,6 @@ class Project {
         }
         !config.slim && log.task(this.name, 'Bundling CSS.');
         const { path = this.path } = config;
-        const slim = config.slim ?? SLIM;
         const minify = config.minify ?? MINIFY;
         let { style_patterns = STYLE_PATTERNS ?? [] } = config;
         if (typeof style_patterns === 'string') {
@@ -512,7 +515,6 @@ class Project {
             exportPath: path + '/dist/themes',
             minify,
             patterns: [path + '/src/components/**/*', ...style_patterns],
-            slim,
             themes: this.getThemes().map(theme => ({ path: `${this.path}/src/themes/${theme}` }))
         });
         await bundler.initialize();

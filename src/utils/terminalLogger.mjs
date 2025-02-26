@@ -189,9 +189,10 @@ export function arpadroidLogBordered() {
 
 /**
  * Logs the Arpadroid ASCII art.
+ * @param {string} [logo] - The ASCII art to log.
  */
-export function logArpadroid() {
-    console.log(chalk.hex('#b7f2ff')(arpadroidLog()));
+export function logArpadroid(logo = arpadroidLog()) {
+    console.log(chalk.hex('#cce2f8')(logo));
 }
 
 // #region Log Exports

@@ -4,7 +4,11 @@ const config = {
     buildJS: false,
     build18n: false,
     watch: false,
-    buildDeps: false
+    buildDeps: false,
+    logo: `           ┓    • ┓        ┓  ┓  
+  ┏┓┏┓┏┓┏┓┏┫┏┓┏┓┓┏┫  ┏┳┓┏┓┏┫┓┏┃┏┓
+  ┗┻┛ ┣┛┗┻┗┻┛ ┗┛┗┗┻  ┛┗┗┗┛┗┻┗┻┗┗ 
+------┛----------------------------`
 };
 
 export default config;
