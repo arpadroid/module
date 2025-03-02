@@ -1,6 +1,7 @@
 /**
  * @typedef {import('./storybookTool.types.js').StoryContextType} StoryContextType
  */
+// @ts-ignore
 import { mergeObjects } from '@arpadroid/tools/object';
 
 /**

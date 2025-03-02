@@ -4,6 +4,7 @@
 import path, { basename } from 'path';
 import fs from 'fs';
 import Project from '../projectBuilder/project.mjs';
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
 const html = String.raw;
 const cwd = process.cwd();
@@ -93,8 +94,10 @@ const config = {
     webpackFinal: async config => {
         config.watchOptions = config.watchOptions || {};
         config.module = config.module || {};
+        config.plugins = config.plugins || [];
         config.module.rules = config.module.rules || [];
         config.resolve = config.resolve || {};
+        config.resolve.fallback = config.resolve.fallback || {};
         config.watchOptions.aggregateTimeout = 1200;
         config.watchOptions.ignored = ['**/*.css'];
         config.module.rules = config.module.rules.filter(rule => {
@@ -105,6 +108,28 @@ const config = {
         config.resolve.alias = config.resolve.alias || {};
         config.resolve.alias['@storybook/test'] = sbRoot + '/test';
         config.resolve.alias['@storybook/addon-actions'] = sbRoot + '/addon-actions';
+        /** @todo Review below rules. */
+        config.resolve.alias = {
+            ...config.resolve.alias,
+            fsevents: false,
+            'node:url': 'url',
+            'node:fs': 'fs',
+            'node:path': 'path'
+        };
+
+        config.resolve.fallback = {
+            ...config.resolve.fallback,
+            string_decoder: require.resolve('string_decoder/'),
+            url: require.resolve('url/'),
+            async_hooks: false,
+            worker_threads: false,
+            module: false,
+            crypto: require.resolve('crypto-browserify'),
+            stream: require.resolve('stream-browserify'),
+            buffer: require.resolve('buffer/'),
+            child_process: false
+        };
+        config.plugins.unshift(new NodePolyfillPlugin());
         return config;
     },
     /**

@@ -7,14 +7,14 @@
  */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable security/detect-non-literal-fs-filename */
-import { rollup, watch as rollupWatch } from 'rollup';
+import { rollup, watch as rollupWatch } from 'rollup'; // @ts-ignore
 import { mergeObjects } from '@arpadroid/tools/object';
 import { readFileSync, existsSync, writeFileSync, cpSync, rmSync, readdirSync, mkdirSync } from 'fs';
 import alias from '@rollup/plugin-alias';
 import fs from 'fs';
 import path from 'path';
 import { hideBin } from 'yargs/helpers';
-import yargs from 'yargs'; // @ts-ignore
+import yargs from 'yargs';
 import { ThemesBundler } from '@arpadroid/stylesheet-bundler';
 import { spawn } from 'child_process';
 import chalk from 'chalk';
@@ -34,9 +34,11 @@ const STORYBOOK_PORT = argv.storybook ?? process.env.storybook;
 const NO_TYPES = Boolean(argv.noTypes ?? process.env.noTypes);
 const STYLE_PATTERNS = argv['style-patterns'];
 const DEPENDENCY_SORT = [
+    'module',
     'tools',
     'i18n',
     'ui',
+    'context',
     'services',
     'resources',
     'lists',
@@ -68,7 +70,7 @@ class Project {
     }
 
     static _getFileConfig() {
-        const projectConfigPath = cwd + '/arpadroid.config.js';
+        const projectConfigPath = cwd + '/src/arpadroid.config.js';
         if (existsSync(projectConfigPath)) {
             return require(projectConfigPath).default;
         }
@@ -102,7 +104,7 @@ class Project {
     }
 
     async getFileConfig() {
-        const configFile = `${this.path}/arpadroid.config.js`;
+        const configFile = `${this.path}/src/arpadroid.config.js`;
         return existsSync(configFile) ? (await import(configFile)).default : {};
     }
 
@@ -233,7 +235,7 @@ class Project {
         await this.bundleStyles(config);
         await this.bundleI18n(config);
         process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
-        const rollupConfigFile = `${this.path}/rollup.config.mjs`;
+        const rollupConfigFile = `${this.path}/src/rollup.config.mjs`;
         const rollupConfig = fs.existsSync(rollupConfigFile) ? (await import(rollupConfigFile)).default : [];
         await this.rollup(rollupConfig, config);
         await this.buildTypes(rollupConfig, config);

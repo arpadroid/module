@@ -4,8 +4,8 @@
  * @typedef {import('./project.types.js').TestArgsType} TestArgsType
  */
 /* eslint-disable security/detect-non-literal-regexp */
+import { execSync } from 'child_process'; // @ts-ignore
 import { mergeObjects } from '@arpadroid/tools/object';
-import { execSync } from 'child_process';
 import fs from 'fs';
 import { globSync } from 'glob';
 import { hideBin } from 'yargs/helpers';
