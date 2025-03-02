@@ -4,7 +4,10 @@
     "description": "Manages the build test and configuration of arpadroid's modules.",
     "exports": {
         ".": "./src/index.js",
+<<<<<<< HEAD
         "./logger": "./src/utils/terminalLogger.mjs",
+=======
+>>>>>>> origin/main
         "./storybook/addons": "./src/storybook/index.mjs",
         "./storybook/main": "./src/storybook/main.ui.js",
         "./storybook/preview": "./src/storybook/preview.ui.js",

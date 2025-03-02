@@ -249,6 +249,11 @@ export function getFatPlugins(project, config) {
  */
 export function getPlugins(project, config) {
     const { slim, plugins = [] } = config;
+<<<<<<< HEAD
+=======
+    // console.log('config', config);
+    // console.log('config.buildTypes', config.buildTypes);
+>>>>>>> origin/main
     return [ // @ts-ignore
         nodePolyfills(),
         config.buildTypes === true &&
