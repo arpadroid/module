@@ -1,11 +1,10 @@
-import { usagePanelDecorator } from './decorators.js';
+import { usagePanelDecorator } from './decorators.js'; // @ts-ignore
 import { mergeObjects } from '@arpadroid/tools/object';
-
 /** @type { import('@storybook/web-components').Preview } */
 const defaultConfig = {
     decorators: [usagePanelDecorator()],
     parameters: {
-        layout: 'padded', //'centered' | 'fullscreen' | 'padded'
+        layout: 'centered', //'centered' | 'fullscreen' | 'padded'
         options: {
             storySort: {}
         },

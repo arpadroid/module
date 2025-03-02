@@ -8,6 +8,7 @@
  * @typedef {import('../../projectBuilder/project.types.js').CommandArgsType} CommandArgsType
  */
 /* eslint-disable security/detect-non-literal-fs-filename */
+import nodePolyfills from 'rollup-plugin-polyfill-node';
 import fs from 'fs';
 import path from 'path';
 import yargs from 'yargs';
@@ -30,7 +31,7 @@ import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import buildStyles from '../plugins/buildStyles.mjs';
 import typescript from 'rollup-plugin-typescript2';
-
+// @ts-ignore
 import { mergeObjects } from '@arpadroid/tools/object';
 import { logError } from '../../utils/terminalLogger.mjs';
 import Project from '../../projectBuilder/project.mjs';
@@ -248,9 +249,8 @@ export function getFatPlugins(project, config) {
  */
 export function getPlugins(project, config) {
     const { slim, plugins = [] } = config;
-    // console.log('config', config);
-    // console.log('config.buildTypes', config.buildTypes);
-    return [
+    return [ // @ts-ignore
+        nodePolyfills(),
         config.buildTypes === true &&
             !NO_TYPES && // @ts-ignore
             typescript({
@@ -350,13 +350,13 @@ const rollupBuilds = {
  * @param {string} projectName
  * @param {'uiComponent' | 'library'} buildName
  * @param {BuildConfigType} config
- * @returns {BuildInterface | undefined}
+ * @returns {BuildInterface | Record<string, never>}
  */
 export function getBuild(projectName, buildName, config = {}) {
     const buildFn = rollupBuilds[buildName];
     if (typeof buildFn !== 'function') {
         logError(`Invalid build name: ${buildName}`);
-        return;
+        return {};
     }
     const buildConfig = getBuildConfig(config);
     const project = new Project(projectName, buildConfig);
