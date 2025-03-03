@@ -34,10 +34,11 @@ class ProjectTest {
         /** @type {Project} */
         this.project = project;
         this.setConfig(config);
+        const modulePath = this.project.getModulePath();
         this.scripts = this.project.getScripts();
-        this.pm2 = this.project.getArpadroidPath() + '/node_modules/pm2/bin/pm2';
-        this.sb = this.project.getArpadroidPath() + '/node_modules/.bin/storybook';
-        this.httpServer = this.project.getArpadroidPath() + '/node_modules/http-server/bin/http-server';
+        this.pm2 = modulePath + '/node_modules/pm2/bin/pm2';
+        this.sb = modulePath + '/node_modules/.bin/storybook';
+        this.httpServer = modulePath + '/node_modules/http-server/bin/http-server';
     }
 
     setConfig(config = {}) {
@@ -119,7 +120,7 @@ class ProjectTest {
      * @returns {Promise<Buffer | string>}
      */
     async testJest(_config) {
-        const jest = this.project.getArpadroidPath() + '/node_modules/jest/bin/jest.js';
+        const jest = this.project.getModulePath() + '/node_modules/jest/bin/jest.js';
         const script = `node --experimental-vm-modules ${jest} --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
         log.task(this.project.name, 'running jest tests');
         return execSync(script, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
@@ -141,7 +142,7 @@ class ProjectTest {
 
     async testStorybook(config = this.config) {
         const configPath = this.project.getStorybookConfigPath();
-        const executable = `${this.project.getArpadroidPath()}/node_modules/@storybook/test-runner/dist/test-storybook`;
+        const executable = `${this.project.getModulePath()}/node_modules/@storybook/test-runner/dist/test-storybook`;
         const script = `${executable} -c ${configPath} --maxWorkers=9 --browsers ${config?.browsers ?? 'chromium'} --url="http://127.0.0.1:${PORT}"`;
 
         /**

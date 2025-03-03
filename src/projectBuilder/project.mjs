@@ -148,7 +148,7 @@ class Project {
         return fs.existsSync(path) ? readdirSync(path) : [];
     }
 
-    getArpadroidPath() {
+    getModulePath() {
         if (this.name === 'module') {
             return this.path;
         }

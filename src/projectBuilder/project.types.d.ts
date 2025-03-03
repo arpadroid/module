@@ -16,7 +16,6 @@ export type CommandArgsType = {
     noTypes: boolean;
 };
 
-
 export type TestArgsType = {
     ci?: boolean;
     watch?: boolean;
@@ -26,4 +25,4 @@ export type TestArgsType = {
     storybook?: boolean;
     port?: number;
     query?: string;
-}
+};
