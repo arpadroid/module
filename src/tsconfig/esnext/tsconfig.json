@@ -30,6 +30,6 @@
          */
         // "tsBuildInfoFile": "./.tsbuildinfo",
     },
-    "include": ["src/index.js", "src/**/*"],
+    "include": ["src/index.js", "src/**/*", "src/mockData/**/*.json"],
     "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

@@ -1,8 +1,22 @@
 import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup';
 import type Project from '../../projectBuilder/project.mjs';
-import { RollupPlugin } from './rollup-builds.mjs';
+// import { RollupPlugin } from './rollup-builds.mjs';
 import { Plugin } from 'rollup';
 import { Preview } from '@storybook/web-components';
+
+import { bundleStats } from 'rollup-plugin-bundle-stats';
+import gzipPlugin from 'rollup-plugin-gzip';
+import { dts } from 'rollup-plugin-dts';
+import multiEntry from '@rollup/plugin-multi-entry';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import json from '@rollup/plugin-json';
+import peerDepsExternal from 'rollup-plugin-peer-deps-external';
+import rollupAlias from '@rollup/plugin-alias';
+import rollupWatch from 'rollup-plugin-watch';
+import terser from '@rollup/plugin-terser';
+import copy from 'rollup-plugin-copy';
+import { visualizer } from 'rollup-plugin-visualizer';
+import typescript from 'rollup-plugin-typescript2';
 
 export type BuildConfigType = {
     aliases?: string[];
@@ -38,7 +52,21 @@ export type BuildInterface = {
     project: Project;
     buildConfig: BuildConfigType;
     plugins: InputPluginOption;
-    Plugins: Record<string, RollupPlugin>;
+    Plugins: {
+        bundleStats: typeof bundleStats;
+        gzipPlugin: typeof gzipPlugin;
+        dts: typeof dts;
+        multiEntry: typeof multiEntry;
+        nodeResolve: typeof nodeResolve;
+        json: typeof json;
+        peerDepsExternal: typeof peerDepsExternal;
+        alias: typeof rollupAlias;
+        watch: typeof rollupWatch;
+        terser: typeof terser;
+        copy: typeof copy;
+        visualizer: typeof visualizer;
+        typescript: typeof typescript;
+        debugPlugin: Plugin;
+    };
     output: OutputOptions | OutputOptions[] | undefined;
 };
-

@@ -4,7 +4,7 @@
  * @typedef {import('./project.types.js').TestArgsType} TestArgsType
  */
 /* eslint-disable security/detect-non-literal-regexp */
-import { execSync } from 'child_process'; // @ts-ignore
+import { execSync } from 'child_process';
 import { mergeObjects } from '@arpadroid/tools/object';
 import fs from 'fs';
 import { globSync } from 'glob';
@@ -52,11 +52,11 @@ class ProjectTest {
     async test(_config = {}) {
         try {
             await this.runTest(_config);
-        } catch (/** @type {unknown} */ error) {
+        } catch (error) {
             log.error(String(error));
             return {
-                success: false, // @ts-ignore
-                message: error?.message || 'An error occurred',
+                success: false,
+                message: error?.toString() || 'An error occurred',
                 payloads: []
             };
         }

@@ -380,14 +380,19 @@ export function getBuild(projectName, buildName, config = {}) {
         output: appBuild.output,
         Plugins: {
             bundleStats,
+            gzipPlugin,
             dts,
             multiEntry,
+            json,
             nodeResolve,
             peerDepsExternal,
             alias: rollupAlias,
             watch: rollupWatch,
             debugPlugin,
-            terser
+            terser,
+            copy,
+            visualizer,
+            typescript
         }
     };
 }
