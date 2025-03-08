@@ -1,6 +1,7 @@
 import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup';
 import type Project from '../../projectBuilder/project.mjs';
 import { RollupPlugin } from './rollup-builds.mjs';
+import { Plugin } from 'rollup';
 import { Preview } from '@storybook/web-components';
 
 export type BuildConfigType = {
@@ -23,8 +24,8 @@ export type BuildConfigType = {
     plugins?: Plugin[];
     processBuilds?: (builds: RollupOptions[]) => void;
     slim?: boolean;
-    storybook?: { 
-        preview?: Preview 
+    storybook?: {
+        preview?: Preview;
     };
     style_patterns?: string | string[];
     watch?: boolean;
@@ -40,3 +41,4 @@ export type BuildInterface = {
     Plugins: Record<string, RollupPlugin>;
     output: OutputOptions | OutputOptions[] | undefined;
 };
+

@@ -5,9 +5,9 @@
  * @typedef {import('./project.types.js').CompileTypesType} CompileTypesType
  * @typedef {import('./project.types.js').CommandArgsType} CommandArgsType
  */
-/* eslint-disable sonarjs/no-duplicate-string */
+
 /* eslint-disable security/detect-non-literal-fs-filename */
-import { rollup, watch as rollupWatch } from 'rollup'; // @ts-ignore
+import { rollup, watch as rollupWatch } from 'rollup';
 import { mergeObjects } from '@arpadroid/tools/object';
 import { readFileSync, existsSync, writeFileSync, cpSync, rmSync, readdirSync, mkdirSync } from 'fs';
 import alias from '@rollup/plugin-alias';
@@ -25,7 +25,7 @@ import { dts } from 'rollup-plugin-dts';
 
 const cwd = process.cwd();
 
-/** @type {CommandArgsType} */ // @ts-ignore
+/** @type {CommandArgsType} */
 const argv = yargs(hideBin(process.argv)).argv;
 const SLIM = Boolean(argv.slim ?? process.env.slim);
 const MINIFY = Boolean(argv.minify ?? process.env.minify);
@@ -173,7 +173,6 @@ class Project {
                     packages.splice(packages.indexOf(pkg), 1);
                 }
             });
-            // @ts-ignore
             return rv.concat(packages.filter(pkg => pkg !== false));
         }
         return /** @type {string[]} */ (packages.filter(pkg => pkg !== false));
@@ -545,10 +544,13 @@ class Project {
         const appBuild = rollupConfig[0];
         const plugins = appBuild.plugins;
         if (aliases?.length && Array.isArray(plugins)) {
-            // @ts-ignore
             plugins?.push(alias({ entries: aliases }));
         }
-        // @ts-ignore
+        /**
+         * Maps the rollup configs.
+         * @param {Record<string, any>} conf
+         * @returns {Promise<boolean>}
+         */
         const mapConfigs = async conf => {
             return new Promise(async resolve => {
                 conf.input = this.preProcessInputs(conf.input);
@@ -610,11 +612,11 @@ class Project {
         });
         /**
          * Watches for file changes.
-         * @param {{ result: { close: () => void }}} param0
+         * @param {Record<string, any>} param0
          * @returns {void}
          */
         const watcherCallback = ({ result }) => result?.close();
-        // @ts-ignore
+
         this.watcher.on('event', watcherCallback);
         !slim && this.runGuardLivereload();
     }

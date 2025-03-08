@@ -22,7 +22,6 @@ import { dts } from 'rollup-plugin-dts';
 import multiEntry from '@rollup/plugin-multi-entry';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import json from '@rollup/plugin-json';
-// @ts-ignore
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import rollupAlias from '@rollup/plugin-alias';
 import rollupWatch from 'rollup-plugin-watch';
@@ -31,12 +30,11 @@ import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import buildStyles from '../plugins/buildStyles.mjs';
 import typescript from 'rollup-plugin-typescript2';
-// @ts-ignore
 import { mergeObjects } from '@arpadroid/tools/object';
 import { logError } from '../../utils/terminalLogger.mjs';
 import Project from '../../projectBuilder/project.mjs';
 
-/** @type {CommandArgsType} */ // @ts-ignore
+/** @type {CommandArgsType} */
 const argv = yargs(hideBin(process.argv)).argv || {};
 const cwd = process.cwd();
 const DEPS = process.env.deps ?? argv?.deps ?? '';
@@ -168,6 +166,11 @@ export function getAliases(projectName, projects = []) {
     }
     const aliases = [
         projectName && { find: `@arpadroid/${projectName}`, replacement: path.resolve('./src/index.js') },
+        (projectName !== 'module' && {
+            find: 'rollup-plugin-copy',
+            replacement: './node_modules/@arpadroid/module/node_modules/rollup-plugin-copy'
+        }) ||
+            undefined,
         projects?.map(dep => {
             if (typeof dep === 'string') {
                 return {
@@ -178,7 +181,7 @@ export function getAliases(projectName, projects = []) {
             return dep;
         })
     ].filter(item => typeof item !== 'undefined');
-    // @ts-ignore
+
     return aliases?.length ? rollupAlias({ entries: aliases }) : undefined;
 }
 
@@ -191,7 +194,7 @@ export function getAliases(projectName, projects = []) {
 export function getWatchers(envDeps = [], project) {
     const deps = [...new Set(envDeps.concat(project.getArpadroidDependencies()))];
     return deps.map(dep => {
-        const depPath = path.join(cwd, 'node_modules', '@arpadroid', dep, 'src', 'themes'); // @ts-ignore
+        const depPath = path.join(cwd, 'node_modules', '@arpadroid', dep, 'src', 'themes');
         return fs.existsSync(depPath) ? rollupWatch({ dir: depPath }) : null;
     });
 }
@@ -206,7 +209,7 @@ export function getSlimPlugins(project, config = {}) {
     const { parent, aliases = [] } = config;
     const plugins = [peerDepsExternal(), nodeResolve({ browser: true, preferBuiltins: false })];
     const _aliases = getAliases(parent, aliases);
-    plugins.push(_aliases);
+    _aliases && plugins.push(_aliases);
     return plugins.filter(Boolean);
 }
 
@@ -220,15 +223,15 @@ export function getFatPlugins(project, config) {
     const { watch = WATCH, deps, aliases } = config;
     /** @type {(RollupPlugin  | any)[]} */
     const plugins = [
-        nodeResolve({ browser: true, preferBuiltins: false }), // @ts-ignore
+        nodeResolve({ browser: true, preferBuiltins: false }),
         terser({
             keep_classnames: false
-        }), // @ts-ignore
+        }),
         watch && fs.existsSync(path.resolve(cwd, 'src/themes')) && rollupWatch({ dir: 'src/themes' }),
-        Boolean(watch) && getWatchers(deps, project), // @ts-ignore
+        Boolean(watch) && getWatchers(deps, project),
         deps && deps?.length > 0 && multiEntry(),
         bundleStats(),
-        getAliases(project.name, aliases), // @ts-ignore
+        getAliases(project.name, aliases),
         copy({
             targets: [{ src: 'src/i18n', dest: 'dist' }]
         }),
@@ -249,14 +252,14 @@ export function getFatPlugins(project, config) {
  */
 export function getPlugins(project, config) {
     const { slim, plugins = [] } = config;
-    return [ // @ts-ignore
+    return [
         nodePolyfills(),
         config.buildTypes === true &&
-            !NO_TYPES && // @ts-ignore
+            !NO_TYPES &&
             typescript({
                 tsconfig: './tsconfig.json', // Use the config defined earlier
                 useTsconfigDeclarationDir: true
-            }), // @ts-ignore
+            }),
         json(),
         ...(slim ? getSlimPlugins(project, config) : getFatPlugins(project, config)),
         buildStyles(project, config),
@@ -313,7 +316,7 @@ export function getBuildDefaults(project, config) {
  */
 export function getPolyfillsBuild() {
     return {
-        input: 'node_modules/@arpadroid/module/src/polyfills/polyfills.js', // @ts-ignore
+        input: 'node_modules/@arpadroid/module/src/polyfills/polyfills.js',
         plugins: [nodeResolve({ browser: true, preferBuiltins: false }), terser({ keep_classnames: true })],
         output: {
             file: 'dist/arpadroid-polyfills.js',
@@ -377,13 +380,13 @@ export function getBuild(projectName, buildName, config = {}) {
         output: appBuild.output,
         Plugins: {
             bundleStats,
-            dts, // @ts-ignore
+            dts,
             multiEntry,
             nodeResolve,
-            peerDepsExternal, // @ts-ignore
-            alias: rollupAlias, // @ts-ignore
+            peerDepsExternal,
+            alias: rollupAlias,
             watch: rollupWatch,
-            debugPlugin, // @ts-ignore
+            debugPlugin,
             terser
         }
     };

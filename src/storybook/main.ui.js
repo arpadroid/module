@@ -100,12 +100,12 @@ const config = {
         config.resolve.fallback = config.resolve.fallback || {};
         config.watchOptions.aggregateTimeout = 1200;
         config.watchOptions.ignored = ['**/*.css'];
-        config.module.rules = config.module.rules.filter(rule => {
-            // @ts-ignore
+        config.module.rules = config.module.rules.filter((/** @type {any} */ rule) => {
             const isCSSRule = rule?.test?.toString().includes('css');
             return isCSSRule ? false : true;
         });
         config.resolve.alias = config.resolve.alias || {};
+        config.resolve.alias['rollup-plugin-copy'] = modulesRoot + '/rollup-plugin-copy/dist/index.module.js';
         config.resolve.alias['@storybook/test'] = sbRoot + '/test';
         config.resolve.alias['@storybook/addon-actions'] = sbRoot + '/addon-actions';
         /** @todo Review below rules. */

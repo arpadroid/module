@@ -12,7 +12,7 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
 
-/** @type {TestArgsType} */ // @ts-ignore
+/** @type {TestArgsType} */
 const argv = yargs(hideBin(process.argv)).argv;
 const CI = Boolean(argv.ci ?? process.env.ci);
 const QUERY = argv.query ?? process.env.query ?? '';
