@@ -104,13 +104,12 @@ const config = {
             const isCSSRule = rule?.test?.toString().includes('css');
             return isCSSRule ? false : true;
         });
-        config.resolve.alias = config.resolve.alias || {};
-        config.resolve.alias['rollup-plugin-copy'] = modulesRoot + '/rollup-plugin-copy/dist/index.module.js';
-        config.resolve.alias['@storybook/test'] = sbRoot + '/test';
-        config.resolve.alias['@storybook/addon-actions'] = sbRoot + '/addon-actions';
-        /** @todo Review below rules. */
         config.resolve.alias = {
-            ...config.resolve.alias,
+            ...(config.resolve.alias || {}),
+            'rollup-plugin-copy': modulesRoot + '/rollup-plugin-copy/dist/index.module.js',
+            '@storybook/test': sbRoot + '/test',
+            '@storybook/addon-actions': sbRoot + '/addon-actions',
+            'storybook/internal': modulesRoot + '/storybook/core',
             fsevents: false,
             'node:url': 'url',
             'node:fs': 'fs',

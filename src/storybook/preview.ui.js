@@ -1,8 +1,9 @@
 import { usagePanelDecorator } from './decorators.js';
 import { mergeObjects } from '@arpadroid/tools/object';
+import flexLayoutDecorator from './layouts/flexLayout.jsx';
 /** @type { import('@storybook/web-components').Preview } */
 const defaultConfig = {
-    decorators: [usagePanelDecorator()],
+    decorators: [usagePanelDecorator(), flexLayoutDecorator()],
     parameters: {
         layout: 'centered', //'centered' | 'fullscreen' | 'padded'
         options: {

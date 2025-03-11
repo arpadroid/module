@@ -1,6 +1,7 @@
 const config = {
     buildTypes: true,
-    buildStyles: false,
+    buildStyles: true,
+    style_patterns: 'storybook/**/*',
     buildJS: false,
     build18n: false,
     watch: false,
