@@ -98,7 +98,7 @@ const config = {
         config.module.rules = config.module.rules || [];
         config.resolve = config.resolve || {};
         config.resolve.fallback = config.resolve.fallback || {};
-        config.watchOptions.aggregateTimeout = 1200;
+        config.watchOptions.aggregateTimeout = 1600;
         config.watchOptions.ignored = ['**/*.css'];
         config.module.rules = config.module.rules.filter((/** @type {any} */ rule) => {
             const isCSSRule = rule?.test?.toString().includes('css');
