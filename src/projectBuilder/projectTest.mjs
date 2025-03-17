@@ -15,6 +15,7 @@ import { log, logStyle } from '../utils/terminalLogger.mjs';
 /** @type {TestArgsType} */
 const argv = yargs(hideBin(process.argv)).argv;
 const CI = Boolean(argv.ci ?? process.env.ci);
+const WATCH = Boolean(argv.watch ?? process.env.watch);
 const QUERY = argv.query ?? process.env.query ?? '';
 const STORYBOOK = Boolean(argv.storybook ?? process.env.storybook);
 const JEST = Boolean(argv.jest ?? process.env.jest);
@@ -141,9 +142,10 @@ class ProjectTest {
     }
 
     async testStorybook(config = this.config) {
+        const watch = WATCH ? ' --watch ' : '';
         const configPath = this.project.getStorybookConfigPath();
         const executable = `${this.project.getModulePath()}/node_modules/@storybook/test-runner/dist/test-storybook`;
-        const script = `${executable} -c ${configPath} --maxWorkers=9 --browsers ${config?.browsers ?? 'chromium'} --url="http://127.0.0.1:${PORT}"`;
+        const script = `${executable} -c ${configPath} --maxWorkers=9 ${watch} --browsers ${config?.browsers ?? 'chromium'} --url="http://127.0.0.1:${PORT}"`;
 
         /**
          * If there is a query then filter the stories to run only the ones that match the query.
