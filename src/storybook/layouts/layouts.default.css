@@ -1,4 +1,8 @@
 #storybook-root {
+    min-width: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     &.storybook__layout--flexColumn {
         padding: 1rem;
         box-sizing: border-box;
