@@ -192,7 +192,7 @@ export function getAliases(projectName, projects = []) {
  * @returns {(RollupPlugin | null)[]}
  */
 export function getWatchers(envDeps = [], project) {
-    const deps = [...new Set(envDeps.concat(project.getArpadroidDependencies()))];
+    const deps = [...new Set(envDeps.concat(project.getDependencies()))];
     return deps.map(dep => {
         const depPath = path.join(cwd, 'node_modules', '@arpadroid', dep, 'src', 'themes');
         return fs.existsSync(depPath) ? rollupWatch({ dir: depPath }) : null;

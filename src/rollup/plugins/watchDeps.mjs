@@ -10,7 +10,7 @@ export default function watchDeps(project) {
     return {
         name: 'watch-deps',
         buildEnd() {
-            const deps = project.getArpadroidDependencies();
+            const deps = project.getDependencies();
             deps.forEach(dep => {
                 const filePath = `node_modules/@arpadroid/${dep}/dist/arpadroid-${dep}.js`;
                 // eslint-disable-next-line security/detect-non-literal-fs-filename

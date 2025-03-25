@@ -16,7 +16,7 @@ import path from 'path';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { ThemesBundler } from '@arpadroid/stylesheet-bundler';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import chalk from 'chalk';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
 import ProjectTest from './projectTest.mjs';
@@ -34,17 +34,19 @@ const STORYBOOK_PORT = argv.storybook ?? process.env.storybook;
 const NO_TYPES = Boolean(argv.noTypes ?? process.env.noTypes);
 const STYLE_PATTERNS = argv['style-patterns'];
 const DEPENDENCY_SORT = [
-    'module',
     'tools',
+    'stylesheet-bundler',
+    'module',
     'i18n',
-    'ui',
-    'context',
     'services',
+    'context',
     'resources',
+    'ui',
     'lists',
     'navigation',
     'messages',
     'forms',
+    'gallery',
     'application'
 ];
 const STYLE_SORT = ['ui', 'lists', 'navigation', 'messages', 'form'];
@@ -160,7 +162,7 @@ class Project {
      * @param {string[]} sort
      * @returns {string[]}
      */
-    getArpadroidDependencies(sort = DEPENDENCY_SORT) {
+    getDependencies(sort = DEPENDENCY_SORT) {
         const packages = Object.entries(this.pkg?.peerDependencies ?? {})
             .map(([name]) => name.startsWith('@arpadroid/') && name.replace('@arpadroid/', ''))
             .filter(Boolean);
@@ -204,14 +206,12 @@ class Project {
     // #region Install
     async install() {
         log.task(this.name, 'Installing project.');
-        const cmd = `cd ${this.path} && npm install`;
-        // wait until command has completed before returning.
-        return new Promise((resolve, reject) => {
-            const child = spawn(cmd, { shell: true, stdio: 'inherit' });
-            child.on('close', code => {
-                code === 0 ? resolve(true) : reject(new Error(`Failed to install ${this.name}`));
-            });
-        });
+        spawnSync(this.getInstallCmd(), { shell: true, stdio: 'inherit' });
+        return true;
+    }
+
+    getInstallCmd() {
+        return `cd ${this.path} && rm -rf node_modules && rm package-lock.json && npm install && npm audit fix`;
     }
 
     // #endregion Install
@@ -523,7 +523,7 @@ class Project {
     }
 
     createDependencyInstances() {
-        return this.getArpadroidDependencies().map(
+        return this.getDependencies().map(
             packageName => new Project(packageName, { path: `${cwd}/node_modules/@arpadroid/${packageName}` })
         );
     }
@@ -644,7 +644,7 @@ class Project {
         const minifiedDeps = this.getStyleBuildFiles() ?? [];
         Object.entries(minifiedDeps).forEach(([theme, files]) => this.buildTheme(theme, files));
 
-        if (this.getArpadroidDependencies().includes('ui')) {
+        if (this.getDependencies().includes('ui')) {
             this.copyUIStyleAssets();
         }
     }
@@ -670,7 +670,7 @@ class Project {
     }
 
     getStylePackages() {
-        return [...this.getArpadroidDependencies(STYLE_SORT), this.name];
+        return [...this.getDependencies(STYLE_SORT), this.name];
     }
 
     /**
