@@ -375,8 +375,20 @@ class Project {
      * @returns {Promise<boolean>}
      */
     compileTypeDeclarations(_config) {
-        const watchString = WATCH ? '--watch --preserveWatchOutput &' : '';
-        const cmd = `cd ${this.path} && tsc -b --declaration --emitDeclarationOnly ${watchString}`;
+        const watchString = WATCH ? '--watch --preserveWatchOutput &' : '';        
+        // Try to find TypeScript binary in local node_modules
+        const localTsc = `${this.path}/node_modules/.bin/tsc`;
+        const moduleTsc = `${this.getModulePath()}/node_modules/.bin/tsc`;
+        const globalTsc = 'tsc';
+        
+        let tscPath = globalTsc;
+        if (existsSync(localTsc)) {
+            tscPath = localTsc;
+        } else if (existsSync(moduleTsc)) {
+            tscPath = moduleTsc;
+        }
+        
+        const cmd = `cd ${this.path} && ${tscPath} -b --declaration --emitDeclarationOnly ${watchString}`;
         return new Promise((resolve, reject) => {
             const child = spawn(cmd, { shell: true, stdio: 'inherit' });
             child.on('close', code => {
