@@ -1,7 +1,7 @@
 {
     "name": "@arpadroid/module",
     "version": "1.0.0",
-    "description": "Manages the build test and configuration of arpadroid's modules.",
+    "description": "Comprehensive build system and development toolkit for JavaScript/TypeScript projects with unified Rollup, Storybook, Jest, and ESLint configuration.",
     "exports": {
         ".": "./src/index.js",
         "./logger": "./src/utils/terminalLogger.mjs",
@@ -18,9 +18,20 @@
     },
     "types": "./dist/@types/types.compiled.d.ts",
     "type": "module",
+    "files": [
+        "src/",
+        "scripts/",
+        "dist/",
+        "README.md",
+        "LICENSE"
+    ],
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+    },
     "scripts": {
         "build:project": "node ./scripts/build-project.js",
-        "test": "node ./scripts/test-projects.mjs --build --storybook --jest --ci",
+        "test": "node ./scripts/test-project.mjs --project=module --storybook --jest --port=6000",
         "install:project": "node ./scripts/install-projects.mjs",
         "stop:storybook:ci": "pm2 stop srv-storybook && pm2 delete srv-storybook",
         "postinstall": "npx playwright install",
@@ -31,9 +42,22 @@
         "url": "git+https://github.com/arpadroid/module.git"
     },
     "keywords": [
+        "build-system",
+        "rollup",
+        "storybook", 
+        "jest",
+        "typescript",
+        "eslint",
+        "babel",
+        "bundler",
+        "development-tools",
+        "testing",
+        "ui-components",
+        "css-bundling",
         "arpadroid",
-        "package",
-        "manager"
+        "build-tools",
+        "javascript",
+        "esm"
     ],
     "author": "Andres Vaquero / @arpadroid",
     "license": "MIT",
