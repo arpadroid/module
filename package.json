@@ -44,7 +44,7 @@
     "keywords": [
         "build-system",
         "rollup",
-        "storybook", 
+        "storybook",
         "jest",
         "typescript",
         "eslint",
@@ -133,6 +133,7 @@
         "eslint-webpack-plugin": "^5.0.0",
         "glob": "^11.0.0",
         "globals": "^16.0.0",
+        "guard": "^0.1.2",
         "html-webpack-plugin": "^5.6.0",
         "http-proxy-middleware": "^3.0.0",
         "http-server": "^14.1.1",
