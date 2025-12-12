@@ -56,12 +56,9 @@ function renderPreviewBody(_body) {
     return `${_body}${body}`;
 }
 
-const toolsPath = path.resolve(__dirname, '../../node_modules/@arpadroid/tools/dist/');
 const staticDirs = [cwd + '/dist', cwd + '/src'];
 fs.existsSync(cwd + '/assets') && staticDirs.push(cwd + '/assets');
 fs.existsSync(cwd + '/storybook/decorators') && staticDirs.push(cwd + '/storybook/decorators');
-fs.existsSync(toolsPath) && staticDirs.push(toolsPath);
-
 const config = {
     stories: [cwd + '/src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
     staticDirs,

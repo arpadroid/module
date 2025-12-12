@@ -1,6 +1,6 @@
 {
     "name": "@arpadroid/module",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "description": "Comprehensive build system and development toolkit for JavaScript/TypeScript projects with unified Rollup, Storybook, Jest, and ESLint configuration.",
     "exports": {
         ".": "./src/index.js",
@@ -35,7 +35,9 @@
         "install:project": "node ./scripts/install-projects.mjs",
         "stop:storybook:ci": "pm2 stop srv-storybook && pm2 delete srv-storybook",
         "postinstall": "npx playwright install",
-        "build": "node ./scripts/build-project.mjs --project=module --minify"
+        "build": "node ./scripts/build-project.mjs --project=module --minify",
+        "clean": "rm -rf ./dist ./node_modules package-lock.json",
+        "clean:build": "npm run clean && npm install && npm run build"
     },
     "repository": {
         "type": "git",
@@ -162,7 +164,6 @@
         "yargs": "^17.7.2"
     },
     "peerDependencies": {
-        "@arpadroid/stylesheet-bundler": "file:../stylesheet-bundler",
-        "@arpadroid/tools": "file:../tools"
+        "@arpadroid/style-bun": "file:../style-bun"
     }
 }

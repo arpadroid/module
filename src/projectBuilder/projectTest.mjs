@@ -5,12 +5,12 @@
  */
 /* eslint-disable security/detect-non-literal-regexp */
 import { execSync } from 'child_process';
-import { mergeObjects } from '@arpadroid/tools/object';
 import fs from 'fs';
 import { globSync } from 'glob';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
+import { mergeObjects } from '../utils/object.util.js';
 
 /** @type {TestArgsType} */
 const argv = yargs(hideBin(process.argv)).argv;

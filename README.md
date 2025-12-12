@@ -374,7 +374,7 @@ The module bundles all necessary development dependencies:
 ### CSS Processing
 
 - **SASS/SCSS & LESS** - CSS preprocessing and compilation
-- **LightningCSS** - Fast CSS processing and minification (via stylesheet-bundler)
+- **LightningCSS** - Fast CSS processing and minification (via style-bun)
 
 ### Utilities
 
@@ -390,7 +390,7 @@ This module is the build foundation for the entire @arpadroid ecosystem of packa
 ### Core Modules
 
 - **@arpadroid/tools** - JavaScript utility library with object, node, and HTML helpers
-- **@arpadroid/stylesheet-bundler** - CSS/SCSS theme bundling and processing system
+- **@arpadroid/style-bun** - CSS/SCSS theme bundling and processing system
 
 ### UI & Component Libraries
 

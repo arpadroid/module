@@ -8,20 +8,20 @@
 
 /* eslint-disable security/detect-non-literal-fs-filename */
 import { rollup, watch as rollupWatch } from 'rollup';
-import { mergeObjects } from '@arpadroid/tools/object';
 import { readFileSync, existsSync, writeFileSync, cpSync, rmSync, readdirSync, mkdirSync } from 'fs';
 import alias from '@rollup/plugin-alias';
 import fs from 'fs';
 import path from 'path';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
-import { ThemesBundler } from '@arpadroid/stylesheet-bundler';
+import { ThemesBundler } from '@arpadroid/style-bun';
 import { spawn, spawnSync } from 'child_process';
 import chalk from 'chalk';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
 import ProjectTest from './projectTest.mjs';
 import { glob } from 'glob';
 import { dts } from 'rollup-plugin-dts';
+import { mergeObjects } from '../utils/object.util.js';
 
 const cwd = process.cwd();
 
@@ -35,7 +35,7 @@ const NO_TYPES = Boolean(argv.noTypes ?? process.env.noTypes);
 const STYLE_PATTERNS = argv['style-patterns'];
 const DEPENDENCY_SORT = [
     'tools',
-    'stylesheet-bundler',
+    'style-bun',
     'module',
     'i18n',
     'services',
@@ -375,19 +375,19 @@ class Project {
      * @returns {Promise<boolean>}
      */
     compileTypeDeclarations(_config) {
-        const watchString = WATCH ? '--watch --preserveWatchOutput &' : '';        
+        const watchString = WATCH ? '--watch --preserveWatchOutput &' : '';
         // Try to find TypeScript binary in local node_modules
         const localTsc = `${this.path}/node_modules/.bin/tsc`;
         const moduleTsc = `${this.getModulePath()}/node_modules/.bin/tsc`;
         const globalTsc = 'tsc';
-        
+
         let tscPath = globalTsc;
         if (existsSync(localTsc)) {
             tscPath = localTsc;
         } else if (existsSync(moduleTsc)) {
             tscPath = moduleTsc;
         }
-        
+
         const cmd = `cd ${this.path} && ${tscPath} -b --declaration --emitDeclarationOnly ${watchString}`;
         return new Promise((resolve, reject) => {
             const child = spawn(cmd, { shell: true, stdio: 'inherit' });
@@ -554,7 +554,7 @@ class Project {
         const { aliases = [] } = config;
         VERBOSE || (!config.slim && log.task(this.name, heading));
         const appBuild = rollupConfig[0];
-        const plugins = appBuild.plugins;
+        const plugins = appBuild?.plugins;
         if (aliases?.length && Array.isArray(plugins)) {
             plugins?.push(alias({ entries: aliases }));
         }
@@ -649,6 +649,10 @@ class Project {
      */
     buildStyles(config = {}) {
         const slim = config.slim ?? SLIM;
+        if (!config.buildStyles) {
+            console.error('There are no styles to build.');
+            return;
+        }
         if (slim) {
             return;
         }

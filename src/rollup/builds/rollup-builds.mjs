@@ -8,6 +8,7 @@
  * @typedef {import('../../projectBuilder/project.types.js').CommandArgsType} CommandArgsType
  */
 /* eslint-disable security/detect-non-literal-fs-filename */
+import { mergeObjects } from '../../utils/object.util.js';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
 import fs from 'fs';
 import path from 'path';
@@ -30,7 +31,6 @@ import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import buildStyles from '../plugins/buildStyles.mjs';
 import typescript from 'rollup-plugin-typescript2';
-import { mergeObjects } from '@arpadroid/tools/object';
 import { logError } from '../../utils/terminalLogger.mjs';
 import Project from '../../projectBuilder/project.mjs';
 
@@ -335,11 +335,12 @@ const rollupBuilds = {
         if (!isSlim()) {
             /**
              * Processes the builds.
+             * Disabled for now as we do not need polyfills in every build.
              * @param {RollupOptions[]} builds
              */
-            config.processBuilds = builds => {
-                builds.push(getPolyfillsBuild());
-            };
+            // config.processBuilds = builds => {
+            //     builds.push(getPolyfillsBuild());
+            // };
         }
         return { ...getBuildDefaults(project, config) };
     },

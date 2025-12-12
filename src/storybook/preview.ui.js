@@ -1,7 +1,8 @@
-import { usagePanelDecorator } from './decorators.js';
-import { mergeObjects } from '@arpadroid/tools/object';
-import flexLayoutDecorator from './layouts/flexLayout.jsx';
 /** @type { import('@storybook/web-components').Preview } */
+import { mergeObjects } from '../utils/object.util.js';
+import { usagePanelDecorator } from './decorators.js';
+import flexLayoutDecorator from './layouts/flexLayout.jsx';
+
 const defaultConfig = {
     decorators: [usagePanelDecorator(), flexLayoutDecorator()],
     parameters: {
