@@ -630,16 +630,9 @@ class Project {
         const watcherCallback = ({ result }) => result?.close();
 
         this.watcher.on('event', watcherCallback);
-        !slim && this.runGuardLivereload();
     }
 
-    runGuardLivereload() {
-        if (existsSync(`${this.path}/Guardfile`)) {
-            log.task(this.name, 'running guard livereload');
-            spawn('guard', { shell: true, stdio: 'inherit', cwd: this.path });
-        }
-    }
-    // #endregion
+    // #endregionq
 
     // #region BUILD STYLES
 

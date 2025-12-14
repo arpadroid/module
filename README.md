@@ -11,15 +11,45 @@ A comprehensive build system and development toolkit for JavaScript/TypeScript p
 📝 **TypeScript Support** - Automatic type generation and compilation  
 🎨 **Style Bundling** - CSS/SCSS processing and optimization  
 🌍 **i18n Support** - Internationalization file bundling  
-⚡ **Development Server** - Watch mode with live reload  
 🔧 **ESLint Integration** - Code quality and style enforcement  
 📊 **Bundle Analysis** - Size analysis and visualization tools
+
+## What It Does
+
+### 📦 **Build Pipeline**
+
+1. **Dependency Building** - Builds project dependencies in correct order
+2. **Style Bundling** - Processes CSS/SCSS files with optimization
+3. **i18n Bundling** - Combines translation files
+4. **JavaScript Bundling** - Rollup-based bundling with:
+    - Tree-shaking for optimal bundle size
+    - Minification and compression
+    - Source map generation
+    - Multiple output formats (ESM, UMD)
+5. **TypeScript Compilation** - Generates type definitions
+6. **Bundle Analysis** - Creates size reports and visualizations
+
+### 🧪 **Testing Framework**
+
+- **Jest Integration** - Unit and integration tests
+- **Storybook Testing** - Visual regression and component testing
+- **CI/CD Support** - Automated testing in continuous integration
+- **Coverage Reports** - Code coverage analysis
+
+### 🔧 **Development Experience**
+
+- **Watch Mode** - Automatic rebuilding on file changes
+- **Hot Reload** - Live updates during development
+- **Storybook Integration** - Component documentation and playground
+- **Error Reporting** - Clear build and test error messages
+- **Performance Monitoring** - Build time optimization
 
 ## Installation
 
 ```bash
 npm install --save-dev @arpadroid/module
 ```
+
 
 ## Quick Start
 
@@ -106,36 +136,6 @@ npm run test
 | `--watch`     | Watch mode for tests           | `--watch`        |
 | `--query`     | Filter tests by pattern        | `--query=button` |
 
-## What It Does
-
-### 📦 **Build Pipeline**
-
-1. **Dependency Building** - Builds project dependencies in correct order
-2. **Style Bundling** - Processes CSS/SCSS files with optimization
-3. **i18n Bundling** - Combines translation files
-4. **JavaScript Bundling** - Rollup-based bundling with:
-    - Tree-shaking for optimal bundle size
-    - Minification and compression
-    - Source map generation
-    - Multiple output formats (ESM, UMD)
-5. **TypeScript Compilation** - Generates type definitions
-6. **Bundle Analysis** - Creates size reports and visualizations
-
-### 🧪 **Testing Framework**
-
-- **Jest Integration** - Unit and integration tests
-- **Storybook Testing** - Visual regression and component testing
-- **CI/CD Support** - Automated testing in continuous integration
-- **Coverage Reports** - Code coverage analysis
-
-### 🔧 **Development Experience**
-
-- **Watch Mode** - Automatic rebuilding on file changes
-- **Hot Reload** - Live updates during development
-- **Storybook Integration** - Component documentation and playground
-- **Error Reporting** - Clear build and test error messages
-- **Performance Monitoring** - Build time optimization
-
 ## Configuration
 
 ### Project Structure Requirements
@@ -200,43 +200,25 @@ const { build, appBuild, Plugins } = getBuild('my-project', 'uiComponent', {
 appBuild.plugins = [
     ...appBuild.plugins,
 
-    // Environment-specific replacements
+    // Environment-specific replacements:
     replace({
         preventAssignment: true,
         values: {
-            __VERSION__: JSON.stringify(process.env.npm_package_version),
-            __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
-            __ENVIRONMENT__: JSON.stringify(process.env.NODE_ENV || 'development'),
-            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+            __VERSION__: JSON.stringify(process.env.npm_package_version)
+            // Other replacements
         }
     }),
 
-    // Rollup Copy plugin for asset management: http://rollupjs.org/guide/en/#copy
+    // Copy static assets:
     Plugins.copy({
         targets: [
-            // Copy files
             {
                 src: 'src/assets/*',
                 dest: 'dist/assets/'
             }
         ]
-    }),
-
-    // Development-only plugins
-    ...(process.env.NODE_ENV === 'development'
-        ? [
-              // Custom dev server middleware
-              {
-                  name: 'dev-middleware',
-                  configureServer(server) {
-                      server.middlewares.use('/api/health', (req, res, next) => {
-                          res.writeHead(200, { 'Content-Type': 'application/json' });
-                          res.end(JSON.stringify({ status: 'ok', timestamp: Date.now() }));
-                      });
-                  }
-              }
-          ]
-        : [])
+    })
+    // ...
 ];
 
 // Custom external dependencies based on environment
@@ -247,14 +229,8 @@ if (process.env.NODE_ENV === 'development') {
 // Override output configuration for specific builds
 if (process.env.BUILD_TARGET === 'cdn') {
     appBuild.output = {
-        ...appBuild.output,
-        format: 'umd',
-        name: 'MyProject',
-        file: 'dist/my-project.umd.js',
-        globals: {
-            react: 'React',
-            'react-dom': 'ReactDOM'
-        }
+        ...appBuild.output
+        // ...
     };
 }
 
@@ -381,7 +357,6 @@ The module bundles all necessary development dependencies:
 - **Glob** - File pattern matching and selection
 - **JSDoc** - Documentation generation from code comments
 - **Lit** - Web components library support
-
 
 ## Arpadroid Ecosystem
 
