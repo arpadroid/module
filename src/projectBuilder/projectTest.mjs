@@ -182,9 +182,13 @@ class ProjectTest {
         return execSync(cmd, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
     }
 
+    isStorybookCIRunning() {
+        const processExists = Boolean(execSync(`${this.pm2} pid srv-storybook`).toString().trim());
+        return processExists;
+    }
+
     async stopStorybookCI() {
-        const processExists = Boolean((await execSync(`${this.pm2} pid srv-storybook`)).toString().trim());
-        if (!processExists) {
+        if (!this.isStorybookCIRunning()) {
             return Promise.resolve();
         }
         return execSync(`${this.pm2} stop srv-storybook && ${this.pm2} delete srv-storybook`, {

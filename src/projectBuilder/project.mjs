@@ -390,7 +390,10 @@ class Project {
 
         const cmd = `cd ${this.path} && ${tscPath} -b --declaration --emitDeclarationOnly ${watchString}`;
         return new Promise((resolve, reject) => {
-            const child = spawn(cmd, { shell: true, stdio: 'inherit' });
+            const child = spawn(cmd, {
+                shell: true,
+                stdio: WATCH ? 'ignore' : 'inherit' // ← Suppress output only in watch mode
+            });
             child.on('close', code => {
                 code === 0
                     ? resolve(true)
@@ -664,7 +667,8 @@ class Project {
         }
         /** @type {Record<string, string[]>} */
         const minifiedDeps = {};
-        this.getStylePackages().forEach(dep => {
+        const stylePkgs = this.getStylePackages();
+        stylePkgs.forEach(dep => {
             const project = new Project(dep);
             if (!project.hasStyles()) {
                 return false;
@@ -691,14 +695,19 @@ class Project {
         const themePath = `${this.path}/dist/themes/${theme}`;
         let css = '';
         let bundledCss = '';
+
         files.forEach(file => {
+            const bundledFile = file.replace('.min.css', '.bundled.css');
+            let isValid = false;
+            if (existsSync(bundledFile)) {
+                isValid = true;
+                bundledCss += readFileSync(bundledFile, 'utf8');
+            }
             if (existsSync(file)) {
+                isValid = true;
                 css += readFileSync(file, 'utf8');
-                const bundledFile = file.replace('.min.css', '.bundled.css');
-                if (existsSync(bundledFile)) {
-                    bundledCss += readFileSync(bundledFile, 'utf8');
-                }
-            } else {
+            } 
+            if (!isValid) {
                 log.error(`Could not bundle file, ${chalk.magentaBright(file)} does not exist`);
             }
         });

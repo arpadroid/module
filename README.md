@@ -7,42 +7,12 @@ A comprehensive build system and development toolkit for JavaScript/TypeScript p
 🏗️ **Unified Build System** - Single configuration for all build tools  
 📦 **Rollup Integration** - Optimized bundling with tree-shaking and minification  
 📚 **Storybook Ready** - Component documentation and testing platform  
-🧪 **Testing Suite** - Jest integration with CI/CD support  
+🧪 **Testing Suite** - Jest/Storybook/Playwright integration with CI/CD support  
 📝 **TypeScript Support** - Automatic type generation and compilation  
 🎨 **Style Bundling** - CSS/SCSS processing and optimization  
 🌍 **i18n Support** - Internationalization file bundling  
 🔧 **ESLint Integration** - Code quality and style enforcement  
 📊 **Bundle Analysis** - Size analysis and visualization tools
-
-## What It Does
-
-### 📦 **Build Pipeline**
-
-1. **Dependency Building** - Builds project dependencies in correct order
-2. **Style Bundling** - Processes CSS/SCSS files with optimization
-3. **i18n Bundling** - Combines translation files
-4. **JavaScript Bundling** - Rollup-based bundling with:
-    - Tree-shaking for optimal bundle size
-    - Minification and compression
-    - Source map generation
-    - Multiple output formats (ESM, UMD)
-5. **TypeScript Compilation** - Generates type definitions
-6. **Bundle Analysis** - Creates size reports and visualizations
-
-### 🧪 **Testing Framework**
-
-- **Jest Integration** - Unit and integration tests
-- **Storybook Testing** - Visual regression and component testing
-- **CI/CD Support** - Automated testing in continuous integration
-- **Coverage Reports** - Code coverage analysis
-
-### 🔧 **Development Experience**
-
-- **Watch Mode** - Automatic rebuilding on file changes
-- **Hot Reload** - Live updates during development
-- **Storybook Integration** - Component documentation and playground
-- **Error Reporting** - Clear build and test error messages
-- **Performance Monitoring** - Build time optimization
 
 ## Installation
 
@@ -50,23 +20,46 @@ A comprehensive build system and development toolkit for JavaScript/TypeScript p
 npm install --save-dev @arpadroid/module
 ```
 
-
 ## Quick Start
 
 ### 1. Add Scripts to package.json
 
 ```json
 {
+    "name": "@arpadroid/my-project",
     "scripts": {
-        "build": "node ./node_modules/@arpadroid/module/scripts/build-project.mjs --project=my-project --minify",
-        "dev": "npm run build -- --storybook=6001 --watch",
-        "test": "node ./node_modules/@arpadroid/module/scripts/test-project.mjs --project=my-project --jest --storybook",
-        "storybook": "npm run build -- --storybook=6001 --watch"
+        "build": "arpadroid-build --minify",
+        "dev": "arpadroid-build --storybook=6001 --watch",
+        "test": "arpadroid-test --jest --storybook --port=6001"
     }
 }
 ```
 
-### 2. Create Project Structure
+### 2. (Optional) Create Config File
+
+For project-specific defaults, create `src/arpadroid.config.js`:
+
+```javascript
+export default {
+    buildStyles: true,
+    buildTypes: true,
+    minify: true
+};
+```
+
+Then your scripts become even simpler:
+
+```json
+{
+    "scripts": {
+        "build": "arpadroid-build",
+        "dev": "arpadroid-build --watch",
+        "test": "arpadroid-test"
+    }
+}
+```
+
+### 3. Create Project Structure
 
 ```
 my-project/
@@ -74,75 +67,74 @@ my-project/
 │   ├── index.js              # Main entry point
 │   ├── components/           # Your components
 │   ├── themes/              # Style files (optional)
-│   └── i18n/                # Translation files (optional)
+│   ├── i18n/                # Translation files (optional)
+│   └── arpadroid.config.js  # Build config (optional)
 ├── package.json
 └── tsconfig.json            # TypeScript config (optional)
 ```
 
-### 3. Build Your Project
+### 4. Build Your Project
 
 ```bash
 npm run build
 ```
 
-## Build Commands
+### cmd: **_arpadroid-build_** Options
 
-### Basic Build
+| Option        | Description                            | Example            |
+| ------------- | -------------------------------------- | ------------------ |
+| `--project`   | Project name (optional, auto-detected) | `--project=ui`     |
+| `--minify`    | Enable minification                    | `--minify`         |
+| `--watch`     | Watch for file changes                 | `--watch`          |
+| `--storybook` | Start Storybook server                 | `--storybook=6001` |
+| `--slim`      | Build without dependencies             | `--slim`           |
+| `--noTypes`   | Skip TypeScript compilation            | `--noTypes`        |
 
-```bash
-# Build with minification
-npm run build
+### cmd: **_arpadroid-test_** Options
 
-# Build without minification
-node ./node_modules/@arpadroid/module/scripts/build-project.mjs --project=my-project
-```
-
-### Development Mode
-
-```bash
-# Watch mode with Storybook
-npm run build -- --storybook=6001 --watch
-
-# Watch mode without Storybook
-npm run build -- --watch
-```
-
-### Build Options
-
-| Option        | Description                 | Example            |
-| ------------- | --------------------------- | ------------------ |
-| `--project`   | Project name (required)     | `--project=ui`     |
-| `--minify`    | Enable minification         | `--minify`         |
-| `--watch`     | Watch for file changes      | `--watch`          |
-| `--storybook` | Start Storybook server      | `--storybook=6001` |
-| `--slim`      | Build without dependencies  | `--slim`           |
-| `--noTypes`   | Skip TypeScript compilation | `--noTypes`        |
-
-## Testing Commands
-
-### Run All Tests
-
-```bash
-npm run test
-```
-
-### Test Options
-
-| Option        | Description                    | Example          |
-| ------------- | ------------------------------ | ---------------- |
-| `--jest`      | Run Jest unit tests            | `--jest`         |
-| `--storybook` | Run Storybook visual tests     | `--storybook`    |
-| `--ci`        | CI mode (starts/stops servers) | `--ci`           |
-| `--watch`     | Watch mode for tests           | `--watch`        |
-| `--query`     | Filter tests by pattern        | `--query=button` |
+| Option        | Description                            | Example          |
+| ------------- | -------------------------------------- | ---------------- |
+| `--project`   | Project name (optional, auto-detected) | `--project=ui`   |
+| `--jest`      | Run Jest unit tests                    | `--jest`         |
+| `--storybook` | Run Storybook visual tests             | `--storybook`    |
+| `--ci`        | CI mode (starts/stops servers)         | `--ci`           |
+| `--watch`     | Watch mode for tests                   | `--watch`        |
+| `--query`     | Filter tests by pattern                | `--query=button` |
 
 ## Configuration
+
+### arpadroid.config.js
+
+Create `src/arpadroid.config.js` to set project defaults:
+
+```javascript
+export default {
+    // Build options
+    buildStyles: true,
+    buildTypes: true,
+    buildI18n: true,
+    buildDeps: true,
+    minify: true,
+
+    // Storybook customization (optional)
+    storybook: {
+        previewHead: () => `<link rel="stylesheet" href="/custom.css" />`,
+        previewBody: () => `<div id="custom-root"></div>`
+    }
+};
+```
 
 ### Project Structure Requirements
 
 ```javascript
 // src/index.js - Main entry point
 export * from './components/myComponent.js';
+
+// src/arpadroid.config.js - Build configuration (optional)
+export default {
+    buildStyles: true,
+    minify: true
+};
 
 // src/rollup.config.mjs - Custom Rollup config (optional)
 export default [
@@ -298,9 +290,9 @@ dist/
 {
     "name": "@company/ui-library",
     "scripts": {
-        "build": "node ./node_modules/@arpadroid/module/scripts/build-project.mjs --project=ui --minify",
+        "build": "arpadroid-build --minify",
         "dev": "npm run build -- --storybook=6001 --watch",
-        "test": "node ./node_modules/@arpadroid/module/scripts/test-project.mjs --project=ui --jest --storybook"
+        "test": "arpadroid-test --jest --storybook"
     },
     "devDependencies": {
         "@arpadroid/module": "^1.0.0"
@@ -314,9 +306,9 @@ dist/
 {
     "name": "@company/web-app",
     "scripts": {
-        "build": "node ./node_modules/@arpadroid/module/scripts/build-project.mjs --project=app --minify",
+        "build": "arpadroid-build --minify",
         "dev": "npm run build -- --watch",
-        "test": "node ./node_modules/@arpadroid/module/scripts/test-project.mjs --project=app --jest"
+        "test": "arpadroid-test --jest"
     }
 }
 ```

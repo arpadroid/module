@@ -16,6 +16,10 @@
         "./storybook/manager": "./.storybook/manager.jsx",
         "./storybook/decorators": "./src/storybook/decorators.js"
     },
+    "bin": {
+        "arpadroid-build": "./scripts/build-project.mjs",
+        "arpadroid-test": "./scripts/test-project.mjs"
+    },
     "types": "./dist/@types/types.compiled.d.ts",
     "type": "module",
     "files": [
@@ -137,6 +141,7 @@
         "globals": "^16.0.0",
         "html-webpack-plugin": "^5.6.0",
         "http-proxy-middleware": "^3.0.0",
+        "http-server": "^14.1.1",
         "jest": "^29.7.0",
         "jest-environment-jsdom": "^29.7.0",
         "jest-expect-message": "^1.1.3",
