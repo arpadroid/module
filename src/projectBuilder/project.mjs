@@ -645,7 +645,7 @@ class Project {
      */
     buildStyles(config = {}) {
         const slim = config.slim ?? SLIM;
-        if (!config.buildStyles) {
+        if (!config?.buildStyles) {
             console.error('There are no styles to build.');
             return;
         }
