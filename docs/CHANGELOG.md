@@ -1,4 +1,4 @@
-# Changelog
+# Changelog - **_`@arpadroid/module`_**
 
 All notable changes to this project will be documented in this file.
 

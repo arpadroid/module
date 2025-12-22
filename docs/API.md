@@ -1,13 +1,11 @@
-<link rel="stylesheet" href="../docs-styles.css">
-
-# 📚 API Reference - **_@arpadroid/module_**
+# 📚 API Reference - **_`@arpadroid/module`_**
 
 **Comprehensive API documentation for @arpadroid/module build system and development toolkit.**
 
 ## Project Class
 
 The Project class is responsible for orchestrating the build, watch, and test operations.
-It is instantiated by the CLI command **`arpadroid-build`** (see [CLI Documentation](CLI.md)).
+It is instantiated by the CLI command **`arpadroid-build`** (see [> CLI Reference](CLI.md)).
 For more advanced scenarios, you can instantiate it programmatically in your own scripts as such:
 
 ```typescript
@@ -428,19 +426,6 @@ import storybookPreview from '@arpadroid/module/storybook/preview';
 import type { ProjectConfig } from '@arpadroid/module';
 ```
 
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please see the [README](README.md) for guidelines.
-
----
 
 ## 📚 Additional Resources
 

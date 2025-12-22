@@ -1,6 +1,4 @@
-<link rel="stylesheet" href="../docs-styles.css">
-
-# 🔧 Build Reference - **_@arpadroid/module_**
+# 🔧 Build System Reference - **_`@arpadroid/module`_**
 
 **_Quick Links:_** &nbsp;&nbsp; [🛠️ Build System](#build-system) &nbsp;|&nbsp;
 [⚙️ Build Configuration](#buildconfigtype) &nbsp;|&nbsp;
