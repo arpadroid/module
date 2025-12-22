@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 /**
  * @typedef {import('./rollup-builds.types.js').BuildConfigType} BuildConfigType
  * @typedef {import('./rollup-builds.types.js').BuildInterface} BuildInterface
@@ -352,14 +351,14 @@ const rollupBuilds = {
 /**
  * Returns the build configuration for the specified project and build.
  * @param {string} projectName
- * @param {'uiComponent' | 'library'} buildName
+ * @param {'uiComponent' | 'library'} buildType
  * @param {BuildConfigType} config
  * @returns {BuildInterface | Record<string, never>}
  */
-export function getBuild(projectName, buildName, config = {}) {
-    const buildFn = rollupBuilds[buildName];
+export function getBuild(projectName, buildType, config = {}) {
+    const buildFn = rollupBuilds[buildType];
     if (typeof buildFn !== 'function') {
-        logError(`Invalid build name: ${buildName}`);
+        logError(`Invalid build name: ${buildType}`);
         return {};
     }
     const buildConfig = getBuildConfig(config);

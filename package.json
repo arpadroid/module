@@ -35,11 +35,11 @@
     },
     "scripts": {
         "build:project": "node ./scripts/build-project.js",
-        "test": "node ./scripts/test-project.mjs --project=module --storybook --jest --port=6000",
+        "test": "node ./scripts/test-project.mjs --storybook --jest --port=6000",
         "install:project": "node ./scripts/install-projects.mjs",
         "stop:storybook:ci": "pm2 stop srv-storybook && pm2 delete srv-storybook",
         "postinstall": "npx playwright install",
-        "build": "node ./scripts/build-project.mjs --project=module --minify",
+        "build": "node ./scripts/build-project.mjs --minify",
         "clean": "rm -rf ./dist ./node_modules package-lock.json",
         "clean:build": "npm run clean && npm install && npm run build"
     },

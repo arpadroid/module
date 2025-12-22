@@ -645,11 +645,7 @@ class Project {
      */
     buildStyles(config = {}) {
         const slim = config.slim ?? SLIM;
-        if (!config?.buildStyles) {
-            console.error('There are no styles to build.');
-            return;
-        }
-        if (slim) {
+        if (!config?.buildStyles || slim === true) {
             return;
         }
         log.task(this.name, 'Compiling dependency styles.');
@@ -706,7 +702,7 @@ class Project {
             if (existsSync(file)) {
                 isValid = true;
                 css += readFileSync(file, 'utf8');
-            } 
+            }
             if (!isValid) {
                 log.error(`Could not bundle file, ${chalk.magentaBright(file)} does not exist`);
             }

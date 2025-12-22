@@ -18,6 +18,12 @@ import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import typescript from 'rollup-plugin-typescript2';
 
+export type StorybookConfigType = {
+    preview?: Preview;
+    previewHead?: (head) => string;
+    previewBody?: (body) => string;
+};
+
 export type BuildConfigType = {
     aliases?: string[];
     basePath?: string;
@@ -38,9 +44,7 @@ export type BuildConfigType = {
     plugins?: Plugin[];
     processBuilds?: (builds: RollupOptions[]) => void;
     slim?: boolean;
-    storybook?: {
-        preview?: Preview;
-    };
+    storybook?: StorybookConfigType;
     style_patterns?: string | string[];
     watch?: boolean;
 };

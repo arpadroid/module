@@ -1,0 +1,452 @@
+<link rel="stylesheet" href="../docs-styles.css">
+
+# 📚 API Reference - **_@arpadroid/module_**
+
+**Comprehensive API documentation for @arpadroid/module build system and development toolkit.**
+
+## Project Class
+
+The Project class is responsible for orchestrating the build, watch, and test operations.
+It is instantiated by the CLI command **`arpadroid-build`** (see [CLI Documentation](CLI.md)).
+For more advanced scenarios, you can instantiate it programmatically in your own scripts as such:
+
+```typescript
+import { Project, BuildConfigType } from '@arpadroid/module';
+
+const config: BuildConfigType = {
+    buildStyles: true,
+    buildTypes: true,
+    buildI18n: true,
+    minify: true,
+    path: '/path/to/my/project',
+    style_patterns: ['/path/to/styles/**/*.scss']
+};
+
+// Sample usage
+const project = new Project('my-project', config);
+await project.build();
+```
+
+---
+
+### Constructor Parameters
+
+- `name`: `string`  
+Project name (e.g., 'ui', 'forms'). Used to locate project directory and package
+
+- `config`: `BuildConfigType | string`  
+Optional build configuration object
+
+### Methods
+```typescript
+build(config: BuildConfigType): Promise<boolean>
+// Performs a full build: cleans, builds deps, bundles styles/i18n, runs rollup & types, starts storybook/watch as configured.
+```
+
+```typescript
+buildStyles(config?: BuildConfigType): void
+// Compiles and combines dependency styles and copies UI assets when needed.
+```
+
+```typescript
+bundleStyles(config?: BuildConfigType): Promise<ThemesBundler | boolean>
+// Uses ThemesBundler to generate theme CSS bundles for the project.
+```
+
+```typescript
+buildTypes(rollupConfig: RollupOptions[], config: BuildConfigType): Promise<boolean>
+// Coordinates type compilation, declaration bundling and distribution when enabled.
+```
+
+```typescript
+compileTypeDeclarations(_config: BuildConfigType): Promise<boolean>
+// Invokes tsc to emit declaration files (watch mode supported).
+```
+
+```typescript
+compileTypes(config?: CompileTypesType): Promise<unknown[]>
+// Copies *.types.d.ts files into a temp types directory preserving structure.
+```
+
+```typescript
+rollupTypes(rollupConfig: RollupOptions[], config: BuildConfigType): Promise<boolean>
+// Runs a Rollup build to produce a single dist/types.d.ts declaration file.
+```
+
+```typescript
+distTypes(): Promise<void>
+// Copies the compiled .tmp/.types directory into dist/@types.
+```
+
+```typescript
+addEntryTypesFile(): Promise<boolean>
+// Creates a combined types.compiled.d.ts file from index and types files.
+```
+
+```typescript
+bundleI18n(config: BuildConfigType): Promise<boolean>
+// Compiles i18n assets using the external i18n compiler and stores resulting files on the instance.
+```
+
+```typescript
+buildDependencies(buildConfig: BuildConfigType): Promise<void>
+// Builds dependent @arpadroid projects in sequence with slim mode enabled.
+```
+
+```typescript
+rollup(rollupConfig: RollupOptions[], config?: BuildConfigType, heading?: string): Promise<boolean>
+// Runs Rollup builds for each provided configuration and writes outputs to dist.
+```
+
+```typescript
+watch(rollupConfig: RollupOptions[], { watch = WATCH, slim }: { watch?: boolean, slim?: boolean }): void
+// Starts Rollup watcher and handles watch events and errors.
+```
+
+```typescript
+preProcessInputs(inputs: InputOption | InputOption[] | undefined): InputOption | InputOption[] | undefined
+// Normalizes rollup input(s) by resolving project paths.
+```
+
+```typescript
+preProcessInput(input: InputOption): InputOption
+// Converts a single input path to an absolute path within the project.
+```
+
+```typescript
+getBuildConfig(_config?: Object): Promise<BuildConfigType>
+// Merges file-level config with defaults and returns the effective build configuration.
+```
+
+```typescript
+setConfig(config: BuildConfigType): void
+// Applies and merges the provided build configuration with defaults.
+```
+
+```typescript
+getDefaultConfig(): BuildConfigType
+// Returns the default build configuration used by the project.
+```
+
+```typescript
+getFileConfig(): Promise<Object>
+// Loads and returns the project's src/arpadroid.config.js configuration if present.
+```
+
+```typescript
+getPackageJson(): Object | false
+// Reads and returns the project's package.json if it exists.
+```
+
+```typescript
+getPath(): string
+// Resolves the filesystem path for the project (local or in node_modules/@arpadroid/*).
+```
+
+```typescript
+validate(): boolean
+// Checks whether the project path exists and logs an error if not.
+```
+
+```typescript
+getScripts(): Object | undefined
+// Returns the scripts section from the project's package.json.
+```
+
+```typescript
+getInstallCmd(): string
+// Returns the shell command used to install the project dependencies.
+```
+
+```typescript
+install(): Promise<boolean>
+// Runs the install routine (removes node_modules, reinstalls and audits).
+```
+
+```typescript
+test(): Promise
+// Runs the project's test suite using ProjectTest.
+```
+
+```typescript
+getDependencies(sort?: string[]): string[]
+// Returns the list of @arpadroid peerDependencies, optionally ordered by a provided sort array.
+```
+
+```typescript
+createDependencyInstances(): Project[]
+// Creates Project instances for each dependency package.
+```
+
+```typescript
+getModulePath(): string
+// Returns the path to the @arpadroid/module package for this project (or the project path if it's the module itself).
+```
+
+```typescript
+hasStyles(): boolean
+// True if the project exposes themes under src/themes.
+```
+
+```typescript
+getThemes(): string[]
+// Returns an array of theme directory names found under src/themes.
+```
+
+```typescript
+getThemesPath(): string
+// Returns the path to the project's themes directory.
+```
+
+```typescript
+getStylePackages(): string[]
+// Returns an ordered list of packages that provide styles (dependencies + the project).
+```
+
+```typescript
+getStyleBuildFiles(): Record<string,string[]> | false
+// Collects minified theme files from style dependencies for bundling.
+```
+
+```typescript
+buildTheme(theme: string, files: string[]): void
+// Concatenates CSS files into final theme outputs and writes them to dist/themes.
+```
+
+```typescript
+copyUIStyleAssets(): void
+// Copies UI font assets and material symbol files into the project's dist output.
+```
+
+```typescript
+runStorybook({ slim = SLIM }: { slim?: boolean }): Promise<void>
+// Starts Storybook for the project if a port is configured and build is not slimmed.
+```
+
+```typescript
+getStorybookCmd(): Promise<string>
+// Constructs the Storybook CLI command with the appropriate config path and port.
+```
+
+```typescript
+getStorybookConfigPath(): string
+// Returns the project or fallback Storybook configuration directory path.
+```
+
+```typescript
+logBuild(config: BuildConfigType): void
+// Emits build heading and task messages to the console based on config.
+```
+
+```typescript
+logBuildComplete(): void
+// Logs a success message including total build time.
+```
+
+```typescript
+getBuildSeconds(): string | false
+// Returns the build duration in seconds formatted as a string.
+```
+
+```typescript
+bundleI18n(config: BuildConfigType): Promise<boolean>
+// Compiles i18n assets using the external i18n compiler and stores resulting files on the instance.
+```
+
+```typescript
+buildDependencies(buildConfig: BuildConfigType): Promise<void>
+// Builds dependent @arpadroid projects in sequence with slim mode enabled.
+```
+
+## ProjectTest Class
+
+The ProjectTest class is responsible for orchestrating and running tests for a Project instance, including Node.js, Jest, and Storybook tests.
+It is used internally by the Project class through the `test` method, but can also be instantiated directly for advanced testing scenarios:
+
+```typescript
+import ProjectTest from '@arpadroid/module/projectBuilder/projectTest.mjs';
+import Project from '@arpadroid/module';
+
+const project = new Project('my-project');
+const tester = new ProjectTest(project, { jest: true, storybook: true });
+await tester.test();
+```
+
+### Constructor Parameters
+
+`project`: `Project`  
+Project instance to test (required)
+
+`config`: `TestArgsType`  
+Optional test configuration object
+
+### Methods
+
+```typescript
+setConfig(config: TestArgsType): void 
+// Applies and merges the provided test configuration with defaults.
+```
+
+```typescript
+getDefaultConfig(): TestArgsType 
+// Returns the default test configuration used by ProjectTest.
+```
+
+```typescript
+test(config?: TestArgsType): Promise<object> 
+// Runs all configured tests (Node.js, Jest, Storybook) and returns a result object.
+```
+
+```typescript
+runTest(config?: TestArgsType): Promise<boolean | unknown> 
+// Runs the main test routine, orchestrating build and test execution.
+```
+
+```typescript
+testNodeJS(config: TestArgsType): Promise<boolean | unknown> 
+// Runs Node.js tests if present.
+```
+
+```typescript
+testJest(config: TestArgsType): Promise<Buffer | string> 
+// Runs Jest tests if configured.
+```
+
+```typescript
+getJestConfigLocation(): string 
+// Returns the path to the Jest configuration file for the project.
+```
+
+```typescript
+testStorybook(config?: TestArgsType): Promise<void> 
+// Runs Storybook tests if configured.
+```
+
+```typescript
+startStorybookCI(): Promise<Buffer> 
+// Starts the Storybook server in CI mode.
+```
+
+```typescript
+isStorybookCIRunning(): boolean 
+// Checks if the Storybook CI server is running.
+```
+
+```typescript
+stopStorybookCI(): Promise<Buffer> 
+// Stops the Storybook CI server if running.
+```
+
+## 🚀 Advanced Usage
+
+Complex use cases and integration patterns.
+
+### Custom Rollup Plugin
+
+Add a custom Rollup plugin to your build:
+
+```javascript
+// rollup.config.js
+import { getBuild } from '@arpadroid/module';
+
+function myCustomPlugin() {
+    return {
+        name: 'my-plugin',
+        transform(code, id) {
+            // Your transformation logic
+            return code;
+        }
+    };
+}
+
+export default getBuild('my-project', 'uiComponent', {
+    plugins: [myCustomPlugin()],
+    minify: true
+});
+```
+
+### Programmatic Testing
+
+Run tests programmatically from Node.js:
+
+```javascript
+import Project from '@arpadroid/module';
+
+const project = new Project('ui');
+
+// Run tests
+await project.test({
+    jest: true,
+    storybook: true,
+    ci: true
+});
+
+console.log('All tests passed!');
+```
+
+### Environment-Specific Builds
+
+Configure builds based on environment:
+
+```javascript
+// arpadroid.config.js
+const isDev = process.env.NODE_ENV === 'development';
+const isProd = process.env.NODE_ENV === 'production';
+
+export default {
+    buildStyles: true,
+    buildTypes: !isDev, // Skip types in dev for faster builds
+    buildI18n: isProd, // Only bundle i18n in production
+    buildDeps: isProd,
+    minify: isProd
+};
+```
+
+---
+
+## 📦 Package Exports
+
+Available import paths from @arpadroid/module:
+
+```javascript
+// Main exports
+import Project from '@arpadroid/module';
+import { getBuild, isSlim, mergeObjects, isObject } from '@arpadroid/module';
+
+// Logger utilities
+import { log, logStyle } from '@arpadroid/module/logger';
+
+// Storybook utilities
+import { getStorybookContext } from '@arpadroid/module/storybook/test';
+import decorators from '@arpadroid/module/storybook/decorators';
+
+// Configuration presets
+import storybookMain from '@arpadroid/module/storybook/main';
+import storybookPreview from '@arpadroid/module/storybook/preview';
+
+// TypeScript types
+import type { ProjectConfig } from '@arpadroid/module';
+```
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see the [README](README.md) for guidelines.
+
+---
+
+## 📚 Additional Resources
+
+- [CHANGELOG](CHANGELOG.md) - Version history and release notes
+- [README](README.md) - Getting started guide
+- [@arpadroid/style-bun](https://github.com/arpadroid/style-bun) - CSS/SCSS theme bundling
+- [Rollup Documentation](https://rollupjs.org/) - Rollup bundler docs
+- [Storybook Documentation](https://storybook.js.org/) - Storybook docs
+- [Jest Documentation](https://jestjs.io/) - Jest testing framework

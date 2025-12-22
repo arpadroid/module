@@ -1,32 +1,100 @@
-# Arpadroid Module
+<link rel="stylesheet" href="docs-styles.css">
 
-A comprehensive build system and development toolkit for JavaScript/TypeScript projects in the Arpadroid ecosystem. This module provides unified configuration and tooling for Rollup, Storybook, TypeScript, Jest, ESLint, and more.
+# README - **_@arpadroid/module_**
 
-## Features
+![version](https://img.shields.io/badge/version-1.0.0-lightblue)
+![node version](https://img.shields.io/badge/node-%3E%3D16.0.0-blue)
+![npm version](https://img.shields.io/badge/npm-%3E%3D8.0.0-red)
 
-🏗️ **Unified Build System** - Single configuration for all build tools  
-📦 **Rollup Integration** - Optimized bundling with tree-shaking and minification  
+> A comprehensive build system and development toolkit for JavaScript/TypeScript projects in the Arpadroid ecosystem. This module provides unified configuration and tooling for Rollup, Storybook, TypeScript, Jest, ESLint, and more.
+
+**_Resources:_** 📖 [Build System](docs/BUILD.md) / [CLI](docs/CLI.md) / [API](API.md) | 📝[Changelog](docs/CHANGELOG.md) | 🤝 [Contributing](#contributing)
+
+<!--**_Quick Links:_** [Installation](#-installation) | [Quick Start](#-quick-start) | [Configuration](#-configuration) | [File Outputs](#-file-outputs) | [Advanced Usage](#-advanced-usage) | [Dependencies](#-dependencies-included) | [Arpadroid Ecosystem](#-arpadroid-ecosystem)
+-->
+
+## ✨ Features
+
+🏗️ **Unified Build System** - **Single configuration system** for all build tools with sensitive defaults.  
+📦 **Rollup Integration** - **Optimized bundling** with **tree-shaking** and **minification**  
+🧪 **Testing Suite** - **Jest/Storybook/Playwright** integration with **CI/CD support**  
 📚 **Storybook Ready** - Component documentation and testing platform  
-🧪 **Testing Suite** - Jest/Storybook/Playwright integration with CI/CD support  
-📝 **TypeScript Support** - Automatic type generation and compilation  
-🎨 **Style Bundling** - CSS/SCSS processing and optimization  
-🌍 **i18n Support** - Internationalization file bundling  
-🔧 **ESLint Integration** - Code quality and style enforcement  
+📝 **ESLint/TypeScript/JSDoc Support** - Code quality and style enforcement; automatic type compilation.  
+🎨 **Style Bundling** - CSS/SCSS bundling and theme support via **@arpadroid/style-bun**  
+🌍 **i18n Support** - Internationalization file bundling
 📊 **Bundle Analysis** - Size analysis and visualization tools
 
-## Installation
+<div id="installation"></div>
+
+## 📦 Installation
 
 ```bash
 npm install --save-dev @arpadroid/module
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Add Scripts to package.json
+### 1. Create Project Structure
+
+```
+my-project
+|
+├── 📦 package.json
+├── 🔷 tsconfig.json             # TypeScript config (opt)
+│
+└── 🗂️ src
+    │
+    ├── 🚀 index.js              # Main entry point
+    ├── 🔷 types.d.ts            # TypeScript definitions (opt)
+    ├── ⚙️ arpadroid.config.js   # Build config
+    ├── 🌀 rollup.config.mjs     # Custom Rollup config (opt)
+    |
+    ├── 🌐 i18n (opt)
+    │   ├── en.json
+    │   └── es.json
+    |
+    ├── 🧩 components (opt)
+    |    |
+    │    └── 🧩 myComponent
+    |         │
+    │         ├── myComponent.js
+    │         ├── myComponent.stories.js
+    │         │
+    |         ├── 🌐 i18n
+    │         │   ├── myComponent.i18n.en.json
+    │         │   └── myComponent.i18n.es.json
+    │         │
+    │         └── 🎨 styles
+    │             ├── myComponent.default.css
+    │             ├── myComponent.dark.css
+    │             └── myComponent.my-custom-theme.scss
+    |
+    └── 🎨 themes (opt)
+        │
+        ├── 🧰 common
+        │    ├── ⚙️ common.config.json (required)
+        │    ├── _reset.css
+        │    ├── variables/...
+        │    └── mixins/...
+        │
+        ├── 🌞 default
+        │    ├── ⚙️ default.config.json (required)
+        │    ├── default.css
+        │    └── styles/...
+        │
+        ├── 🌙 dark/...
+        ├── 📱 mobile/...
+        └── ✨ my-custom-theme/...
+
+
+```
+
+### 2. Add Scripts to package.json
 
 ```json
 {
     "name": "@arpadroid/my-project",
+    "main": "dist/arpadroid-my-project.js",
     "scripts": {
         "build": "arpadroid-build --minify",
         "dev": "arpadroid-build --storybook=6001 --watch",
@@ -35,42 +103,32 @@ npm install --save-dev @arpadroid/module
 }
 ```
 
-### 2. (Optional) Create Config File
+See [> CLI Reference](docs/CLI.md) to learn how to configure the build via CLI flags.
 
-For project-specific defaults, create `src/arpadroid.config.js`:
+### 3. Create a Config File:
+
+For project-specific defaults, create a file at `src/arpadroid.config.js`, and add some configuration:
 
 ```javascript
 export default {
     buildStyles: true,
     buildTypes: true,
-    minify: true
+    buildI18n: true,
+    minify: false
+    // etc...
 };
 ```
+
+See [> Build Reference](docs/BUILD.md#buildconfigtype) for all configuration options.
 
 Then your scripts become even simpler:
 
 ```json
-{
-    "scripts": {
-        "build": "arpadroid-build",
-        "dev": "arpadroid-build --watch",
-        "test": "arpadroid-test"
-    }
+"scripts": {
+    "build": "arpadroid-build",
+    "dev": "arpadroid-build --watch",
+    "test": "arpadroid-test"
 }
-```
-
-### 3. Create Project Structure
-
-```
-my-project/
-├── src/
-│   ├── index.js              # Main entry point
-│   ├── components/           # Your components
-│   ├── themes/              # Style files (optional)
-│   ├── i18n/                # Translation files (optional)
-│   └── arpadroid.config.js  # Build config (optional)
-├── package.json
-└── tsconfig.json            # TypeScript config (optional)
 ```
 
 ### 4. Build Your Project
@@ -79,75 +137,16 @@ my-project/
 npm run build
 ```
 
-### cmd: **_arpadroid-build_** Options
+## ⚙️ Other Configurations
 
-| Option        | Description                            | Example            |
-| ------------- | -------------------------------------- | ------------------ |
-| `--project`   | Project name (optional, auto-detected) | `--project=ui`     |
-| `--minify`    | Enable minification                    | `--minify`         |
-| `--watch`     | Watch for file changes                 | `--watch`          |
-| `--storybook` | Start Storybook server                 | `--storybook=6001` |
-| `--slim`      | Build without dependencies             | `--slim`           |
-| `--noTypes`   | Skip TypeScript compilation            | `--noTypes`        |
+### Stylesheet Bundling:
 
-### cmd: **_arpadroid-test_** Options
+[@todo]()
 
-| Option        | Description                            | Example          |
-| ------------- | -------------------------------------- | ---------------- |
-| `--project`   | Project name (optional, auto-detected) | `--project=ui`   |
-| `--jest`      | Run Jest unit tests                    | `--jest`         |
-| `--storybook` | Run Storybook visual tests             | `--storybook`    |
-| `--ci`        | CI mode (starts/stops servers)         | `--ci`           |
-| `--watch`     | Watch mode for tests                   | `--watch`        |
-| `--query`     | Filter tests by pattern                | `--query=button` |
+### Internationalization (i18n):
 
-## Configuration
-
-### arpadroid.config.js
-
-Create `src/arpadroid.config.js` to set project defaults:
-
-```javascript
-export default {
-    // Build options
-    buildStyles: true,
-    buildTypes: true,
-    buildI18n: true,
-    buildDeps: true,
-    minify: true,
-
-    // Storybook customization (optional)
-    storybook: {
-        previewHead: () => `<link rel="stylesheet" href="/custom.css" />`,
-        previewBody: () => `<div id="custom-root"></div>`
-    }
-};
-```
-
-### Project Structure Requirements
-
-```javascript
-// src/index.js - Main entry point
-export * from './components/myComponent.js';
-
-// src/arpadroid.config.js - Build configuration (optional)
-export default {
-    buildStyles: true,
-    minify: true
-};
-
-// src/rollup.config.mjs - Custom Rollup config (optional)
-export default [
-  // Custom rollup configurations
-];
-
-// tsconfig.json - TypeScript config (optional)
-{
-  "extends": "./node_modules/@arpadroid/module/src/tsconfig/tsconfig.json"
-}
-```
-
-### Storybook Configuration
+[@todo]()
+### Storybook:
 
 The module provides default Storybook configuration, but you can customize it:
 
@@ -159,7 +158,9 @@ export default {
 };
 ```
 
-### Jest Configuration
+[@todo]()
+
+### Jest:
 
 Default Jest configuration is provided, or customize with:
 
@@ -170,106 +171,13 @@ export default {
 };
 ```
 
-## Advanced Usage
+[@todo]()
 
-### Build Hooks
+## 🧑‍💻 Advanced Usage
 
-```javascript
-// src/rollup.config.mjs - Advanced build customization
-import { getBuild } from '@arpadroid/module';
-import { readFileSync } from 'fs';
-import replace from '@rollup/plugin-replace';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
+For advanced scenarios, you can access the `Project` class directly, see [API Reference](docs/API.md#project-class).
 
-// Get the default build configuration
-const { build, appBuild, Plugins } = getBuild('my-project', 'uiComponent', {
-    buildStyles: true,
-    buildTypes: true,
-    minify: process.env.NODE_ENV === 'production'
-});
-
-// Extend the default plugins with custom functionality
-appBuild.plugins = [
-    ...appBuild.plugins,
-
-    // Environment-specific replacements:
-    replace({
-        preventAssignment: true,
-        values: {
-            __VERSION__: JSON.stringify(process.env.npm_package_version)
-            // Other replacements
-        }
-    }),
-
-    // Copy static assets:
-    Plugins.copy({
-        targets: [
-            {
-                src: 'src/assets/*',
-                dest: 'dist/assets/'
-            }
-        ]
-    })
-    // ...
-];
-
-// Custom external dependencies based on environment
-if (process.env.NODE_ENV === 'development') {
-    appBuild.external = [...appBuild.external, 'react-devtools', '@storybook/addon-devtools'];
-}
-
-// Override output configuration for specific builds
-if (process.env.BUILD_TARGET === 'cdn') {
-    appBuild.output = {
-        ...appBuild.output
-        // ...
-    };
-}
-
-export default build;
-```
-
-For even more advanced scenarios, you can access the Project class directly:
-
-```javascript
-// scripts/custom-build.mjs
-import { Project } from '@arpadroid/module';
-
-const project = new Project('my-project');
-
-// Custom pre-build tasks
-await project.buildDependencies();
-await project.bundleStyles({
-    style_patterns: ['custom/**/*.scss', 'themes/**/*.css']
-});
-
-// Custom build with hooks
-await project.build({
-    minify: true,
-    buildTypes: true,
-    buildStyles: false, // We handled styles above
-
-    // Custom build processing
-    processBuilds: builds => {
-        // Add custom build configurations
-        builds.push({
-            input: 'src/worker.js',
-            output: {
-                file: 'dist/worker.js',
-                format: 'iife'
-            },
-            plugins: [
-                /* worker-specific plugins */
-            ]
-        });
-    }
-});
-
-// Custom post-build tasks
-console.log('✅ Custom build completed');
-```
-
-## File Outputs
+## 📂 File Outputs
 
 After building, your project will have:
 
@@ -279,11 +187,12 @@ dist/
 ├── arpadroid-my-project.js.gz  # Gzipped bundle
 ├── @types/                     # TypeScript definitions
 ├── stats.html                  # Bundle analysis
+├── themes/                     # Compiled styles (if any)
 └── i18n/                       # Internationalization files
 ```
 
-## Integration Examples
-
+<!--
+## 🔌 Integration Examples
 ### UI Component Library
 
 ```json
@@ -312,8 +221,9 @@ dist/
     }
 }
 ```
+-->
 
-## Dependencies Included
+## 📚 Dependencies Included
 
 The module bundles all necessary development dependencies:
 
@@ -350,7 +260,7 @@ The module bundles all necessary development dependencies:
 - **JSDoc** - Documentation generation from code comments
 - **Lit** - Web components library support
 
-## Arpadroid Ecosystem
+## 🌟 Arpadroid Ecosystem
 
 This module is the build foundation for the entire @arpadroid ecosystem of packages:
 
@@ -381,10 +291,18 @@ This module is the build foundation for the entire @arpadroid ecosystem of packa
 
 All @arpadroid modules use this build system for consistent development experience, testing, and deployment across the entire ecosystem.
 
-## License
+<div id="contributing"></div>
+
+## 🤝 Contributing
+
+This project has specific architectural goals. If you'd like to contribute:
+
+1. **[Open an issue](https://github.com/arpadroid/module/issues/new)** describing your proposal
+2. Wait for maintainer feedback before coding
+3. PRs without prior discussion may be closed
+
+**[Bug reports](https://github.com/arpadroid/module/issues/new)** are always welcome!
+
+## 📄 License
 
 MIT License - see LICENSE file for details.
-
-## Contributing
-
-Contributions are welcome! This module is the foundation for all Arpadroid projects.

@@ -1,3 +1,4 @@
+/** @type {import("./types.js").BuildConfigType} */
 const config = {
     buildTypes: true,
     buildStyles: true,
