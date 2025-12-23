@@ -3,7 +3,7 @@
  */
 import { basename } from 'path';
 import fs from 'fs';
-import Project from '../projectBuilder/project.mjs';
+import Project from '../project/project.mjs';
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
 const html = String.raw;

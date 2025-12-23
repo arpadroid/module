@@ -3,8 +3,8 @@
  * @typedef {import('./rollup-builds.types.js').BuildInterface} BuildInterface
  * @typedef {import('rollup').RollupOptions} RollupOptions
  * @typedef {import('rollup').Plugin} RollupPlugin
- * @typedef {import('../../projectBuilder/project.types.js').CompileTypesType} CompileTypesType
- * @typedef {import('../../projectBuilder/project.types.js').CommandArgsType} CommandArgsType
+ * @typedef {import('../../project/project.types.js').CompileTypesType} CompileTypesType
+ * @typedef {import('../../project/project.types.js').CommandArgsType} CommandArgsType
  */
 /* eslint-disable security/detect-non-literal-fs-filename */
 import { mergeObjects } from '../../utils/object.util.js';
@@ -31,7 +31,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import buildStyles from '../plugins/buildStyles.mjs';
 import typescript from 'rollup-plugin-typescript2';
 import { logError } from '../../utils/terminalLogger.mjs';
-import Project from '../../projectBuilder/project.mjs';
+import Project from '../../project/project.mjs';
 
 /** @type {CommandArgsType} */
 const argv = yargs(hideBin(process.argv)).argv || {};
@@ -198,6 +198,10 @@ export function getWatchers(envDeps = [], project) {
     });
 }
 
+//////////////////////////////
+// #region Plugins
+//////////////////////////////
+
 /**
  * Returns the slim build rollup plugins configuration.
  * @param {Project} project
@@ -266,6 +270,8 @@ export function getPlugins(project, config) {
         ...plugins
     ].filter(plugin => plugin !== false);
 }
+
+// #endregion Plugins
 
 /**
  * Returns the rollup output configuration.
@@ -351,11 +357,11 @@ const rollupBuilds = {
 /**
  * Returns the build configuration for the specified project and build.
  * @param {string} projectName
- * @param {'uiComponent' | 'library'} buildType
  * @param {BuildConfigType} config
  * @returns {BuildInterface | Record<string, never>}
  */
-export function getBuild(projectName, buildType, config = {}) {
+export function getBuild(projectName, config = {}) {
+    const { buildType = 'library' } = config;
     const buildFn = rollupBuilds[buildType];
     if (typeof buildFn !== 'function') {
         logError(`Invalid build name: ${buildType}`);

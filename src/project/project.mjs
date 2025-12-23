@@ -1,3 +1,6 @@
+/* eslint-disable security/detect-non-literal-require */
+/* eslint-disable security/detect-non-literal-fs-filename */
+
 /**
  * @typedef {import('../rollup/builds/rollup-builds.types.js').BuildConfigType} BuildConfigType
  * @typedef {import('rollup').RollupOptions} RollupOptions
@@ -6,22 +9,24 @@
  * @typedef {import('./project.types.js').CommandArgsType} CommandArgsType
  */
 
-/* eslint-disable security/detect-non-literal-fs-filename */
-import { rollup, watch as rollupWatch } from 'rollup';
-import { readFileSync, existsSync, writeFileSync, cpSync, rmSync, readdirSync, mkdirSync } from 'fs';
-import alias from '@rollup/plugin-alias';
-import fs from 'fs';
-import path from 'path';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
-import { ThemesBundler } from '@arpadroid/style-bun';
+import path from 'path';
+import fs, { readFileSync, existsSync, writeFileSync, cpSync, rmSync, readdirSync, mkdirSync } from 'fs';
 import { spawn, spawnSync } from 'child_process';
+import { glob } from 'glob';
+
+import { rollup, watch as rollupWatch } from 'rollup';
+import { dts } from 'rollup-plugin-dts';
+import alias from '@rollup/plugin-alias';
+
 import chalk from 'chalk';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
 import ProjectTest from './projectTest.mjs';
-import { glob } from 'glob';
-import { dts } from 'rollup-plugin-dts';
+
+import { ThemesBundler } from '@arpadroid/style-bun';
 import { mergeObjects } from '../utils/object.util.js';
+import { DEPENDENCY_SORT } from './project.util.mjs';
 
 const cwd = process.cwd();
 
@@ -33,28 +38,12 @@ const WATCH = Boolean(argv.watch ?? process.env.watch);
 const STORYBOOK_PORT = argv.storybook ?? process.env.storybook;
 const NO_TYPES = Boolean(argv.noTypes ?? process.env.noTypes);
 const STYLE_PATTERNS = argv['style-patterns'];
-const DEPENDENCY_SORT = [
-    'tools',
-    'style-bun',
-    'module',
-    'i18n',
-    'services',
-    'context',
-    'resources',
-    'ui',
-    'lists',
-    'navigation',
-    'messages',
-    'forms',
-    'gallery',
-    'application'
-];
 const STYLE_SORT = ['ui', 'lists', 'navigation', 'messages', 'form'];
 const VERBOSE = Boolean(argv.verbose ?? process.env.verbose);
 
 class Project {
     ////////////////////////////////
-    // #region INITIALIZATION
+    // #region Initialization
     ////////////////////////////////
     /**
      * Initializes a new project instance.
@@ -71,28 +60,11 @@ class Project {
         this.scripts = this.pkg?.scripts ?? {};
     }
 
-    static _getFileConfig() {
-        const projectConfigPath = cwd + '/src/arpadroid.config.js';
-        if (existsSync(projectConfigPath)) {
-            return require(projectConfigPath).default;
-        }
-        return {};
-    }
+    // #endregion Initialization
 
-    getPackageJson() {
-        return (
-            existsSync(`${this.path}/package.json`) &&
-            JSON.parse(readFileSync(`${this.path}/package.json`, 'utf8'))
-        );
-    }
-
-    /**
-     * Sets the project configuration.
-     * @param {BuildConfigType} config
-     */
-    setConfig(config) {
-        this.config = Object.assign(this.getDefaultConfig(), config);
-    }
+    /////////////////////
+    // #region Get
+    /////////////////////
 
     /**
      * Returns the default project configuration.
@@ -105,17 +77,24 @@ class Project {
         };
     }
 
+    static _getFileConfig(_cwd = cwd) {
+        const projectConfigPath = _cwd + '/src/arpadroid.config.js';
+        if (existsSync(projectConfigPath)) {
+            return require(projectConfigPath).default;
+        }
+        return {};
+    }
+
     async getFileConfig() {
         const configFile = `${this.path}/src/arpadroid.config.js`;
         return existsSync(configFile) ? (await import(configFile)).default : {};
     }
 
-    validate() {
-        if (!existsSync(this.path)) {
-            log.error(`Project ${this.name} does not exist`);
-            return false;
-        }
-        return true;
+    getPackageJson() {
+        return (
+            existsSync(`${this.path}/package.json`) &&
+            JSON.parse(readFileSync(`${this.path}/package.json`, 'utf8'))
+        );
     }
 
     getPath() {
@@ -129,16 +108,8 @@ class Project {
         return cwd;
     }
 
-    // #endregion
-
-    // #region ACCESSORS
-
     getScripts() {
         return this.pkg?.scripts;
-    }
-
-    hasStyles() {
-        return this.getThemes().length > 0;
     }
 
     getThemesPath() {
@@ -180,6 +151,11 @@ class Project {
         return /** @type {string[]} */ (packages.filter(pkg => pkg !== false));
     }
 
+    /**
+     * Returns the build configuration.
+     * @param {BuildConfigType} _config
+     * @returns {Promise<BuildConfigType>}
+     */
     async getBuildConfig(_config = {}) {
         this.fileConfig = (await this.getFileConfig()) || {};
         return mergeObjects(
@@ -196,6 +172,50 @@ class Project {
         );
     }
 
+    /**
+     * Returns the build time in seconds.
+     * @returns {string | false | 0 | undefined}
+     */
+    getBuildSeconds() {
+        return (
+            this.buildEndTime &&
+            this.buildStartTime &&
+            ((this.buildEndTime - this.buildStartTime) / 1000).toFixed(2)
+        );
+    }
+
+    hasStyles() {
+        return this.getThemes().length > 0;
+    }
+
+    // #endregion Get
+
+    ////////////////////
+    // #region Set
+    ////////////////////
+
+    /**
+     * Sets the project configuration.
+     * @param {BuildConfigType} config
+     */
+    setConfig(config) {
+        this.config = Object.assign(this.getDefaultConfig(), config);
+    }
+
+    // #endregion Set
+
+    /////////////////////
+    // #region API
+    ////////////////////
+
+    validate() {
+        if (!existsSync(this.path)) {
+            log.error(`Project ${this.name} does not exist`);
+            return false;
+        }
+        return true;
+    }
+
     test() {
         this.projectTest = new ProjectTest(this);
         return this.projectTest.test();
@@ -203,15 +223,18 @@ class Project {
 
     // #endregion
 
+    ////////////////////////////
     // #region Install
+    ///////////////////////////
+
+    getInstallCmd() {
+        return `cd ${this.path} && rm -rf node_modules && rm package-lock.json && npm install && npm audit fix`;
+    }
+
     async install() {
         log.task(this.name, 'Installing project.');
         spawnSync(this.getInstallCmd(), { shell: true, stdio: 'inherit' });
         return true;
-    }
-
-    getInstallCmd() {
-        return `cd ${this.path} && rm -rf node_modules && rm package-lock.json && npm install && npm audit fix`;
     }
 
     // #endregion Install
@@ -245,6 +268,47 @@ class Project {
         return true;
     }
 
+    /**
+     * Builds the project dependencies.
+     * @param {BuildConfigType} buildConfig
+     * @returns {Promise<void>}
+     */
+    async buildDependencies(buildConfig) {
+        if (buildConfig?.buildDeps !== true) {
+            return;
+        }
+        log.task(this.name, 'Building dependencies.');
+        const projects = this.createDependencyInstances();
+        process.env.arpadroid_slim = 'true';
+
+        const runPromises = async () => {
+            for (const project of projects) {
+                /** @type {BuildConfigType} */
+                const config = {
+                    slim: true,
+                    isDependency: true,
+                    parent: this.name
+                };
+                if (buildConfig.buildTypes === false) {
+                    config.buildTypes = false;
+                }
+                await project.build(config);
+            }
+        };
+        const rv = await runPromises().catch(err => {
+            log.error(`Failed to build ${logStyle.subject(this.name)} dependencies`, err);
+            return Promise.reject(err);
+        });
+        process.env.arpadroid_slim = '';
+        return rv;
+    }
+
+    createDependencyInstances() {
+        return this.getDependencies().map(
+            packageName => new Project(packageName, { path: `${cwd}/node_modules/@arpadroid/${packageName}` })
+        );
+    }
+
     logBuildComplete() {
         log.task(
             this.name,
@@ -253,16 +317,39 @@ class Project {
     }
 
     /**
-     * Returns the build time in seconds.
-     * @returns {string | false | 0 | undefined}
+     * Logs the build process.
+     * @param {BuildConfigType} config
+     * @returns {void}
      */
-    getBuildSeconds() {
-        return (
-            this.buildEndTime &&
-            this.buildStartTime &&
-            ((this.buildEndTime - this.buildStartTime) / 1000).toFixed(2)
-        );
+    logBuild(config) {
+        const pkgName = '@arpadroid/' + this.name;
+        if (!config?.slim) {
+            config.logHeading && log.arpadroid(config.logo);
+            console.log(logStyle.heading(`Building project: ${logStyle.pkg(pkgName)} ...`));
+        } else {
+            log.task(config?.parent ?? this.name, `Building ${logStyle.dep(pkgName)}.`);
+        }
     }
+
+    /**
+     * Cleans up the build directory.
+     * @param {BuildConfigType} config
+     * @returns {Promise<boolean>}
+     */
+    async cleanBuild({ slim }) {
+        !slim && log.task(this.name, 'Cleaning up.');
+        if (existsSync(`${this.path}/dist`)) {
+            rmSync(`${this.path}/dist`, { recursive: true, force: true });
+        }
+        mkdirSync(`${this.path}/dist`, { recursive: true });
+        return true;
+    }
+
+    // #endregion Build
+
+    ///////////////////////////
+    // #region Build Types
+    ///////////////////////////
 
     /**
      * Builds the project types.
@@ -402,54 +489,11 @@ class Project {
         });
     }
 
-    /**
-     * Bundles the i18n files.
-     * @param {BuildConfigType} config
-     * @returns {Promise<boolean>}
-     */
-    async bundleI18n(config) {
-        if (config?.buildI18n !== true) {
-            return true;
-        }
-        const slim = config.slim ?? SLIM;
-        if (slim) return true;
-        const script = `${cwd}/node_modules/@arpadroid/i18n/scripts/compile.mjs`;
-        const scriptExists = existsSync(script);
-        if (scriptExists) {
-            const compiler = await import(script);
-            this.i18nFiles = await compiler.compileI18n(this);
-        }
-        return true;
-    }
+    // #endregion Build Types
 
-    /**
-     * Logs the build process.
-     * @param {BuildConfigType} config
-     * @returns {void}
-     */
-    logBuild(config) {
-        const pkgName = '@arpadroid/' + this.name;
-        if (!config?.slim) {
-            config.logHeading && log.arpadroid(config.logo);
-            console.log(logStyle.heading(`Building project: ${logStyle.pkg(pkgName)} ...`));
-        } else {
-            log.task(config?.parent ?? this.name, `Building ${logStyle.dep(pkgName)}.`);
-        }
-    }
-
-    /**
-     * Cleans up the build directory.
-     * @param {BuildConfigType} config
-     * @returns {Promise<boolean>}
-     */
-    async cleanBuild({ slim }) {
-        !slim && log.task(this.name, 'Cleaning up.');
-        if (existsSync(`${this.path}/dist`)) {
-            rmSync(`${this.path}/dist`, { recursive: true, force: true });
-        }
-        mkdirSync(`${this.path}/dist`, { recursive: true });
-        return true;
-    }
+    /////////////////////////////
+    // #region Storybook
+    /////////////////////////////
 
     /**
      * Runs the storybook.
@@ -475,73 +519,11 @@ class Project {
         return existsSync(projectPath) ? projectPath : arpadroidPath;
     }
 
-    /**
-     * Builds the project dependencies.
-     * @param {BuildConfigType} buildConfig
-     * @returns {Promise<void>}
-     */
-    async buildDependencies(buildConfig) {
-        if (buildConfig?.buildDeps !== true) {
-            return;
-        }
-        log.task(this.name, 'Building dependencies.');
-        const projects = this.createDependencyInstances();
-        process.env.arpadroid_slim = 'true';
+    // #endregion Storybook
 
-        const runPromises = async () => {
-            for (const project of projects) {
-                /** @type {BuildConfigType} */
-                const config = {
-                    slim: true,
-                    isDependency: true,
-                    parent: this.name
-                };
-                if (buildConfig.buildTypes === false) {
-                    config.buildTypes = false;
-                }
-                await project.build(config);
-            }
-        };
-        const rv = await runPromises().catch(err => {
-            log.error(`Failed to build ${logStyle.subject(this.name)} dependencies`, err);
-            return Promise.reject(err);
-        });
-        process.env.arpadroid_slim = '';
-        return rv;
-    }
-
-    /**
-     * Bundles the project styles.
-     * @param {BuildConfigType} config
-     * @returns {Promise<ThemesBundler | boolean>}
-     */
-    async bundleStyles(config = {}) {
-        if (!config.buildStyles) {
-            return true;
-        }
-        !config.slim && log.task(this.name, 'Bundling CSS.');
-        const { path = this.path } = config;
-        const minify = config.minify ?? MINIFY;
-        let { style_patterns = STYLE_PATTERNS ?? [] } = config;
-        if (typeof style_patterns === 'string') {
-            style_patterns = style_patterns.split(',').map(pattern => pattern.trim());
-        }
-        style_patterns = style_patterns.map(pattern => `${this.path}/src/${pattern}`);
-        const bundler = new ThemesBundler({
-            exportPath: path + '/dist/themes',
-            minify,
-            patterns: [path + '/src/components/**/*', ...style_patterns],
-            themes: this.getThemes().map(theme => ({ path: `${this.path}/src/themes/${theme}` }))
-        });
-        await bundler.initialize();
-        return bundler;
-    }
-
-    createDependencyInstances() {
-        return this.getDependencies().map(
-            packageName => new Project(packageName, { path: `${cwd}/node_modules/@arpadroid/${packageName}` })
-        );
-    }
+    /////////////////////////////
+    // #region Rollup
+    /////////////////////////////
 
     /**
      * Bundles the project using rollup.
@@ -635,9 +617,38 @@ class Project {
         this.watcher.on('event', watcherCallback);
     }
 
-    // #endregionq
+    // #endregion Rollup
 
-    // #region BUILD STYLES
+    /////////////////////////////
+    // #region Styles
+    /////////////////////////////
+
+    /**
+     * Bundles the project styles.
+     * @param {BuildConfigType} config
+     * @returns {Promise<ThemesBundler | boolean>}
+     */
+    async bundleStyles(config = {}) {
+        if (!config.buildStyles) {
+            return true;
+        }
+        !config.slim && log.task(this.name, 'Bundling CSS.');
+        const { path = this.path } = config;
+        const minify = config.minify ?? MINIFY;
+        let { style_patterns = STYLE_PATTERNS ?? [] } = config;
+        if (typeof style_patterns === 'string') {
+            style_patterns = style_patterns.split(',').map(pattern => pattern.trim());
+        }
+        style_patterns = style_patterns.map(pattern => `${this.path}/src/${pattern}`);
+        const bundler = new ThemesBundler({
+            exportPath: path + '/dist/themes',
+            minify,
+            patterns: [path + '/src/components/**/*', ...style_patterns],
+            themes: this.getThemes().map(theme => ({ path: `${this.path}/src/themes/${theme}` }))
+        });
+        await bundler.initialize();
+        return bundler;
+    }
 
     /**
      * Builds the project styles.
@@ -655,31 +666,6 @@ class Project {
         if (this.getDependencies().includes('ui')) {
             this.copyUIStyleAssets();
         }
-    }
-
-    getStyleBuildFiles() {
-        if (!this.hasStyles()) {
-            return false;
-        }
-        /** @type {Record<string, string[]>} */
-        const minifiedDeps = {};
-        const stylePkgs = this.getStylePackages();
-        stylePkgs.forEach(dep => {
-            const project = new Project(dep);
-            if (!project.hasStyles()) {
-                return false;
-            }
-            const themes = project.getThemes();
-            themes.forEach(theme => {
-                !minifiedDeps[theme] && (minifiedDeps[theme] = []);
-                minifiedDeps[theme].push(`${project.path}/dist/themes/${theme}/${theme}.min.css`);
-            });
-        });
-        return minifiedDeps;
-    }
-
-    getStylePackages() {
-        return [...this.getDependencies(STYLE_SORT), this.name];
     }
 
     /**
@@ -718,6 +704,31 @@ class Project {
         }
     }
 
+    getStyleBuildFiles() {
+        if (!this.hasStyles()) {
+            return false;
+        }
+        /** @type {Record<string, string[]>} */
+        const minifiedDeps = {};
+        const stylePkgs = this.getStylePackages();
+        stylePkgs.forEach(dep => {
+            const project = new Project(dep);
+            if (!project.hasStyles()) {
+                return false;
+            }
+            const themes = project.getThemes();
+            themes.forEach(theme => {
+                !minifiedDeps[theme] && (minifiedDeps[theme] = []);
+                minifiedDeps[theme].push(`${project.path}/dist/themes/${theme}/${theme}.min.css`);
+            });
+        });
+        return minifiedDeps;
+    }
+
+    getStylePackages() {
+        return [...this.getDependencies(STYLE_SORT), this.name];
+    }
+
     copyUIStyleAssets() {
         const uiPath = `${this.path}/node_modules/@arpadroid/ui`;
         cpSync(`${uiPath}/src/themes/default/fonts`, `${this.path}/dist/themes/default/fonts`, {
@@ -728,7 +739,32 @@ class Project {
         });
     }
 
-    // #endregion
+    // #endregion Styles
+
+    /////////////////////////////
+    // #region i18n
+    /////////////////////////////
+    /**
+     * Bundles the i18n files.
+     * @param {BuildConfigType} config
+     * @returns {Promise<boolean>}
+     */
+    async bundleI18n(config) {
+        if (config?.buildI18n !== true) {
+            return true;
+        }
+        const slim = config.slim ?? SLIM;
+        if (slim) return true;
+        const script = `${cwd}/node_modules/@arpadroid/i18n/scripts/compile.mjs`;
+        const scriptExists = existsSync(script);
+        if (scriptExists) {
+            const compiler = await import(script);
+            this.i18nFiles = await compiler.compileI18n(this);
+        }
+        return true;
+    }
+
+    // #endregion i18n
 }
 
 export default Project;

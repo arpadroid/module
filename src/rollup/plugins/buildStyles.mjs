@@ -1,5 +1,5 @@
 /**
- * @typedef {import('../../projectBuilder/project.mjs').default} Project
+ * @typedef {import('../../project/project.mjs').default} Project
  */
 
 /**

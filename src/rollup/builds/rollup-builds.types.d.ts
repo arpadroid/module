@@ -1,5 +1,5 @@
 import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup';
-import type Project from '../../projectBuilder/project.mjs';
+import type Project from '../../project/project.mjs';
 // import { RollupPlugin } from './rollup-builds.mjs';
 import { Plugin } from 'rollup';
 import { Preview } from '@storybook/web-components';
@@ -29,6 +29,7 @@ export type BuildConfigType = {
     basePath?: string;
     buildDeps?: boolean;
     buildI18n?: boolean;
+    buildType?: 'uiComponent' | 'library';
     buildJS?: boolean;
     buildStyles?: boolean;
     buildTypes?: boolean;

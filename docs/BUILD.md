@@ -1,10 +1,10 @@
-# 🔧 Build System Reference - **_`@arpadroid/module`_**
+# 🛠️ Build System Reference - **_`@arpadroid/module`_**
 
-**_Quick Links:_** &nbsp;&nbsp; [🛠️ Build System](#build-system) &nbsp;|&nbsp;
+> **_Links:_** &nbsp;&nbsp; [🛠️ Build System](#build-system) &nbsp;|&nbsp;
 [⚙️ Build Configuration](#buildconfigtype) &nbsp;|&nbsp;
 [📤 Build Interface](#buildinterface)
 
-**_Resources:_** &nbsp;&nbsp; 📖 [CLI](CLI.md) / [API](API.md) &nbsp;|&nbsp; 📝[Changelog](CHANGELOG.md) &nbsp;|&nbsp; 🤝 [Contributing](../README.md#contributing)
+> **_Resources:_** &nbsp;&nbsp; 📖 [CLI](CLI.md) / [API](API.md) &nbsp;|&nbsp; 📝[Changelog](CHANGELOG.md) &nbsp;|&nbsp; 🤝 [Contributing](../README.md#contributing)
 
 ## ✨ Features
 
@@ -14,6 +14,8 @@
 - **Storybook** / **Jest** / **Playwright** integrations;
 - Pre-defined **Eslint** and **Typescript** configurations.
 - **Fully customizable** via the provided options.
+
+<br/>
 
 <div id="build-system"></div>
 
@@ -90,7 +92,7 @@ The build system uses `Rollup` and exposes the `getBuild()` function to get the 
 import { getBuild } from '@arpadroid/module';
 import myPlugin from './plugins/my-plugin.js';
 
-const { build } = getBuild('forms', 'uiComponent', {
+const { build } = getBuild('forms', {
     /**
      * We can also override default config options here.
      * The order of precedence is:
@@ -99,6 +101,7 @@ const { build } = getBuild('forms', 'uiComponent', {
      * 3. arpadroid.config.js
      */
     minify: true,
+    buildType: 'uiComponent',
     buildTypes: true,
     plugins: [...plugins, myPlugin()],
     external: ['lodash'],

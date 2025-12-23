@@ -1,14 +1,16 @@
 <link rel="stylesheet" href="docs-styles.css">
 
-# README - **_@arpadroid/module_**
+# README - **_`@arpadroid/module`_**
 
 ![version](https://img.shields.io/badge/version-1.0.0-lightblue)
-![node version](https://img.shields.io/badge/node-%3E%3D16.0.0-blue)
-![npm version](https://img.shields.io/badge/npm-%3E%3D8.0.0-red)
+![node version](https://img.shields.io/badge/node-%3E%3D16.0.0-lightyellow)
+![npm version](https://img.shields.io/badge/npm-%3E%3D8.0.0-pink)
+
+>**_Links:_** 📖 [Build System](docs/BUILD.md) / [CLI](docs/CLI.md) / [API](API.md) | 📝[Changelog](docs/CHANGELOG.md) | 🤝 [Contributing](#contributing)
 
 > A comprehensive build system and development toolkit for JavaScript/TypeScript projects in the Arpadroid ecosystem. This module provides unified configuration and tooling for Rollup, Storybook, TypeScript, Jest, ESLint, and more.
 
-**_Resources:_** 📖 [Build System](docs/BUILD.md) / [CLI](docs/CLI.md) / [API](API.md) | 📝[Changelog](docs/CHANGELOG.md) | 🤝 [Contributing](#contributing)
+
 
 <!--**_Quick Links:_** [Installation](#-installation) | [Quick Start](#-quick-start) | [Configuration](#-configuration) | [File Outputs](#-file-outputs) | [Advanced Usage](#-advanced-usage) | [Dependencies](#-dependencies-included) | [Arpadroid Ecosystem](#-arpadroid-ecosystem)
 -->
@@ -103,7 +105,7 @@ my-project
 }
 ```
 
-See [> CLI Reference](docs/CLI.md) to learn how to configure the build via CLI flags.
+See [`> CLI Reference`](docs/CLI.md) to learn how to configure the build via CLI flags.
 
 ### 3. Create a Config File:
 
@@ -114,12 +116,13 @@ export default {
     buildStyles: true,
     buildTypes: true,
     buildI18n: true,
-    minify: false
+    minify: false,
+    buildType: 'uiComponent'
     // etc...
 };
 ```
 
-See [> Build Reference](docs/BUILD.md#buildconfigtype) for all configuration options.
+See [`> Build Reference`](docs/BUILD.md#buildconfigtype) for all configuration options.
 
 Then your scripts become even simpler:
 
@@ -137,7 +140,14 @@ Then your scripts become even simpler:
 npm run build
 ```
 
+## ⚙️ Build Types
+
+
+
+
+
 ## ⚙️ Other Configurations
+
 
 ### Stylesheet Bundling:
 

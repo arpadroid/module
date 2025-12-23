@@ -48,7 +48,7 @@ First pre-release version of @arpadroid/module - a comprehensive build system an
 
 ### 🎯 Project Structure
 
-- **Build System:** `src/projectBuilder/` - Project and ProjectTest classes
+- **Build System:** `src/project/` - Project and ProjectTest classes
 - **Rollup Configuration:** `src/rollup/` - Build configurations and custom plugins
 - **Storybook Setup:** `src/storybook/` - Main config, preview, decorators, layouts
 - **Jest Configuration:** `src/jest/` - Test configuration presets

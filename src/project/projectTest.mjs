@@ -24,6 +24,11 @@ const BROWSERS = argv.browsers ?? process.env.browsers ?? 'webkit chromium firef
 const PORT = argv.port ?? process.env.port ?? 6006;
 
 class ProjectTest {
+
+    //////////////////////////////
+    // #region Initialization
+    /////////////////////////////
+
     testResponse = { success: true, message: '', payloads: [] };
 
     /**
@@ -42,6 +47,12 @@ class ProjectTest {
         this.httpServer = modulePath + '/node_modules/http-server/bin/http-server';
     }
 
+    // #endregion
+
+    ////////////////////////////
+    // #region Get/Set
+    ///////////////////////////
+
     setConfig(config = {}) {
         this.config = mergeObjects(this.getDefaultConfig(), config);
     }
@@ -49,6 +60,12 @@ class ProjectTest {
     getDefaultConfig() {
         return { storybook: STORYBOOK, jest: JEST, ci: CI, query: QUERY, browsers: BROWSERS, build: BUILD };
     }
+
+    // #endregion Get/Set
+
+    ////////////////////////////
+    // #region Tests
+    ///////////////////////////
 
     async test(_config = {}) {
         try {
@@ -100,6 +117,12 @@ class ProjectTest {
         return this.testResponse;
     }
 
+    // endregion Tests
+
+    ////////////////////////////
+    // #region Test NodeJS
+    ///////////////////////////
+
     /**
      * Tests the node.js scripts.
      * @param {TestArgsType} _config
@@ -115,6 +138,12 @@ class ProjectTest {
         return execSync(script, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
     }
 
+    // #endregion Test NodeJS
+
+    ////////////////////////////
+    // #region Test Jest
+    ///////////////////////////
+
     /**
      * Runs the jest tests.
      * @param {TestArgsType} _config
@@ -122,7 +151,7 @@ class ProjectTest {
      */
     async testJest(_config) {
         const jest = this.project.getModulePath() + '/node_modules/jest/bin/jest.js';
-        const script = `node --experimental-vm-modules ${jest} --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
+        const script = `node --experimental-vm-modules ${jest} --coverage --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
         log.task(this.project.name, 'running jest tests');
         return execSync(script, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
     }
@@ -140,6 +169,12 @@ class ProjectTest {
         }
         return `${path}/node_modules/@arpadroid/module/src/jest/jest.config.mjs`;
     }
+
+    // #endregion Test Jest
+
+    ////////////////////////////
+    // #region Test Storybook
+    ///////////////////////////
 
     async testStorybook(config = this.config) {
         const watch = WATCH ? ' --watch ' : '';
@@ -197,6 +232,7 @@ class ProjectTest {
             cwd: this.project.path
         });
     }
+    // #endregion Test Storybook
 }
 
 export default ProjectTest;

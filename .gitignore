@@ -1,5 +1,6 @@
 junit.xml
 /node_modules
+/coverage
 bundle-stats.html
 /dist
 .tsbuildinfo

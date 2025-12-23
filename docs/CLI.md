@@ -4,7 +4,7 @@
 
 > Command-line interface for building and testing projects.
 
-## 📦 `arpadroid-build`
+## 📦 `$ arpadroid-build`
 
 **Build a project with optional watch mode and Storybook server.**
 
@@ -40,7 +40,7 @@ arpadroid-build [options]
 
 <br/>
 
-## 🧪 `arpadroid-test`
+## 🧪 `$ arpadroid-test`
 
 **Run tests (Jest / Storybook / Playwright) for a project.**
 

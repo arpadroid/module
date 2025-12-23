@@ -2,7 +2,7 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import Project from '../src/projectBuilder/project.mjs';
+import Project from '../src/project/project.mjs';
 const argv = yargs(hideBin(process.argv)).argv;
 const cwd = process.cwd();
 

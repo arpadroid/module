@@ -11,7 +11,7 @@ import {
     getExternal,
     getBuild
 } from './rollup-builds.mjs';
-import Project from '../../projectBuilder/project.mjs';
+import Project from '../../project/project.mjs';
 import path from 'path';
 
 const TEST_PROJECT_PATH = path.join(process.cwd(), 'src/test/test-project');
@@ -146,29 +146,33 @@ describe('rollup-builds', () => {
         const baseConfig = {
             path: TEST_PROJECT_PATH,
             buildTypes: false,
-            buildStyles: false
+            buildStyles: false,
+            buildType: 'uiComponent'
         };
 
         it('should return valid build config for library and uiComponent', () => {
-            const lib = getBuild('test-project', 'library', baseConfig);
+            const lib = getBuild('test-project', baseConfig);
             expect(lib.build).toBeDefined();
             expect(lib.appBuild).toBeDefined();
             expect(lib.project).toBeInstanceOf(Project);
             expect(lib.Plugins).toBeDefined();
             expect(lib.output.format).toBe('esm');
             
-            const ui = getBuild('test-project', 'uiComponent', baseConfig);
+            const ui = getBuild('test-project', baseConfig);
             expect(ui.build).toBeDefined();
             expect(Array.isArray(ui.build)).toBe(true);
             expect(ui.plugins).toBeDefined();
         });
 
         it('should return empty object for invalid build name', () => {
-            expect(getBuild('test-project', 'invalid-build', baseConfig)).toEqual({});
+            expect(getBuild('test-project', {
+                ...baseConfig,
+                buildType: 'invalidBuildName'
+            })).toEqual({});
         });
 
         it('should configure project and plugins correctly', () => {
-            const result = getBuild('test-project', 'library', baseConfig);
+            const result = getBuild('test-project', baseConfig);
             
             expect(result.project.name).toBe('test-project');
             expect(result.Plugins.terser).toBeDefined();
@@ -178,7 +182,7 @@ describe('rollup-builds', () => {
 
         it('should handle slim mode and custom config', () => {
             process.env.arpadroid_slim = 'true';
-            const result = getBuild('test-project', 'library', {
+            const result = getBuild('test-project', {
                 ...baseConfig,
                 minify: true,
                 custom: 'test'
@@ -192,7 +196,7 @@ describe('rollup-builds', () => {
         it('should call processBuilds callback only when not slim', () => {
             let called = false;
             
-            getBuild('test-project', 'library', {
+            getBuild('test-project', {
                 ...baseConfig,
                 slim: false,
                 processBuilds: () => { called = true; }
@@ -201,7 +205,7 @@ describe('rollup-builds', () => {
             
             called = false;
             process.env.arpadroid_slim = 'true';
-            getBuild('test-project', 'library', {
+            getBuild('test-project', {
                 ...baseConfig,
                 processBuilds: () => { called = true; }
             });
@@ -211,7 +215,8 @@ describe('rollup-builds', () => {
 
     describe('integration', () => {
         it('should create valid rollup config with complex options', () => {
-            const result = getBuild('test-project', 'library', {
+            const result = getBuild('test-project', {
+                buildType: 'library',
                 path: TEST_PROJECT_PATH,
                 deps: ['ui', 'tools'],
                 external: ['services'],
