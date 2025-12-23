@@ -140,12 +140,6 @@ Then your scripts become even simpler:
 npm run build
 ```
 
-## ⚙️ Build Types
-
-
-
-
-
 ## ⚙️ Other Configurations
 
 

@@ -1,7 +1,7 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
- * @typedef {import('./project.mjs').default} Project
- * @typedef {import('./project.types.js').TestArgsType} TestArgsType
+ * @typedef {import('../project/project.mjs').default} Project
+ * @typedef {import('../project/project.types.js').TestArgsType} TestArgsType
  */
 /* eslint-disable security/detect-non-literal-regexp */
 import { execSync } from 'child_process';

@@ -22,7 +22,7 @@ import alias from '@rollup/plugin-alias';
 
 import chalk from 'chalk';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
-import ProjectTest from './projectTest.mjs';
+import ProjectTest from '../projectTest/projectTest.mjs';
 
 import { ThemesBundler } from '@arpadroid/style-bun';
 import { mergeObjects } from '../utils/object.util.js';
