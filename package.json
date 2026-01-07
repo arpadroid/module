@@ -109,6 +109,7 @@
         "@storybook/types": "^8.6.4",
         "@storybook/web-components": "^8.6.4",
         "@storybook/web-components-webpack5": "^8.6.4",
+        "@types/jest": "^30.0.0",
         "@types/react": "^19.0.10",
         "@types/react-dom": "^19.0.4",
         "@types/react-router": "^5.1.20",
@@ -160,6 +161,7 @@
         "rollup-plugin-typescript2": "^0.36.0",
         "rollup-plugin-visualizer": "^5.14.0",
         "rollup-plugin-watch": "1.0.4",
+        "sass": "^1.97.1",
         "storybook": "^8.6.4",
         "typescript": "^5.8.2",
         "yargs": "^17.7.2"

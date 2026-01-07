@@ -2,7 +2,3 @@
     --primary-color: #0066cc;
     --secondary-color: #6c757d;
 }
-
-.test-component {
-    color: var(--primary-color);
-}

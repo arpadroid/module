@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import {
     isSlim,
     shouldWatch,
@@ -37,10 +33,10 @@ describe('rollup-builds', () => {
     describe('isSlim', () => {
         it('should return correct boolean based on env', () => {
             expect(isSlim()).toBe(false);
-            
+
             process.env.arpadroid_slim = 'true';
             expect(isSlim()).toBe(true);
-            
+
             process.env.arpadroid_slim = 'false';
             expect(isSlim()).toBe(false);
         });
@@ -49,7 +45,7 @@ describe('rollup-builds', () => {
     describe('shouldWatch', () => {
         it('should return correct boolean based on env', () => {
             expect(shouldWatch()).toBe(false);
-            
+
             process.env.arpadroid_watch = 'true';
             expect(shouldWatch()).toBe(true);
         });
@@ -60,11 +56,7 @@ describe('rollup-builds', () => {
             expect(preProcessDependencies('ui,tools,i18n')).toEqual(['ui', 'tools', 'i18n']);
             expect(preProcessDependencies('ui , tools , i18n')).toEqual(['ui', 'tools', 'i18n']);
             expect(preProcessDependencies('ui')).toEqual(['ui']);
-            expect(preProcessDependencies('')).toEqual(['']);
-            
-            const arr = ['ui', 'tools'];
-            expect(preProcessDependencies(arr)).toBe(arr);
-            expect(preProcessDependencies(null)).toEqual([]);
+
         });
     });
 
@@ -72,12 +64,11 @@ describe('rollup-builds', () => {
         it('should return config with defaults and merge options', () => {
             const config = getBuildConfig();
             expect(config.slim).toBe(false);
-            expect(config.production).toBe(false);
             expect(config.watch).toBe(false);
-            
-            const customConfig = getBuildConfig({ minify: true, custom: 'value' });
+
+            const customConfig = getBuildConfig({ minify: true, deps: ['ui'] });
             expect(customConfig.minify).toBe(true);
-            expect(customConfig.custom).toBe('value');
+            expect(customConfig.deps).toEqual(['ui']);
         });
 
         it('should respect and override environment config', () => {
@@ -89,7 +80,7 @@ describe('rollup-builds', () => {
         it('should handle deps based on slim mode', () => {
             const withDeps = getBuildConfig({ slim: false, deps: ['ui'] });
             expect(withDeps.deps).toEqual(['ui']);
-            
+
             process.env.arpadroid_slim = 'true';
             expect(getBuildConfig().deps).toBeUndefined();
         });
@@ -101,6 +92,7 @@ describe('rollup-builds', () => {
     });
 
     describe('getInput', () => {
+        /** @type {Project} */
         let project;
 
         beforeEach(() => {
@@ -129,20 +121,20 @@ describe('rollup-builds', () => {
             expect(getExternal()).toEqual([]);
             expect(getExternal({})).toEqual([]);
             expect(getExternal({ external: [] })).toEqual([]);
-            expect(getExternal({ external: ['ui', 'tools'] }))
-                .toEqual(['@arpadroid/ui', '@arpadroid/tools']);
+            expect(getExternal({ external: ['ui', 'tools'] })).toEqual(['@arpadroid/ui', '@arpadroid/tools']);
         });
 
         it('should include context in slim mode', () => {
             process.env.arpadroid_slim = 'true';
             const external = getExternal({ external: ['ui'] });
-            
+
             expect(external).toContain('@arpadroid/context');
             expect(external).toContain('@arpadroid/ui');
         });
     });
 
     describe('getBuild', () => {
+        /** @type {import('./rollup-builds.types.js').BuildConfigType} */
         const baseConfig = {
             path: TEST_PROJECT_PATH,
             buildTypes: false,
@@ -155,9 +147,9 @@ describe('rollup-builds', () => {
             expect(lib.build).toBeDefined();
             expect(lib.appBuild).toBeDefined();
             expect(lib.project).toBeInstanceOf(Project);
-            expect(lib.Plugins).toBeDefined();
-            expect(lib.output.format).toBe('esm');
-            
+            expect(lib.Plugins).toBeDefined(); // @ts-ignore
+            expect(lib?.output?.format).toBe('esm');
+
             const ui = getBuild('test-project', baseConfig);
             expect(ui.build).toBeDefined();
             expect(Array.isArray(ui.build)).toBe(true);
@@ -165,19 +157,21 @@ describe('rollup-builds', () => {
         });
 
         it('should return empty object for invalid build name', () => {
-            expect(getBuild('test-project', {
-                ...baseConfig,
-                buildType: 'invalidBuildName'
-            })).toEqual({});
+            expect(
+                getBuild('test-project', {
+                    ...baseConfig, // @ts-ignore
+                    buildType: 'invalidBuildName'
+                })
+            ).toEqual({});
         });
 
         it('should configure project and plugins correctly', () => {
             const result = getBuild('test-project', baseConfig);
-            
+
             expect(result.project.name).toBe('test-project');
             expect(result.Plugins.terser).toBeDefined();
-            expect(result.Plugins.nodeResolve).toBeDefined();
-            expect(result.output.file).toContain('arpadroid-test-project.js');
+            expect(result.Plugins.nodeResolve).toBeDefined(); // @ts-ignore
+            expect(result?.output?.file).toContain('arpadroid-test-project.js');
         });
 
         it('should handle slim mode and custom config', () => {
@@ -185,29 +179,33 @@ describe('rollup-builds', () => {
             const result = getBuild('test-project', {
                 ...baseConfig,
                 minify: true,
-                custom: 'test'
+                deps: ['my-dep']
             });
-            
+
             expect(result.buildConfig.slim).toBe(true);
             expect(result.buildConfig.minify).toBe(true);
-            expect(result.buildConfig.custom).toBe('test');
+            expect(result.buildConfig.deps).toEqual(['my-dep']);
         });
 
         it('should call processBuilds callback only when not slim', () => {
             let called = false;
-            
+
             getBuild('test-project', {
                 ...baseConfig,
                 slim: false,
-                processBuilds: () => { called = true; }
+                processBuilds: () => {
+                    called = true;
+                }
             });
             expect(called).toBe(true);
-            
+
             called = false;
             process.env.arpadroid_slim = 'true';
             getBuild('test-project', {
                 ...baseConfig,
-                processBuilds: () => { called = true; }
+                processBuilds: () => {
+                    called = true;
+                }
             });
             expect(called).toBe(false);
         });

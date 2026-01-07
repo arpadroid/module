@@ -1,10 +1,26 @@
 {
     "extends": "./src/tsconfig/nodenext/tsconfig.json",
     "compilerOptions": {
+        "allowJs": true,
+        "checkJs": true,
+        "declaration": true,
+        "declarationMap": true,
+        "emitDeclarationOnly": true,
+        "esModuleInterop": true,
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "resolveJsonModule": true,
+        "strict": true,
+        "target": "ESNext",
+        "types": ["jest", "node"],
+        "typeRoots": ["./node_modules/@types"],
+        "useDefineForClassFields": false,
+        "strictPropertyInitialization": false,
         "rootDir": "./src",
-        "outDir": "./.tmp/.types",
-        "jsx": "react"
+        "outDir": "./dist/@types",
+        "jsx": "react",
+        "skipLibCheck": true
     },
     "include": ["src/**/*"],
-    "exclude": ["./node_modules", "dist", "**/*.test.ts", "**/*.test.js", "./dist/@types"]
+    "exclude": ["./node_modules", "dist", "./dist/@types"]
 }

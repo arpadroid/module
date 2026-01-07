@@ -1,14 +1,9 @@
-/**
- * @jest-environment node
- */
-
 import ProjectTest from './projectTest.mjs';
 import Project from '../project/project.mjs';
-import path from 'path';
-
-const TEST_PROJECT_PATH = path.join(process.cwd(), 'src/test/test-project');
+import { TEST_PROJECT_PATH } from '../project/tests/projectTest.util.mjs';
 
 describe('ProjectTest', () => {
+    /** @type {Project} */
     let project;
     let projectTest;
 
@@ -41,8 +36,8 @@ describe('ProjectTest', () => {
             const customConfig = { storybook: true, jest: false };
             projectTest = new ProjectTest(project, customConfig);
 
-            expect(projectTest.config.storybook).toBe(true);
-            expect(projectTest.config.jest).toBe(false);
+            expect(projectTest?.config?.storybook).toBe(true);
+            expect(projectTest?.config?.jest).toBe(false);
         });
     });
 
@@ -51,7 +46,7 @@ describe('ProjectTest', () => {
             projectTest = new ProjectTest(project);
             projectTest.setConfig({ jest: true });
 
-            expect(projectTest.config.jest).toBe(true);
+            expect(projectTest?.config?.jest).toBe(true);
             expect(projectTest.config).toHaveProperty('storybook');
             expect(projectTest.config).toHaveProperty('ci');
         });
@@ -75,7 +70,7 @@ describe('ProjectTest', () => {
         it('should return a path containing jest config', () => {
             projectTest = new ProjectTest(project);
             const configPath = projectTest.getJestConfigLocation();
-            
+
             expect(configPath).toContain('jest.config');
             expect(typeof configPath).toBe('string');
         });

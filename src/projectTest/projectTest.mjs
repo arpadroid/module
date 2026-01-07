@@ -1,7 +1,7 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('../project/project.mjs').default} Project
- * @typedef {import('../project/project.types.js').TestArgsType} TestArgsType
+ * @typedef {import('../project/project.types.js').ProjectTestConfigType} ProjectTestConfigType
  */
 /* eslint-disable security/detect-non-literal-regexp */
 import { execSync } from 'child_process';
@@ -12,7 +12,7 @@ import yargs from 'yargs';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
 import { mergeObjects } from '../utils/object.util.js';
 
-/** @type {TestArgsType} */
+/** @type {ProjectTestConfigType} */
 const argv = yargs(hideBin(process.argv)).argv;
 const CI = Boolean(argv.ci ?? process.env.ci);
 const WATCH = Boolean(argv.watch ?? process.env.watch);
@@ -24,7 +24,6 @@ const BROWSERS = argv.browsers ?? process.env.browsers ?? 'webkit chromium firef
 const PORT = argv.port ?? process.env.port ?? 6006;
 
 class ProjectTest {
-
     //////////////////////////////
     // #region Initialization
     /////////////////////////////
@@ -34,7 +33,7 @@ class ProjectTest {
     /**
      * Creates a new ProjectTest instance.
      * @param {Project} project
-     * @param {TestArgsType} [config]
+     * @param {ProjectTestConfigType} [config]
      */
     constructor(project, config = {}) {
         /** @type {Project} */
@@ -67,6 +66,11 @@ class ProjectTest {
     // #region Tests
     ///////////////////////////
 
+    /**
+     * Tests the project.
+     * @param {ProjectTestConfigType} [_config]
+     * @returns {Promise<boolean | unknown>}
+     */
     async test(_config = {}) {
         try {
             await this.runTest(_config);
@@ -82,11 +86,11 @@ class ProjectTest {
 
     /**
      * Runs the tests.
-     * @param {TestArgsType} [_config]
+     * @param {ProjectTestConfigType} [_config]
      * @returns {Promise<boolean | unknown>}
      */
     async runTest(_config = {}) {
-        /** @type {TestArgsType} */
+        /** @type {ProjectTestConfigType} */
         const config = mergeObjects(this.config, _config);
         const buildConfig = await this.project.getBuildConfig();
         log.arpadroid(buildConfig?.logo);
@@ -125,7 +129,7 @@ class ProjectTest {
 
     /**
      * Tests the node.js scripts.
-     * @param {TestArgsType} _config
+     * @param {ProjectTestConfigType} _config
      * @returns {Promise<boolean | unknown>}
      */
     async testNodeJS(_config) {
@@ -146,12 +150,14 @@ class ProjectTest {
 
     /**
      * Runs the jest tests.
-     * @param {TestArgsType} _config
+     * @param {ProjectTestConfigType} _config
      * @returns {Promise<Buffer | string>}
      */
     async testJest(_config) {
-        const jest = this.project.getModulePath() + '/node_modules/jest/bin/jest.js';
-        const script = `node --experimental-vm-modules ${jest} --coverage --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
+        const binary = this.project.getModulePath() + '/node_modules/jest/bin/jest.js';
+        let script = `node --experimental-vm-modules ${binary} --coverage --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
+        QUERY && (script += ` --testNamePattern="${QUERY}"`);
+        WATCH && (script += ' --watch');
         log.task(this.project.name, 'running jest tests');
         return execSync(script, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
     }

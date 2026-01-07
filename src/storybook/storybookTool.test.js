@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import {
     getStoryContext,
     setStoryContext,
@@ -21,14 +25,15 @@ describe('storybookTool', () => {
             const ctx1 = getStoryContext('story-1');
             expect(ctx1).toEqual({});
 
-            ctx1.testData = 'value';
+            ctx1 && (ctx1.testData = 'value');
             expect(getStoryContext('story-1')).toBe(ctx1);
-            expect(getStoryContext('story-1').testData).toBe('value');
+            expect(getStoryContext('story-1')?.testData).toBe('value');
 
             // Separate contexts for different stories
-            getStoryContext('story-2').data = 'second';
-            expect(getStoryContext('story-1').testData).toBe('value');
-            expect(getStoryContext('story-2').data).toBe('second');
+            const ctx2 = getStoryContext('story-2');
+            if (ctx2) ctx2.data = 'second';
+            expect(getStoryContext('story-1')?.testData).toBe('value');
+            expect(getStoryContext('story-2')?.data).toBe('second');
         });
     });
 
@@ -40,7 +45,7 @@ describe('storybookTool', () => {
 
             setStoryContext('story-1', { new: 'data' });
             expect(getStoryContext('story-1')).toEqual({ new: 'data' });
-            expect(getStoryContext('story-1').key).toBeUndefined();
+            expect(getStoryContext('story-1')?.key).toBeUndefined();
 
             // Handle empty and complex objects
             setStoryContext('story-2', {});

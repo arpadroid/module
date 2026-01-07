@@ -4,7 +4,7 @@
  * @typedef {import('rollup').RollupOptions} RollupOptions
  * @typedef {import('rollup').Plugin} RollupPlugin
  * @typedef {import('../../project/project.types.js').CompileTypesType} CompileTypesType
- * @typedef {import('../../project/project.types.js').CommandArgsType} CommandArgsType
+ * @typedef {import('../../project/project.types.js').ProjectCliArgsType} ProjectCliArgsType
  */
 /* eslint-disable security/detect-non-literal-fs-filename */
 import { mergeObjects } from '../../utils/object.util.js';
@@ -33,7 +33,7 @@ import typescript from 'rollup-plugin-typescript2';
 import { logError } from '../../utils/terminalLogger.mjs';
 import Project from '../../project/project.mjs';
 
-/** @type {CommandArgsType} */
+/** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv || {};
 const cwd = process.cwd();
 const DEPS = process.env.deps ?? argv?.deps ?? '';
@@ -143,8 +143,7 @@ export function getInput(project, config = {}) {
     const rv = [entry];
     deps.forEach(dep => {
         const depPath = path.join('node_modules', '@arpadroid', dep, 'dist', `arpadroid-${dep}.js`);
-        const location = path.join(project.path, depPath);
-        if (fs.existsSync(location)) {
+        if (project.path && fs.existsSync(path.join(project.path, depPath))) {
             rv.push(depPath);
         } else {
             logError(`Dependency ${dep} not found`, { depPath });

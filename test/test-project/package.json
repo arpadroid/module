@@ -1,0 +1,22 @@
+{
+    "name": "@arpadroid/test-project",
+    "version": "1.0.0",
+    "description": "Test project for unit testing",
+    "type": "module",
+    "main": "src/index.js",
+    "scripts": {
+        "build": "arpadroid-build --minify",
+        "dev": "arpadroid-build --watch --storybook=6101",
+        "test": "arpadroid-test --storybook --jest --port=6101",
+        "clean": "rm -rf ./dist ./node_modules package-lock.json"
+    },
+    "peerDependencies": {
+        "@arpadroid/ui": "file:../../../ui",
+        "@arpadroid/tools": "file:../../../tools"
+    },
+    "devDependencies": {
+        "@arpadroid/module": "file:../../",
+        "@babel/core": "^7.23.9",
+        "@babel/preset-env": "^7.23.9"
+    }
+}

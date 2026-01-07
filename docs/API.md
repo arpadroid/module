@@ -315,13 +315,13 @@ await tester.test();
 - `project`: `Project`  
    Project instance to test (required)
 
-- `config`: `TestArgsType`  
+- `config`: `ProjectTestConfigType`  
    Optional test configuration object
 
 ### 🛠️ Methods
 
 - ```typescript
-  getDefaultConfig(): TestArgsType
+  getDefaultConfig(): ProjectTestConfigType
   ```
 
     Returns the default test configuration used by ProjectTest.
@@ -339,13 +339,13 @@ await tester.test();
     Checks if the Storybook CI server is running.
 
 - ```typescript
-  runTest(config?: TestArgsType): Promise<boolean | unknown>
+  runTest(config?: ProjectTestConfigType): Promise<boolean | unknown>
   ```
 
     Runs the main test routine, orchestrating build and test execution.
 
 - ```typescript
-  setConfig(config: TestArgsType): void
+  setConfig(config: ProjectTestConfigType): void
   ```
 
     Applies and merges the provided test configuration with defaults.
@@ -363,25 +363,25 @@ await tester.test();
     Stops the Storybook CI server if running.
 
 - ```typescript
-  test(config?: TestArgsType): Promise<object>
+  test(config?: ProjectTestConfigType): Promise<object>
   ```
 
     Runs all configured tests (Node.js, Jest, Storybook) and returns a result object.
 
 - ```typescript
-  testJest(config: TestArgsType): Promise<Buffer | string>
+  testJest(config: ProjectTestConfigType): Promise<Buffer | string>
   ```
 
     Runs Jest tests if configured.
 
 - ```typescript
-  testNodeJS(config: TestArgsType): Promise<boolean | unknown>
+  testNodeJS(config: ProjectTestConfigType): Promise<boolean | unknown>
   ```
 
     Runs Node.js tests if present.
 
 - ```typescript
-  testStorybook(config?: TestArgsType): Promise<void>
+  testStorybook(config?: ProjectTestConfigType): Promise<void>
   ```
     Runs Storybook tests if configured.
 

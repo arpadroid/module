@@ -6,7 +6,7 @@
  * @typedef {import('rollup').RollupOptions} RollupOptions
  * @typedef {import('rollup').InputOption} InputOption
  * @typedef {import('./project.types.js').CompileTypesType} CompileTypesType
- * @typedef {import('./project.types.js').CommandArgsType} CommandArgsType
+ * @typedef {import('./project.types.js').ProjectCliArgsType} ProjectCliArgsType
  */
 
 import { hideBin } from 'yargs/helpers';
@@ -29,17 +29,17 @@ import { mergeObjects } from '../utils/object.util.js';
 import { DEPENDENCY_SORT } from './project.util.mjs';
 
 const cwd = process.cwd();
-
-/** @type {CommandArgsType} */
+/** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv;
-const SLIM = Boolean(argv.slim ?? process.env.slim);
-const MINIFY = Boolean(argv.minify ?? process.env.minify);
-const WATCH = Boolean(argv.watch ?? process.env.watch);
-const STORYBOOK_PORT = argv.storybook ?? process.env.storybook;
-const NO_TYPES = Boolean(argv.noTypes ?? process.env.noTypes);
+
+const SLIM = Boolean(argv.slim);
+const MINIFY = Boolean(argv.minify);
+const WATCH = Boolean(argv.watch);
+const STORYBOOK_PORT = argv.storybook;
+const NO_TYPES = Boolean(argv.noTypes);
 const STYLE_PATTERNS = argv['style-patterns'];
 const STYLE_SORT = ['ui', 'lists', 'navigation', 'messages', 'form'];
-const VERBOSE = Boolean(argv.verbose ?? process.env.verbose);
+const VERBOSE = Boolean(argv.verbose);
 
 class Project {
     ////////////////////////////////
@@ -87,7 +87,10 @@ class Project {
 
     async getFileConfig() {
         const configFile = `${this.path}/src/arpadroid.config.js`;
-        return existsSync(configFile) ? (await import(configFile)).default : {};
+        if (!existsSync(configFile)) {
+            return {};
+        }
+        return await import(configFile).then(mod => mod.default || {});
     }
 
     getPackageJson() {
@@ -97,15 +100,26 @@ class Project {
         );
     }
 
-    getPath() {
-        if (this.config?.path) {
-            return this.config.path;
+    /**
+     * Returns the project path.
+     * @param {BuildConfigType} [config]
+     * @param {string} [name]
+     * @returns {string | undefined}
+     */
+    getPath(config = this.config, name = this.name) {
+        if (this.path) return this.path;
+        const { path: configPath, basePath = '' } = config || {};
+        if (configPath) return configPath;
+        if (path.basename(cwd) === name) {
+            return cwd;
         }
-        const basename = path.basename(cwd);
-        if (basename !== this.name) {
-            return `${this.config?.basePath || ''}/node_modules/@arpadroid/${this.name}`;
+        const locations = [`${cwd}/node_modules/@arpadroid/${name}`];
+        if (basePath) {
+            locations.unshift(`${basePath}/node_modules/@arpadroid/${name}`);
         }
-        return cwd;
+        const location = locations.find(loc => existsSync(loc));
+        if (location) return location;
+        log.error(`Could not determine path for project ${name}`);
     }
 
     getScripts() {
@@ -121,11 +135,8 @@ class Project {
         return fs.existsSync(path) ? readdirSync(path) : [];
     }
 
-    getModulePath() {
-        if (this.name === 'module') {
-            return this.path;
-        }
-        return `${this.path}/node_modules/@arpadroid/module`;
+    getModulePath(name = this.name, path = this.path) {
+        return name === 'module' ? path : `${path}/node_modules/@arpadroid/module`;
     }
 
     /**
@@ -209,16 +220,21 @@ class Project {
     ////////////////////
 
     validate() {
-        if (!existsSync(this.path)) {
+        if (!this.path || !existsSync(this.path)) {
             log.error(`Project ${this.name} does not exist`);
             return false;
         }
         return true;
     }
 
-    test() {
+    /**
+     * Tests the project.
+     * @param {import('./project.types.js').ProjectTestConfigType} config
+     * @returns {Promise<boolean | unknown>}
+     */
+    test(config = {}) {
         this.projectTest = new ProjectTest(this);
-        return this.projectTest.test();
+        return this.projectTest.test(config);
     }
 
     // #endregion
@@ -233,8 +249,7 @@ class Project {
 
     async install() {
         log.task(this.name, 'Installing project.');
-        spawnSync(this.getInstallCmd(), { shell: true, stdio: 'inherit' });
-        return true;
+        return spawnSync(this.getInstallCmd(), { shell: true, stdio: 'inherit' });
     }
 
     // #endregion Install
@@ -253,6 +268,7 @@ class Project {
         const slim = config.slim ?? SLIM;
         this.logBuild(config);
         await this.cleanBuild(config);
+        await mkdirSync(`${this.path}/dist`, { recursive: true });
         !slim && (await this.buildDependencies(config));
         await this.bundleStyles(config);
         await this.bundleI18n(config);
@@ -336,12 +352,11 @@ class Project {
      * @param {BuildConfigType} config
      * @returns {Promise<boolean>}
      */
-    async cleanBuild({ slim }) {
-        !slim && log.task(this.name, 'Cleaning up.');
+    async cleanBuild(config = {}) {
+        !config?.slim && log.task(this.name, 'Cleaning up.');
         if (existsSync(`${this.path}/dist`)) {
             rmSync(`${this.path}/dist`, { recursive: true, force: true });
         }
-        mkdirSync(`${this.path}/dist`, { recursive: true });
         return true;
     }
 

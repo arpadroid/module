@@ -74,13 +74,13 @@ my-project
     └── 🎨 themes (opt)
         │
         ├── 🧰 common
-        │    ├── ⚙️ common.config.json (required)
+        │    ├── ⚙️ common.config.js (required)
         │    ├── _reset.css
         │    ├── variables/...
         │    └── mixins/...
         │
         ├── 🌞 default
-        │    ├── ⚙️ default.config.json (required)
+        │    ├── ⚙️ default.config.js (required)
         │    ├── default.css
         │    └── styles/...
         │
