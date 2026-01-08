@@ -1,7 +1,11 @@
+/**
+ * @jest-environment node
+ */
 import Project from '../project.mjs';
 import path, { basename } from 'path';
 import { existsSync } from 'fs';
 import { TEST_PROJECT_PATH } from './projectTest.util.mjs';
+import { getDependencies } from '../helpers/projectBuild.helper.mjs';
 
 const cwd = process.cwd();
 
@@ -29,7 +33,7 @@ describe('@arpadroid/module Project Instance', () => {
     });
 
     test('getDependencies returns default sort order', () => {
-        const deps = project?.getDependencies([]);
+        const deps = project?.pkg && getDependencies(project?.pkg, []);
         expect(Array.isArray(deps)).toBe(true);
         expect(deps).toEqual(['style-bun']);
     });
@@ -38,6 +42,16 @@ describe('@arpadroid/module Project Instance', () => {
         const config = await Project._getFileConfig('/non/existent/path');
         expect(config).toEqual({});
     });
+
+    /**
+     * @todo Replace the require in _getFileConfig so that this test can be enabled.
+     */
+    // test('_getFileConfig returns config from existing config file', async () => {
+    //     const config = Project._getFileConfig(TEST_PROJECT_PATH);
+    //     // expect(config).toEqual({ testKey: 'testValue' });
+    //     console.log('config', config);
+    //     expect(config.buildType).toBe('uiComponent');
+    // });
 
     it('cleans up project', async () => {
         await project?.cleanBuild();

@@ -17,6 +17,7 @@ import terser from '@rollup/plugin-terser';
 import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import typescript from 'rollup-plugin-typescript2';
+import { ThemesBundlerConfigType } from '@arpadroid/style-bun';
 
 export type StorybookConfigType = {
     preview?: Preview;
@@ -46,8 +47,12 @@ export type BuildConfigType = {
     processBuilds?: (builds: RollupOptions[]) => void;
     slim?: boolean;
     storybook?: StorybookConfigType;
+    storybook_port?: number;
     style_patterns?: string | string[];
     watch?: boolean;
+    verbose?: boolean;
+    themesPath?: string;
+    themes?: ThemesBundlerConfigType[];
 };
 
 export type BuildInterface = {

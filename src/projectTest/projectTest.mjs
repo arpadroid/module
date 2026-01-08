@@ -11,6 +11,7 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
 import { mergeObjects } from '../utils/object.util.js';
+import { getStorybookConfigPath } from '../project/helpers/projectStorybook.helper.js';
 
 /** @type {ProjectTestConfigType} */
 const argv = yargs(hideBin(process.argv)).argv;
@@ -184,7 +185,7 @@ class ProjectTest {
 
     async testStorybook(config = this.config) {
         const watch = WATCH ? ' --watch ' : '';
-        const configPath = this.project.getStorybookConfigPath();
+        const configPath = getStorybookConfigPath(this.project);
         const executable = `${this.project.getModulePath()}/node_modules/@storybook/test-runner/dist/test-storybook`;
         const script = `${executable} -c ${configPath} --maxWorkers=9 ${watch} --browsers ${config?.browsers ?? 'chromium'} --url="http://127.0.0.1:${PORT}"`;
 
@@ -216,7 +217,7 @@ class ProjectTest {
     }
 
     async startStorybookCI() {
-        const configPath = this.project.getStorybookConfigPath();
+        const configPath = getStorybookConfigPath(this.project);
         const cmd =
             `cd ${this.project.path} && rm -rf ${this.project.path}/storybook-static && ` +
             `${this.sb} build -c ${configPath} && ${this.pm2} start ${this.httpServer} --name 'srv-storybook' -- ./storybook-static --port ${PORT} --host 127.0.0.1 --silent`;

@@ -102,12 +102,6 @@ await project.build();
     Copies \*.types.d.ts files into a temp types directory preserving structure.
 
 - ```typescript
-  copyUIStyleAssets(): void
-  ```
-
-    Copies UI font assets and material symbol files into the project's dist output.
-
-- ```typescript
   createDependencyInstances(): Project[]
   ```
 
@@ -192,18 +186,6 @@ await project.build();
     Returns the project or fallback Storybook configuration directory path.
 
 - ```typescript
-  getStyleBuildFiles(): Record<string,string[]> | false
-  ```
-
-    Collects minified theme files from style dependencies for bundling.
-
-- ```typescript
-  getStylePackages(): string[]
-  ```
-
-    Returns an ordered list of packages that provide styles (dependencies + the project).
-
-- ```typescript
   getThemes(): string[]
   ```
 
@@ -257,17 +239,7 @@ await project.build();
 
     Runs Rollup builds for each provided configuration and writes outputs to dist.
 
-- ```typescript
-  rollupTypes(rollupConfig: RollupOptions[], config: BuildConfigType): Promise<boolean>
-  ```
-
     Runs a Rollup build to produce a single dist/types.d.ts declaration file.
-
-- ```typescript
-  runStorybook({ slim = SLIM }: { slim?: boolean }): Promise<void>
-  ```
-
-    Starts Storybook for the project if a port is configured and build is not slimmed.
 
 - ```typescript
   setConfig(config: BuildConfigType): void

@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+/* eslint-disable id-length */
 
 import {
     getStoryContext,
