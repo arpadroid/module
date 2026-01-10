@@ -168,9 +168,9 @@ describe('rollup-builds', () => {
         it('should configure project and plugins correctly', () => {
             const result = getBuild('test-project', baseConfig);
 
-            expect(result.project.name).toBe('test-project');
-            expect(result.Plugins.terser).toBeDefined();
-            expect(result.Plugins.nodeResolve).toBeDefined(); // @ts-ignore
+            expect(result?.project?.name).toBe('test-project');
+            expect(result?.Plugins?.terser).toBeDefined();
+            expect(result?.Plugins?.nodeResolve).toBeDefined(); // @ts-ignore
             expect(result?.output?.file).toContain('arpadroid-test-project.js');
         });
 
@@ -182,9 +182,9 @@ describe('rollup-builds', () => {
                 deps: ['my-dep']
             });
 
-            expect(result.buildConfig.slim).toBe(true);
-            expect(result.buildConfig.minify).toBe(true);
-            expect(result.buildConfig.deps).toEqual(['my-dep']);
+            expect(result?.buildConfig?.slim).toBe(true);
+            expect(result?.buildConfig?.minify).toBe(true);
+            expect(result?.buildConfig?.deps).toEqual(['my-dep']);
         });
 
         it('should call processBuilds callback only when not slim', () => {
@@ -223,12 +223,12 @@ describe('rollup-builds', () => {
                 buildStyles: false
             });
 
-            const config = result.build[0];
-            expect(config.input).toBeDefined();
-            expect(config.output).toBeDefined();
-            expect(Array.isArray(config.plugins)).toBe(true);
-            expect(result.buildConfig.deps).toEqual(['ui', 'tools']);
-            expect(result.buildConfig.external).toEqual(['services']);
+            const config = result?.build?.[0];
+            expect(config?.input).toBeDefined();
+            expect(config?.output).toBeDefined();
+            expect(Array.isArray(config?.plugins)).toBe(true);
+            expect(result?.buildConfig?.deps).toEqual(['ui', 'tools']);
+            expect(result?.buildConfig?.external).toEqual(['services']);
         });
     });
 });

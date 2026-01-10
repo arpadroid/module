@@ -121,6 +121,7 @@ export async function getStylesheetsToCompile(project) {
  * @param {Project} project
  * @param {string} theme - The theme to build.
  * @param {string[]} files - The files to build the theme from.
+ * @returns {Promise<void>}
  */
 export async function deployTheme(project, theme, files) {
     const themePath = `${project.path}/dist/themes/${theme}`;
@@ -144,13 +145,15 @@ export async function deployTheme(project, theme, files) {
     });
     if (css) {
         if (!existsSync(themePath)) {
-            mkdirSync(themePath, { recursive: true });
+            await mkdirSync(themePath, { recursive: true });
         }
-        writeFileSync(`${themePath}/${theme}.final.css`, css);
+        await writeFileSync(`${themePath}/${theme}.final.css`, css);
     }
-    if (bundledCss) {
-        writeFileSync(`${themePath}/${theme}.bundled.final.css`, bundledCss);
+    if (bundledCss && (await existsSync(themePath))) {
+        const file = join(themePath, `${theme}.bundled.final.css`);
+        await writeFileSync(file, bundledCss);
     }
+    return Promise.resolve();
 }
 
 /**

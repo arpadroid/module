@@ -2,7 +2,7 @@
 const config = {
     buildType: 'library',
     buildTypes: true,
-    buildStyles: true,
+    buildStyles: false,
     buildJS: true,
     logo: `           ┓    • ┓        ┓  ┓  
   ┏┓┏┓┏┓┏┓┏┫┏┓┏┓┓┏┫  ┏┳┓┏┓┏┫┓┏┃┏┓

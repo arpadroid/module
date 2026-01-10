@@ -44,6 +44,7 @@ export type BuildConfigType = {
     parent?: string;
     path?: string;
     plugins?: Plugin[];
+    copyTestAssets?: boolean;
     processBuilds?: (builds: RollupOptions[]) => void;
     slim?: boolean;
     storybook?: StorybookConfigType;
@@ -56,13 +57,18 @@ export type BuildConfigType = {
 };
 
 export type BuildInterface = {
-    build: RollupOptions[];
-    appBuild: RollupOptions;
-    typesBuild: RollupOptions;
-    project: Project;
-    buildConfig: BuildConfigType;
-    plugins: InputPluginOption;
-    Plugins: {
+    build?: RollupOptions[];
+    appBuild?: RollupOptions;
+    typesBuild?: RollupOptions;
+    project?: Project;
+    buildConfig?: BuildConfigType;
+    plugins?: InputPluginOption;
+    constants?: {
+        SLIM?: boolean;
+        MINIFY?: boolean;
+        STORYBOOK?: number;
+    };
+    Plugins?: {
         bundleStats: typeof bundleStats;
         gzipPlugin: typeof gzipPlugin;
         dts: typeof dts;
@@ -78,5 +84,5 @@ export type BuildInterface = {
         typescript: typeof typescript;
         debugPlugin: Plugin;
     };
-    output: OutputOptions | OutputOptions[] | undefined;
+    output?: OutputOptions | OutputOptions[] | undefined;
 };

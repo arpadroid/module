@@ -18,7 +18,7 @@ import alias from '@rollup/plugin-alias';
 
 import { log, logStyle } from '../utils/terminalLogger.mjs';
 import ProjectTest from '../projectTest/projectTest.mjs';
-import { DEPENDENCY_SORT, getBuildConfig } from './helpers/projectBuild.helper.mjs';
+import { DEPENDENCY_SORT, getBuildConfig, MINIFY, SLIM, STORYBOOK } from './helpers/projectBuild.helper.mjs';
 import { buildDependencies, getPackageJson, getDependencies } from './helpers/projectBuild.helper.mjs';
 import { runStorybook } from './helpers/projectStorybook.helper.js';
 import { buildTypes } from './helpers/projectTypes.helper.mjs';
@@ -139,6 +139,14 @@ class Project {
         // await this.promise;
         this.buildConfig = await getBuildConfig(clientConfig, this.path);
         return this.buildConfig;
+    }
+
+    getBuildConstants() {
+        return {
+            SLIM,
+            MINIFY,
+            STORYBOOK
+        };
     }
 
     /**

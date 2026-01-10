@@ -9,7 +9,7 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 import { mergeObjects } from '../../utils/object.util.js';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
-import fs from 'fs';
+import fs, { existsSync } from 'fs';
 import path from 'path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -216,6 +216,33 @@ export function getSlimPlugins(project, config = {}) {
 }
 
 /**
+ * Copies the test assets for storybook builds.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @returns {{src: string, dest: string}[]}
+ */
+export function getTestAssetsCopyTargets(project, { storybook_port, copyTestAssets } = {}) {
+    const targets = [];
+    if (storybook_port && copyTestAssets) {
+        targets.push({ src: 'node_modules/@arpadroid/module/test/test-assets/', dest: 'dist' });
+    }
+    if (existsSync(path.resolve(cwd, 'test', 'test-assets'))) {
+        targets.push({ src: 'test/test-assets', dest: 'dist/' });
+    }
+    return targets;
+}
+/**
+ * Returns a set of files to copy when the build happens.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @returns {{src: string, dest: string}[]}
+ */
+export function getCopyTargets(project, config = {}) {
+    const targets = [{ src: 'src/i18n', dest: 'dist' }, ...getTestAssetsCopyTargets(project, config)];
+    return targets;
+}
+
+/**
  * Returns the fat build rollup plugins configuration.
  * @param {Project} project
  * @param {BuildConfigType} config
@@ -235,14 +262,13 @@ export function getFatPlugins(project, config) {
         bundleStats(),
         getAliases(project.name, aliases),
         copy({
-            targets: [{ src: 'src/i18n', dest: 'dist' }]
+            targets: getCopyTargets(project, config)
         }),
         visualizer({
             emitFile: true,
             filename: 'stats.html'
         })
     ];
-
     return plugins.filter(Boolean);
 }
 
@@ -357,7 +383,7 @@ const rollupBuilds = {
  * Returns the build configuration for the specified project and build.
  * @param {string} projectName
  * @param {BuildConfigType} config
- * @returns {BuildInterface | Record<string, never>}
+ * @returns {BuildInterface }
  */
 export function getBuild(projectName, config = {}) {
     const { buildType = 'library' } = config;
@@ -383,6 +409,7 @@ export function getBuild(projectName, config = {}) {
         buildConfig,
         plugins: appBuild.plugins,
         output: appBuild.output,
+        constants: project.getBuildConstants(),
         Plugins: {
             bundleStats,
             gzipPlugin,

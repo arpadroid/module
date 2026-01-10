@@ -36,6 +36,7 @@ export const DEPENDENCY_SORT = [
 
 export const MINIFY = Boolean(argv.minify);
 export const SLIM = Boolean(argv.slim);
+export const STORYBOOK = argv.storybook;
 
 ////////////////////////////////
 // #region Build  Config
@@ -58,7 +59,7 @@ export function getDefaultBuildConfig() {
         minify: MINIFY,
         style_patterns: argv['style-patterns'],
         verbose: Boolean(argv.verbose),
-        storybook_port: argv.storybook
+        storybook_port: STORYBOOK
     };
     return config;
 }
@@ -85,9 +86,13 @@ export async function getFileConfig(projectPath = cwd()) {
 export async function getBuildConfig(clientConfig = {}, projectPath = cwd()) {
     const fileConfig = (await getFileConfig(projectPath)) || {};
     const conf = mergeObjects(getDefaultBuildConfig(), fileConfig);
+    /** @type {BuildConfigType} */
     const config = mergeObjects(conf, clientConfig);
     if (Boolean(argv.watch) === true && !config.slim) {
         config.watch = true;
+    }
+    if (typeof config.copyTestAssets === 'undefined') {
+        config.copyTestAssets = config.buildType === 'uiComponent';
     }
     return config;
 }

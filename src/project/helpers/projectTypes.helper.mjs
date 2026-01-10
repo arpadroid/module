@@ -119,7 +119,7 @@ export async function distTypes(project) {
  */
 export async function buildTypes(project, rollupConfig, config) {
     if (config?.buildTypes !== true || NO_TYPES) {
-        return Promise.resolve(false);
+        return Promise.resolve(true);
     }
     await compileTypes(project);
     await compileTypeDeclarations(project, config);
