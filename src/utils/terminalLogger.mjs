@@ -101,7 +101,7 @@ export function clearLast() {
  * @param {*} [payload] - Additional payload to log.
  */
 export function logError(text, payload) {
-    console.error(errorLog(text), payload);
+    console.error('🚫 ' + errorLog(text), payload);
 }
 
 /**

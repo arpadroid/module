@@ -1,15 +1,15 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 /**
  * @typedef {import('./rollup-builds.types.js').BuildConfigType} BuildConfigType
  * @typedef {import('./rollup-builds.types.js').BuildInterface} BuildInterface
  * @typedef {import('rollup').RollupOptions} RollupOptions
  * @typedef {import('rollup').Plugin} RollupPlugin
- * @typedef {import('../../projectBuilder/project.types.js').CompileTypesType} CompileTypesType
- * @typedef {import('../../projectBuilder/project.types.js').CommandArgsType} CommandArgsType
+ * @typedef {import('../../project/project.types.js').CompileTypesType} CompileTypesType
+ * @typedef {import('../../project/project.types.js').ProjectCliArgsType} ProjectCliArgsType
  */
 /* eslint-disable security/detect-non-literal-fs-filename */
+import { mergeObjects } from '../../utils/object.util.js';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
-import fs from 'fs';
+import fs, { existsSync } from 'fs';
 import path from 'path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -30,11 +30,10 @@ import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import buildStyles from '../plugins/buildStyles.mjs';
 import typescript from 'rollup-plugin-typescript2';
-import { mergeObjects } from '@arpadroid/tools/object';
 import { logError } from '../../utils/terminalLogger.mjs';
-import Project from '../../projectBuilder/project.mjs';
+import Project from '../../project/project.mjs';
 
-/** @type {CommandArgsType} */
+/** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv || {};
 const cwd = process.cwd();
 const DEPS = process.env.deps ?? argv?.deps ?? '';
@@ -144,8 +143,7 @@ export function getInput(project, config = {}) {
     const rv = [entry];
     deps.forEach(dep => {
         const depPath = path.join('node_modules', '@arpadroid', dep, 'dist', `arpadroid-${dep}.js`);
-        const location = path.join(project.path, depPath);
-        if (fs.existsSync(location)) {
+        if (project.path && fs.existsSync(path.join(project.path, depPath))) {
             rv.push(depPath);
         } else {
             logError(`Dependency ${dep} not found`, { depPath });
@@ -199,6 +197,10 @@ export function getWatchers(envDeps = [], project) {
     });
 }
 
+//////////////////////////////
+// #region Plugins
+//////////////////////////////
+
 /**
  * Returns the slim build rollup plugins configuration.
  * @param {Project} project
@@ -211,6 +213,33 @@ export function getSlimPlugins(project, config = {}) {
     const _aliases = getAliases(parent, aliases);
     _aliases && plugins.push(_aliases);
     return plugins.filter(Boolean);
+}
+
+/**
+ * Copies the test assets for storybook builds.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @returns {{src: string, dest: string}[]}
+ */
+export function getTestAssetsCopyTargets(project, { storybook_port, copyTestAssets } = {}) {
+    const targets = [];
+    if (storybook_port && copyTestAssets) {
+        targets.push({ src: 'node_modules/@arpadroid/module/test/test-assets/', dest: 'dist' });
+    }
+    if (existsSync(path.resolve(cwd, 'test', 'test-assets'))) {
+        targets.push({ src: 'test/test-assets', dest: 'dist/' });
+    }
+    return targets;
+}
+/**
+ * Returns a set of files to copy when the build happens.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @returns {{src: string, dest: string}[]}
+ */
+export function getCopyTargets(project, config = {}) {
+    const targets = [{ src: 'src/i18n', dest: 'dist' }, ...getTestAssetsCopyTargets(project, config)];
+    return targets;
 }
 
 /**
@@ -233,14 +262,13 @@ export function getFatPlugins(project, config) {
         bundleStats(),
         getAliases(project.name, aliases),
         copy({
-            targets: [{ src: 'src/i18n', dest: 'dist' }]
+            targets: getCopyTargets(project, config)
         }),
         visualizer({
             emitFile: true,
             filename: 'stats.html'
         })
     ];
-
     return plugins.filter(Boolean);
 }
 
@@ -267,6 +295,8 @@ export function getPlugins(project, config) {
         ...plugins
     ].filter(plugin => plugin !== false);
 }
+
+// #endregion Plugins
 
 /**
  * Returns the rollup output configuration.
@@ -335,11 +365,12 @@ const rollupBuilds = {
         if (!isSlim()) {
             /**
              * Processes the builds.
+             * Disabled for now as we do not need polyfills in every build.
              * @param {RollupOptions[]} builds
              */
-            config.processBuilds = builds => {
-                builds.push(getPolyfillsBuild());
-            };
+            // config.processBuilds = builds => {
+            //     builds.push(getPolyfillsBuild());
+            // };
         }
         return { ...getBuildDefaults(project, config) };
     },
@@ -351,14 +382,14 @@ const rollupBuilds = {
 /**
  * Returns the build configuration for the specified project and build.
  * @param {string} projectName
- * @param {'uiComponent' | 'library'} buildName
  * @param {BuildConfigType} config
- * @returns {BuildInterface | Record<string, never>}
+ * @returns {BuildInterface }
  */
-export function getBuild(projectName, buildName, config = {}) {
-    const buildFn = rollupBuilds[buildName];
+export function getBuild(projectName, config = {}) {
+    const { buildType = 'library' } = config;
+    const buildFn = rollupBuilds[buildType];
     if (typeof buildFn !== 'function') {
-        logError(`Invalid build name: ${buildName}`);
+        logError(`Invalid build name: ${buildType}`);
         return {};
     }
     const buildConfig = getBuildConfig(config);
@@ -378,6 +409,7 @@ export function getBuild(projectName, buildName, config = {}) {
         buildConfig,
         plugins: appBuild.plugins,
         output: appBuild.output,
+        constants: project.getBuildConstants(),
         Plugins: {
             bundleStats,
             gzipPlugin,

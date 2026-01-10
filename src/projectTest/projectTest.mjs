@@ -1,18 +1,19 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
- * @typedef {import('./project.mjs').default} Project
- * @typedef {import('./project.types.js').TestArgsType} TestArgsType
+ * @typedef {import('../project/project.mjs').default} Project
+ * @typedef {import('../project/project.types.js').ProjectTestConfigType} ProjectTestConfigType
  */
 /* eslint-disable security/detect-non-literal-regexp */
 import { execSync } from 'child_process';
-import { mergeObjects } from '@arpadroid/tools/object';
 import fs from 'fs';
 import { globSync } from 'glob';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { log, logStyle } from '../utils/terminalLogger.mjs';
+import { mergeObjects } from '../utils/object.util.js';
+import { getStorybookConfigPath } from '../project/helpers/projectStorybook.helper.js';
 
-/** @type {TestArgsType} */
+/** @type {ProjectTestConfigType} */
 const argv = yargs(hideBin(process.argv)).argv;
 const CI = Boolean(argv.ci ?? process.env.ci);
 const WATCH = Boolean(argv.watch ?? process.env.watch);
@@ -24,12 +25,16 @@ const BROWSERS = argv.browsers ?? process.env.browsers ?? 'webkit chromium firef
 const PORT = argv.port ?? process.env.port ?? 6006;
 
 class ProjectTest {
+    //////////////////////////////
+    // #region Initialization
+    /////////////////////////////
+
     testResponse = { success: true, message: '', payloads: [] };
 
     /**
      * Creates a new ProjectTest instance.
      * @param {Project} project
-     * @param {TestArgsType} [config]
+     * @param {ProjectTestConfigType} [config]
      */
     constructor(project, config = {}) {
         /** @type {Project} */
@@ -42,6 +47,12 @@ class ProjectTest {
         this.httpServer = modulePath + '/node_modules/http-server/bin/http-server';
     }
 
+    // #endregion
+
+    ////////////////////////////
+    // #region Get/Set
+    ///////////////////////////
+
     setConfig(config = {}) {
         this.config = mergeObjects(this.getDefaultConfig(), config);
     }
@@ -50,6 +61,17 @@ class ProjectTest {
         return { storybook: STORYBOOK, jest: JEST, ci: CI, query: QUERY, browsers: BROWSERS, build: BUILD };
     }
 
+    // #endregion Get/Set
+
+    ////////////////////////////
+    // #region Tests
+    ///////////////////////////
+
+    /**
+     * Tests the project.
+     * @param {ProjectTestConfigType} [_config]
+     * @returns {Promise<boolean | unknown>}
+     */
     async test(_config = {}) {
         try {
             await this.runTest(_config);
@@ -65,11 +87,11 @@ class ProjectTest {
 
     /**
      * Runs the tests.
-     * @param {TestArgsType} [_config]
+     * @param {ProjectTestConfigType} [_config]
      * @returns {Promise<boolean | unknown>}
      */
     async runTest(_config = {}) {
-        /** @type {TestArgsType} */
+        /** @type {ProjectTestConfigType} */
         const config = mergeObjects(this.config, _config);
         const buildConfig = await this.project.getBuildConfig();
         log.arpadroid(buildConfig?.logo);
@@ -100,9 +122,15 @@ class ProjectTest {
         return this.testResponse;
     }
 
+    // endregion Tests
+
+    ////////////////////////////
+    // #region Test NodeJS
+    ///////////////////////////
+
     /**
      * Tests the node.js scripts.
-     * @param {TestArgsType} _config
+     * @param {ProjectTestConfigType} _config
      * @returns {Promise<boolean | unknown>}
      */
     async testNodeJS(_config) {
@@ -115,14 +143,22 @@ class ProjectTest {
         return execSync(script, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
     }
 
+    // #endregion Test NodeJS
+
+    ////////////////////////////
+    // #region Test Jest
+    ///////////////////////////
+
     /**
      * Runs the jest tests.
-     * @param {TestArgsType} _config
+     * @param {ProjectTestConfigType} _config
      * @returns {Promise<Buffer | string>}
      */
     async testJest(_config) {
-        const jest = this.project.getModulePath() + '/node_modules/jest/bin/jest.js';
-        const script = `node --experimental-vm-modules ${jest} --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
+        const binary = this.project.getModulePath() + '/node_modules/jest/bin/jest.js';
+        let script = `node --experimental-vm-modules ${binary} --coverage --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
+        QUERY && (script += ` --testNamePattern="${QUERY}"`);
+        WATCH && (script += ' --watch');
         log.task(this.project.name, 'running jest tests');
         return execSync(script, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
     }
@@ -141,9 +177,15 @@ class ProjectTest {
         return `${path}/node_modules/@arpadroid/module/src/jest/jest.config.mjs`;
     }
 
+    // #endregion Test Jest
+
+    ////////////////////////////
+    // #region Test Storybook
+    ///////////////////////////
+
     async testStorybook(config = this.config) {
         const watch = WATCH ? ' --watch ' : '';
-        const configPath = this.project.getStorybookConfigPath();
+        const configPath = getStorybookConfigPath(this.project);
         const executable = `${this.project.getModulePath()}/node_modules/@storybook/test-runner/dist/test-storybook`;
         const script = `${executable} -c ${configPath} --maxWorkers=9 ${watch} --browsers ${config?.browsers ?? 'chromium'} --url="http://127.0.0.1:${PORT}"`;
 
@@ -175,16 +217,20 @@ class ProjectTest {
     }
 
     async startStorybookCI() {
-        const configPath = this.project.getStorybookConfigPath();
+        const configPath = getStorybookConfigPath(this.project);
         const cmd =
             `cd ${this.project.path} && rm -rf ${this.project.path}/storybook-static && ` +
             `${this.sb} build -c ${configPath} && ${this.pm2} start ${this.httpServer} --name 'srv-storybook' -- ./storybook-static --port ${PORT} --host 127.0.0.1 --silent`;
         return execSync(cmd, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
     }
 
+    isStorybookCIRunning() {
+        const processExists = Boolean(execSync(`${this.pm2} pid srv-storybook`).toString().trim());
+        return processExists;
+    }
+
     async stopStorybookCI() {
-        const processExists = Boolean((await execSync(`${this.pm2} pid srv-storybook`)).toString().trim());
-        if (!processExists) {
+        if (!this.isStorybookCIRunning()) {
             return Promise.resolve();
         }
         return execSync(`${this.pm2} stop srv-storybook && ${this.pm2} delete srv-storybook`, {
@@ -193,6 +239,7 @@ class ProjectTest {
             cwd: this.project.path
         });
     }
+    // #endregion Test Storybook
 }
 
 export default ProjectTest;

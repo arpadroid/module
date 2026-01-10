@@ -6,7 +6,7 @@ export type CompileTypesType = {
     prependFiles?: string[];
 };
 
-export type CommandArgsType = Record<string, any> & {
+export type ProjectCliArgsType = Record<string, any> & {
     watch?: boolean;
     slim?: boolean;
     deps?: string;
@@ -17,7 +17,7 @@ export type CommandArgsType = Record<string, any> & {
     noTypes?: boolean;
 };
 
-export type TestArgsType = Record<string, any> & {
+export type ProjectTestConfigType = Record<string, any> & {
     ci?: boolean;
     watch?: boolean;
     jest?: boolean;

@@ -1,9 +1,9 @@
 /**
  * @typedef {import('webpack').Configuration} WebpackConfig
  */
-import path, { basename } from 'path';
+import { basename } from 'path';
 import fs from 'fs';
-import Project from '../projectBuilder/project.mjs';
+import Project from '../project/project.mjs';
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
 const html = String.raw;
@@ -46,22 +46,14 @@ function renderPreviewHead(_head) {
  */
 function renderPreviewBody(_body) {
     const fn = projectConfig?.storybook?.previewBody;
-    const body =
-        (typeof fn === 'function' && fn()) ||
-        html`
-            ${_body}
-            <script src="http://127.0.0.1:35729/livereload.js?ext=Chrome&amp;extver=2.1.0"></script>
-        `;
+    const body = (typeof fn === 'function' && fn()) || html`${_body}`;
 
     return `${_body}${body}`;
 }
 
-const toolsPath = path.resolve(__dirname, '../../node_modules/@arpadroid/tools/dist/');
 const staticDirs = [cwd + '/dist', cwd + '/src'];
 fs.existsSync(cwd + '/assets') && staticDirs.push(cwd + '/assets');
 fs.existsSync(cwd + '/storybook/decorators') && staticDirs.push(cwd + '/storybook/decorators');
-fs.existsSync(toolsPath) && staticDirs.push(toolsPath);
-
 const config = {
     stories: [cwd + '/src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
     staticDirs,
@@ -98,8 +90,15 @@ const config = {
         config.module.rules = config.module.rules || [];
         config.resolve = config.resolve || {};
         config.resolve.fallback = config.resolve.fallback || {};
-        config.watchOptions.aggregateTimeout = 1600;
-        config.watchOptions.ignored = ['**/*.css'];
+        config.watchOptions.aggregateTimeout = 500;
+
+        config.watchOptions.ignored = [
+            '**/node_modules/**',
+            '**/.git/**',
+            '**/dist/**/@types/**',
+            '**/*.d.ts',
+            '**/.tmp/**'
+        ];
         config.module.rules = config.module.rules.filter((/** @type {any} */ rule) => {
             const isCSSRule = rule?.test?.toString().includes('css');
             return isCSSRule ? false : true;

@@ -1,6 +1,6 @@
 {
     "name": "@arpadroid/module",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "description": "Comprehensive build system and development toolkit for JavaScript/TypeScript projects with unified Rollup, Storybook, Jest, and ESLint configuration.",
     "exports": {
         ".": "./src/index.js",
@@ -15,6 +15,10 @@
         "./storybook/middleware": "./.storybook/middleware.js",
         "./storybook/manager": "./.storybook/manager.jsx",
         "./storybook/decorators": "./src/storybook/decorators.js"
+    },
+    "bin": {
+        "arpadroid-build": "./scripts/build-project.mjs",
+        "arpadroid-test": "./scripts/test-project.mjs"
     },
     "types": "./dist/@types/types.compiled.d.ts",
     "type": "module",
@@ -31,11 +35,13 @@
     },
     "scripts": {
         "build:project": "node ./scripts/build-project.js",
-        "test": "node ./scripts/test-project.mjs --project=module --storybook --jest --port=6000",
+        "test": "node ./scripts/test-project.mjs --storybook --jest --port=6000",
         "install:project": "node ./scripts/install-projects.mjs",
         "stop:storybook:ci": "pm2 stop srv-storybook && pm2 delete srv-storybook",
         "postinstall": "npx playwright install",
-        "build": "node ./scripts/build-project.mjs --project=module --minify"
+        "build": "node ./scripts/build-project.mjs --minify",
+        "clean": "rm -rf ./dist ./node_modules package-lock.json",
+        "clean:build": "npm run clean && npm install && npm run build"
     },
     "repository": {
         "type": "git",
@@ -103,6 +109,7 @@
         "@storybook/types": "^8.6.4",
         "@storybook/web-components": "^8.6.4",
         "@storybook/web-components-webpack5": "^8.6.4",
+        "@types/jest": "^30.0.0",
         "@types/react": "^19.0.10",
         "@types/react-dom": "^19.0.4",
         "@types/react-router": "^5.1.20",
@@ -133,7 +140,6 @@
         "eslint-webpack-plugin": "^5.0.0",
         "glob": "^11.0.0",
         "globals": "^16.0.0",
-        "guard": "^0.1.2",
         "html-webpack-plugin": "^5.6.0",
         "http-proxy-middleware": "^3.0.0",
         "http-server": "^14.1.1",
@@ -141,10 +147,8 @@
         "jest-environment-jsdom": "^29.7.0",
         "jest-expect-message": "^1.1.3",
         "jest-junit": "^16.0.0",
-        "jsdoc-to-markdown": "^8.0.1",
         "jsdom": "^24.1.1",
         "lit": "^3.1.2",
-        "livereload": "^0.9.3",
         "node-polyfill-webpack-plugin": "^4.1.0",
         "pm2": "^6.0.13",
         "rollup": "^4.18.0",
@@ -157,12 +161,12 @@
         "rollup-plugin-typescript2": "^0.36.0",
         "rollup-plugin-visualizer": "^5.14.0",
         "rollup-plugin-watch": "1.0.4",
+        "sass": "^1.97.1",
         "storybook": "^8.6.4",
         "typescript": "^5.8.2",
         "yargs": "^17.7.2"
     },
     "peerDependencies": {
-        "@arpadroid/stylesheet-bundler": "file:../stylesheet-bundler",
-        "@arpadroid/tools": "file:../tools"
+        "@arpadroid/style-bun": "file:../style-bun"
     }
 }

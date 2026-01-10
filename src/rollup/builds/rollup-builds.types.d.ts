@@ -1,5 +1,5 @@
 import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup';
-import type Project from '../../projectBuilder/project.mjs';
+import type Project from '../../project/project.mjs';
 // import { RollupPlugin } from './rollup-builds.mjs';
 import { Plugin } from 'rollup';
 import { Preview } from '@storybook/web-components';
@@ -17,12 +17,20 @@ import terser from '@rollup/plugin-terser';
 import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import typescript from 'rollup-plugin-typescript2';
+import { ThemesBundlerConfigType } from '@arpadroid/style-bun';
+
+export type StorybookConfigType = {
+    preview?: Preview;
+    previewHead?: (head) => string;
+    previewBody?: (body) => string;
+};
 
 export type BuildConfigType = {
     aliases?: string[];
     basePath?: string;
     buildDeps?: boolean;
     buildI18n?: boolean;
+    buildType?: 'uiComponent' | 'library';
     buildJS?: boolean;
     buildStyles?: boolean;
     buildTypes?: boolean;
@@ -36,23 +44,31 @@ export type BuildConfigType = {
     parent?: string;
     path?: string;
     plugins?: Plugin[];
+    copyTestAssets?: boolean;
     processBuilds?: (builds: RollupOptions[]) => void;
     slim?: boolean;
-    storybook?: {
-        preview?: Preview;
-    };
+    storybook?: StorybookConfigType;
+    storybook_port?: number;
     style_patterns?: string | string[];
     watch?: boolean;
+    verbose?: boolean;
+    themesPath?: string;
+    themes?: ThemesBundlerConfigType[];
 };
 
 export type BuildInterface = {
-    build: RollupOptions[];
-    appBuild: RollupOptions;
-    typesBuild: RollupOptions;
-    project: Project;
-    buildConfig: BuildConfigType;
-    plugins: InputPluginOption;
-    Plugins: {
+    build?: RollupOptions[];
+    appBuild?: RollupOptions;
+    typesBuild?: RollupOptions;
+    project?: Project;
+    buildConfig?: BuildConfigType;
+    plugins?: InputPluginOption;
+    constants?: {
+        SLIM?: boolean;
+        MINIFY?: boolean;
+        STORYBOOK?: number;
+    };
+    Plugins?: {
         bundleStats: typeof bundleStats;
         gzipPlugin: typeof gzipPlugin;
         dts: typeof dts;
@@ -68,5 +84,5 @@ export type BuildInterface = {
         typescript: typeof typescript;
         debugPlugin: Plugin;
     };
-    output: OutputOptions | OutputOptions[] | undefined;
+    output?: OutputOptions | OutputOptions[] | undefined;
 };

@@ -1,11 +1,9 @@
+/** @type {import("./types.js").BuildConfigType} */
 const config = {
+    buildType: 'library',
     buildTypes: true,
-    buildStyles: true,
-    style_patterns: 'storybook/**/*',
-    buildJS: false,
-    build18n: false,
-    watch: false,
-    buildDeps: false,
+    buildStyles: false,
+    buildJS: true,
     logo: `           ┓    • ┓        ┓  ┓  
   ┏┓┏┓┏┓┏┓┏┫┏┓┏┓┓┏┫  ┏┳┓┏┓┏┫┓┏┃┏┓
   ┗┻┛ ┣┛┗┻┗┻┛ ┗┛┗┗┻  ┛┗┗┗┛┗┻┗┻┗┗ 

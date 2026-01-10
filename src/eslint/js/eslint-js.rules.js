@@ -91,7 +91,7 @@ const rules = {
     ],
     // 'no-unused-private-class-members': 'off',
     'no-useless-call': 'error',
-    'no-use-before-define': 'error',
+    'no-use-before-define': 'warn',
     'no-unreachable': 'error',
     'security/detect-object-injection': 'off',
     'jsdoc/check-access': 1, // Recommended
