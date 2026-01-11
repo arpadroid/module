@@ -63,22 +63,35 @@ export function getStyleDependencies(project) {
 //////////////////////////
 
 /**
+ * Retrieves the style patterns from the build config.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @returns {string[]}
+ */
+export function getStylePatterns(project, config) {
+    let stylePatterns = config.style_patterns || [];
+    if (typeof stylePatterns === 'string') {
+        stylePatterns = stylePatterns.split(',').map(pattern => pattern.trim());
+    }
+    stylePatterns = stylePatterns.map(pattern => `${project.path}/src/${pattern}`);
+    return stylePatterns;
+}
+
+/**
  * Bundles the project styles.
  * @param {Project} project
  * @param {BuildConfigType} config
  * @returns {Promise<ThemesBundler | boolean>}
  */
 export async function bundleStyles(project, config) {
-    const { buildStyles, slim, minify, buildType } = config;
-    let { style_patterns = [] } = config;
-    if (!buildStyles || buildType !== 'uiComponent') {
+    const { buildStyles, slim, minify } = config;
+
+    if (!buildStyles) {
         return true;
     }
+    const style_patterns = getStylePatterns(project, config);
     !slim && log.task(project.name, 'Bundling CSS.');
-    if (typeof style_patterns === 'string') {
-        style_patterns = style_patterns.split(',').map(pattern => pattern.trim());
-    }
-    style_patterns = style_patterns.map(pattern => `${project.path}/src/${pattern}`);
+
     const bundler = new ThemesBundler({
         exportPath: join(project.path || '', 'dist', 'themes'),
         minify,
@@ -177,10 +190,8 @@ export async function copyUIStyleAssets(project) {
  */
 export async function compileStyles(project, config) {
     const { buildStyles, slim } = config;
-    if (!(await hasStyles(project))) {
-        return;
-    }
-    if (!buildStyles || slim === true) {
+    const _hasStyles = await hasStyles(project);
+    if (!_hasStyles || !buildStyles || slim === true) {
         return;
     }
     log.task(project.name, 'Compiling dependency styles.');

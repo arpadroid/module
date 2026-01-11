@@ -18,6 +18,7 @@ const argv = yargs(hideBin(process.argv)).argv;
 export const NO_TYPES = Boolean(argv.noTypes);
 export const STYLE_SORT = ['ui', 'lists', 'navigation', 'messages', 'form'];
 export const DEPENDENCY_SORT = [
+    'module',
     'style-bun',
     'module',
     'tools',

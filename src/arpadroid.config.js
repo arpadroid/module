@@ -2,7 +2,8 @@
 const config = {
     buildType: 'library',
     buildTypes: true,
-    buildStyles: false,
+    buildStyles: true,
+    style_patterns: ['storybook'],
     buildJS: true,
     logo: `           ┓    • ┓        ┓  ┓  
   ┏┓┏┓┏┓┏┓┏┫┏┓┏┓┓┏┫  ┏┳┓┏┓┏┫┓┏┃┏┓
