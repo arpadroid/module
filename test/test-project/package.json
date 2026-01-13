@@ -4,6 +4,8 @@
     "description": "Test project for unit testing",
     "type": "module",
     "main": "src/index.js",
+    "types": "./dist/@types/types.compiled.d.ts",
+    "exports": "./dist/arpadroid-test-project.js",
     "scripts": {
         "build": "arpadroid-build --minify",
         "dev": "arpadroid-build --watch --storybook=6101",

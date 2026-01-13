@@ -9,7 +9,7 @@
  * @typedef {import('./project.types.js').ProjectCliArgsType} ProjectCliArgsType
  */
 
-import path from 'path';
+import { basename } from 'path';
 import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 
@@ -44,23 +44,20 @@ class Project {
         this.i18nFiles = [];
         this.setConfig(config);
         this.path = this.getPath();
-        this._initialize();
+        this.promise = this.initialize();
     }
 
-    _initialize() {
-        this.promise = new Promise((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
+    async initialize() {
+        const promises = [this.initializePackageJson()];
+        return Promise.all(promises);
+    }
+
+    initializePackageJson() {
+        return getPackageJson(this.path).then(response => {
+            this.pkg = response || {};
+            this.scripts = this.pkg?.scripts ?? {};
+            return Promise.resolve(response);
         });
-        getPackageJson(this.path)
-            .then(response => {
-                this.pkg = response || {};
-                this.scripts = this.pkg?.scripts ?? {};
-                typeof this.resolve === 'function' && this.resolve(true);
-            })
-            .catch(error => {
-                typeof this.reject === 'function' && this.reject(error);
-            });
     }
 
     // #endregion Initialization
@@ -75,7 +72,6 @@ class Project {
      */
     getDefaultConfig() {
         return {
-            basePath: cwd,
             logHeading: true
         };
     }
@@ -99,19 +95,18 @@ class Project {
      * @returns {string | undefined}
      */
     getPath(config = this.config, name = this.name) {
-        if (this.path) return this.path;
-        const { path: configPath, basePath = '' } = config || {};
-        if (configPath) return configPath;
-        if (path.basename(cwd) === name) {
-            return cwd;
-        }
-        const locations = [`${cwd}/node_modules/@arpadroid/${name}`];
-        if (basePath) {
-            locations.unshift(`${basePath}/node_modules/@arpadroid/${name}`);
+        const path = this.path || config?.path || (basename(cwd) === name && cwd) || '';
+        const locations = [path, `${cwd}/node_modules/@arpadroid/${name}`];
+        if (name === 'test-project') {
+            locations.unshift(`${cwd}/test/${name}`);
         }
         const location = locations.find(loc => existsSync(loc));
         if (location) return location;
-        log.error(`Could not determine path for project ${name}`);
+        log.error(`Could not determine path for project ${name}`, {
+            name,
+            path,
+            locations
+        });
     }
 
     /**
@@ -137,7 +132,7 @@ class Project {
             return this.buildConfig;
         }
         // await this.promise;
-        this.buildConfig = await getBuildConfig(clientConfig, this.path);
+        this.buildConfig = await getBuildConfig(this, clientConfig);
         return this.buildConfig;
     }
 
@@ -238,15 +233,19 @@ class Project {
         await bundleStyles(this, config);
         await this.bundleI18n(config);
         process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
-        const rollupConfigFile = `${this.path}/src/rollup.config.mjs`;
-        const rollupConfig = fs.existsSync(rollupConfigFile) ? (await import(rollupConfigFile)).default : [];
+        const rollupConfig = await this.getRollupConfig();
         await this.rollup(rollupConfig, config);
         await buildTypes(this, rollupConfig, config);
-        runStorybook(this, config);
+        await runStorybook(this, config);
         this.watch(rollupConfig, config);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
         return true;
+    }
+
+    async getRollupConfig() {
+        const rollupConfigFile = `${this.path}/src/rollup.config.mjs`;
+        return fs.existsSync(rollupConfigFile) ? (await import(rollupConfigFile)).default : [];
     }
 
     /**
@@ -369,11 +368,10 @@ class Project {
      * Watches the project for file changes.
      * @param {RollupOptions[]} rollupConfig
      * @param {BuildConfigType} config
+     * @param {(payload: Record<string, any>) => void} [callback]
      */
-    watch(rollupConfig, { watch, slim, verbose }) {
-        if (!watch) {
-            return;
-        }
+    watch(rollupConfig, { watch, slim, verbose }, callback) {
+        if (!watch) return;
         verbose || (!slim && log.task(this.name, 'watching for file changes'));
         this.watcher = rollupWatch(rollupConfig);
         this.watcher.on('event', event => {
@@ -387,10 +385,13 @@ class Project {
         });
         /**
          * Watches for file changes.
-         * @param {Record<string, any>} param0
+         * @param {Record<string, any>} payload
          * @returns {void}
          */
-        const watcherCallback = ({ result }) => result?.close();
+        const watcherCallback = payload => {
+            payload?.result?.close();
+            typeof callback === 'function' && callback(payload);
+        };
 
         this.watcher.on('event', watcherCallback);
     }

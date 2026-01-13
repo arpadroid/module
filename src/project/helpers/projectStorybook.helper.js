@@ -2,7 +2,7 @@
  * @typedef {import('../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
  * @typedef {import('../project.mjs').default} Project
  */
-import { spawn } from 'child_process';
+import { spawnSync } from 'child_process';
 import { existsSync } from 'fs';
 
 /**
@@ -32,12 +32,12 @@ export function getStorybookCmd(project, port) {
  * Runs the storybook.
  * @param {Project} project
  * @param {BuildConfigType} config
- * @returns {Promise<void>}
+ * @returns {Promise<any>}
  */
 export async function runStorybook(project, { slim, storybook_port }) {
     if (!storybook_port || slim) {
-        return;
+        return Promise.resolve(true);
     }
     const cmd = getStorybookCmd(project, storybook_port);
-    spawn(cmd, { shell: true, stdio: 'inherit', cwd: project.path });
+    return await spawnSync(cmd, { shell: true, stdio: 'inherit', cwd: project.path });
 }

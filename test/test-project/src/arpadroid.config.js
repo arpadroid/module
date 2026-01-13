@@ -2,7 +2,6 @@
  * @typedef {import('@arpadroid/module').BuildConfigType} BuildConfigType
  */
 
-
 /** @type {BuildConfigType} */
 export default {
     buildType: 'uiComponent',
@@ -11,7 +10,6 @@ export default {
     buildDeps: true,
     buildTypes: true,
     minify: true,
-    build18n: false,
     watch: false,
     logo: `         ┓    • ┓               •    
 ┏┓┏┓┏┓┏┓┏┫┏┓┏┓┓┏┫  ╋┏┓┏╋  ┏┓┏┓┏┓┓┏┓┏╋

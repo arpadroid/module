@@ -27,7 +27,6 @@ export type StorybookConfigType = {
 
 export type BuildConfigType = {
     aliases?: string[];
-    basePath?: string;
     buildDeps?: boolean;
     buildI18n?: boolean;
     buildType?: 'uiComponent' | 'library';

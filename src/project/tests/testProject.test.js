@@ -19,7 +19,6 @@ describe('Test Project Instance', () => {
         process.chdir(TEST_PROJECT_PATH);
         project = new Project('test-project', {
             path: TEST_PROJECT_PATH,
-            basePath: process.cwd(),
             logHeading: false
         });
     });
@@ -27,7 +26,6 @@ describe('Test Project Instance', () => {
     it('Initializes with expected configuration and properties', () => {
         expect(project).toBeInstanceOf(Project);
         expect(project?.name).toBe('test-project');
-        expect(project?.config?.basePath).toBe(process.cwd());
         expect(project?.config?.logHeading).toBe(false);
         expect(project?.path).toBeDefined();
         expect(project?.i18nFiles).toEqual([]);
@@ -113,12 +111,16 @@ describe('Test Project Instance', () => {
         expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Error: Command failed'));
     });
 
-    // it('Builds the environment and runs storybook', async () => {
-    //     await project.build({
-    //         buildJS: true,
-    //         buildI18n: true
-    //     });
-    // });
+    it('Builds the project', async () => {
+        await project.cleanBuild();
+        await project.build();
+        expect(existsSync(`${TEST_PROJECT_PATH}/dist/@types`)).toBe(true);
+        expect(existsSync(`${TEST_PROJECT_PATH}/dist/arpadroid-test-project.js`)).toBe(true);
+        expect(existsSync(`${TEST_PROJECT_PATH}/dist/themes/default/default.min.css`)).toBe(true);
+        expect(existsSync(`${TEST_PROJECT_PATH}/dist/themes/my-theme/my-theme.min.css`)).toBe(true);
+    });
+
+    it('Watches for changes', async () => {});
 
     //////////////////////
     // #region Edge Cases
@@ -129,21 +131,11 @@ describe('Test Project Instance', () => {
         expect(promise).toBeUndefined();
     });
 
-    // test('buildDependencies sets buildTypes to false in dependency builds if buildDeps is set to false in the buildConfig', async () => {
-    //     console.log('project.name', project.name);
-    //     await project.buildDependencies({
-    //         buildDeps: true,
-    //         buildTypes: false,
-    //         path: TEST_PROJECT_PATH,
-    //         basePath: process.cwd(),
-    //         logHeading: false
-    //     });
-    //     const deps = project.dependencyProjects || [];
-    //     expect(deps.length).toBe(2);
-    //     for (const dep of deps) {
-    //         expect(dep.buildConfig?.buildTypes).toBe(false);
-    //     }
-    // });
+    test('builds project and dependencies with no types, overriding value through build method config', async () => {
+        // Spy on the exports object which is used internally
+        await project.build({ buildTypes: false });
+        expect(existsSync(`${TEST_PROJECT_PATH}/dist/@types`)).toBe(false);
+    });
 
     //////////////////////
     // #endregion Edge Cases

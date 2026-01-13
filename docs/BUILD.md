@@ -1,8 +1,8 @@
 # 🛠️ Build System Reference - **_`@arpadroid/module`_**
 
 > **_Links:_** &nbsp;&nbsp; [🛠️ Build System](#build-system) &nbsp;|&nbsp;
-[⚙️ Build Configuration](#buildconfigtype) &nbsp;|&nbsp;
-[📤 Build Interface](#buildinterface)
+> [⚙️ Build Configuration](#buildconfigtype) &nbsp;|&nbsp;
+> [📤 Build Interface](#buildinterface)
 
 > **_Resources:_** &nbsp;&nbsp; 📖 [CLI](CLI.md) / [API](API.md) &nbsp;|&nbsp; 📝[Changelog](CHANGELOG.md) &nbsp;|&nbsp; 🤝 [Contributing](../README.md#contributing)
 
@@ -126,9 +126,6 @@ export default build;
 
 - **`aliases`** — `string[]` (default: `undefined`)  
   Module path aliases for resolution
-
-- **`basePath`** — `string` (default: `cwd`)  
-  Base path for the project (current working directory by default)
 
 - **`buildDeps`** — `boolean` (default: `true`)  
   Whether to build peer dependencies

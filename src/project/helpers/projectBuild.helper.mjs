@@ -45,9 +45,10 @@ export const STORYBOOK = argv.storybook;
 
 /**
  * Returns the default build configuration.
+ * @param {Project} project
  * @returns {BuildConfigType}
  */
-export function getDefaultBuildConfig() {
+export function getDefaultBuildConfig(project) {
     /** @type {BuildConfigType} */
     const config = {
         buildJS: true,
@@ -62,7 +63,7 @@ export function getDefaultBuildConfig() {
         verbose: Boolean(argv.verbose),
         storybook_port: STORYBOOK
     };
-    return config;
+    return mergeObjects(config, project.config);
 }
 
 /**
@@ -80,16 +81,23 @@ export async function getFileConfig(projectPath = cwd()) {
 
 /**
  * Returns the build configuration.
+ * The order of precedence is (highest to lowest):
+ * 1. CLI arguments.
+ * 2. Configuration passed through the Project.build(config) method.
+ * 3. Configuration returned from arpadroid.config.js file.
+ * 4. Configuration passed through the constructor e.g., new Project(name, config).
+ * 5. Default configuration defined in getDefaultBuildConfig().
+ * @param {Project} project
  * @param {BuildConfigType} clientConfig
- * @param {string} projectPath
+ * @param {ProjectCliArgsType} args
  * @returns {Promise<BuildConfigType>}
  */
-export async function getBuildConfig(clientConfig = {}, projectPath = cwd()) {
-    const fileConfig = (await getFileConfig(projectPath)) || {};
-    const conf = mergeObjects(getDefaultBuildConfig(), fileConfig);
+export async function getBuildConfig(project, clientConfig = {}, args = argv) {
+    const fileConfig = (await getFileConfig(project.path || cwd())) || {};
+    const conf = mergeObjects(getDefaultBuildConfig(project), fileConfig);
     /** @type {BuildConfigType} */
     const config = mergeObjects(conf, clientConfig);
-    if (Boolean(argv.watch) === true && !config.slim) {
+    if (args.watch && !config.slim) {
         config.watch = true;
     }
     if (typeof config.copyTestAssets === 'undefined') {
@@ -171,18 +179,19 @@ export async function createDependencyInstances(pkg) {
 /**
  * Builds a single dependency project.
  * @param {Project} project
- * @param {BuildConfigType} param1
+ * @param {Project} parentProject
+ * @param {BuildConfigType} parentConfig
  * @returns {Promise<boolean>}
  */
-export async function buildDependency(project, { buildTypes }) {
+export async function buildDependency(project, parentProject, parentConfig) {
     /** @type {BuildConfigType} */
     const config = {
         slim: true,
         isDependency: true,
-        parent: project.name
+        parent: parentProject.name
     };
-    if (buildTypes === false) {
-        buildTypes = false;
+    if (parentConfig.buildTypes === false) {
+        config.buildTypes = false;
     }
     return project.build(config);
 }
@@ -200,8 +209,9 @@ export async function buildDependencies(project, config) {
     const projects = await createDependencyInstances(project.pkg);
     process.env.arpadroid_slim = 'true';
     const runPromises = async () => {
-        for (const project of projects) {
-            await buildDependency(project, { buildTypes: config.buildTypes });
+        for (const dep of projects) {
+            await dep.promise;
+            await buildDependency(dep, project, config);
         }
     };
     const promise = await runPromises().catch(err => {
