@@ -156,23 +156,28 @@ export function sortDependencies(packages, sort = DEPENDENCY_SORT) {
 
 /**
  * Returns arpadroid peer dependencies sorted by build priority, given a package.json parsed object.
- * @param {Record<string, unknown>} pkg
+ * @param {Project} project
  * @param {string[]} sort
  * @returns {string[]}
  */
-export function getDependencies(pkg, sort = DEPENDENCY_SORT) {
-    const packages = getDependencyPackages(pkg);
+export function getDependencies(project, sort = DEPENDENCY_SORT) {
+    let packages = getDependencyPackages(project.pkg);
+    if (project.buildConfig?.deps?.length) {
+        packages = [...new Set([...packages, ...project.buildConfig.deps])];
+    }
     return sortDependencies(packages, sort);
 }
 
 /**
  * Creates Project instances for each arpadroid dependency.
- * @param {Record<string, unknown>} pkg
+ * @param {string[]} deps
+ * @param {string} projectPath
  * @returns {Promise<Project[]>}
  */
-export async function createDependencyInstances(pkg) {
-    return getDependencies(pkg).map(
-        packageName => new Project(packageName, { path: `${cwd()}/node_modules/@arpadroid/${packageName}` })
+export async function createDependencyInstances(deps, projectPath = cwd()) {
+    return deps.map(
+        packageName =>
+            new Project(packageName, { path: `${projectPath}/node_modules/@arpadroid/${packageName}` })
     );
 }
 
@@ -206,7 +211,8 @@ export async function buildDependencies(project, config) {
     if (config.buildDeps !== true) {
         return { promise: undefined };
     }
-    const projects = await createDependencyInstances(project.pkg);
+    const deps = getDependencies(project);
+    const projects = await createDependencyInstances(deps, project.path);
     process.env.arpadroid_slim = 'true';
     const runPromises = async () => {
         for (const dep of projects) {

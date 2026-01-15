@@ -74,7 +74,7 @@ class ProjectTest {
      */
     async test(_config = {}) {
         try {
-            await this.runTest(_config);
+            return await this.runTest(_config);
         } catch (error) {
             log.error(String(error));
             return {

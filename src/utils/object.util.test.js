@@ -1,3 +1,4 @@
+/* eslint-disable id-length */
 import { isObject, mergeObjects } from './object.util.js';
 
 describe('object.util', () => {

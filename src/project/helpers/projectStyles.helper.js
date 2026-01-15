@@ -53,7 +53,7 @@ export async function hasStyles(project) {
  * @returns {string[]}
  */
 export function getStyleDependencies(project) {
-    return [...getDependencies(project.pkg, STYLE_SORT), project.name];
+    return [...getDependencies(project, STYLE_SORT), project.name];
 }
 
 // #endregion
@@ -118,7 +118,12 @@ export async function getStylesheetsToCompile(project) {
     const styleDeps = getStyleDependencies(project);
 
     for (const styleDep of styleDeps) {
-        const dep = new Project(styleDep);
+        const dep = new Project(styleDep, {
+            path:
+                project.name === styleDep
+                    ? project.path
+                    : `${project.path}/node_modules/@arpadroid/${styleDep}`
+        });
         await dep.getBuildConfig();
         if (!(await hasStyles(dep))) continue;
         getThemes(dep).forEach(theme => {
@@ -198,7 +203,7 @@ export async function compileStyles(project, config) {
     const minifiedDeps = (await getStylesheetsToCompile(project)) ?? [];
     Object.entries(minifiedDeps).forEach(([theme, files]) => deployTheme(project, theme, files));
 
-    if (getDependencies(project.pkg).includes('ui')) {
+    if (getDependencies(project).includes('ui')) {
         await copyUIStyleAssets(project);
     }
 }

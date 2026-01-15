@@ -11,14 +11,33 @@ const cwd = process.cwd();
 const modulesRoot = cwd + '/node_modules/@arpadroid/module/node_modules';
 const sbRoot = modulesRoot + '/@storybook';
 const projectName = basename(cwd);
-const projectConfig = Project._getFileConfig();
+
+/** @type {any} */
+let projectConfig;
+/** @type {Promise<any> | undefined} */
+let projectConfigPromise;
+
+function getProjectConfig() {
+    if (projectConfig) {
+        return projectConfig;
+    }
+    if (!projectConfigPromise) {
+        projectConfigPromise = Project._getFileConfig().then(config => {
+            projectConfig = config;
+            return config;
+        });
+    }
+    return projectConfigPromise;
+}
+
 /**
  * Renders the content for the HTML head.
  * @param {string} _head
  * @returns {string}
  */
 function renderPreviewHead(_head) {
-    const fn = projectConfig?.storybook?.previewHead;
+    const config = projectConfig || {};
+    const fn = config?.storybook?.previewHead;
     const head =
         (typeof fn === 'function' && fn()) ||
         html`
@@ -45,7 +64,8 @@ function renderPreviewHead(_head) {
  * @returns {string}
  */
 function renderPreviewBody(_body) {
-    const fn = projectConfig?.storybook?.previewBody;
+    const config = projectConfig || {};
+    const fn = config?.storybook?.previewBody;
     const body = (typeof fn === 'function' && fn()) || html`${_body}`;
 
     return `${_body}${body}`;
@@ -137,8 +157,11 @@ const config = {
      */
     env: config => ({
         ...config,
-        PROJECT_CONFIG: JSON.stringify(projectConfig)
+        PROJECT_CONFIG: JSON.stringify(projectConfig || {})
     })
 };
+
+// Initialize project config asynchronously
+getProjectConfig();
 
 export default config;

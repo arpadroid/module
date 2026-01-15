@@ -1,17 +1,25 @@
 import ProjectTest from './projectTest.mjs';
 import Project from '../project/project.mjs';
 import { TEST_PROJECT_PATH } from '../project/tests/projectTest.util.mjs';
+import { join } from 'path';
 
 describe('ProjectTest', () => {
     /** @type {Project} */
     let project;
     let projectTest;
 
-    beforeEach(() => {
+    beforeAll(() => {
         project = new Project('test-project', {
             path: TEST_PROJECT_PATH,
             logHeading: false
         });
+    });
+
+    test('getModulePath returns correct module path for other projects', () => {
+        const proj = new Project('test-project', {
+            path: TEST_PROJECT_PATH
+        });
+        expect(proj.getModulePath()).toBe(join(TEST_PROJECT_PATH, 'node_modules/@arpadroid/module'));
     });
 
     describe('constructor', () => {

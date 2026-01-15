@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
  * @typedef {import('../project.mjs').default} Project
@@ -11,10 +12,15 @@ import { existsSync } from 'fs';
  * @returns {string}
  */
 export function getStorybookConfigPath(project) {
-    const projectPath = `${project.path}/.storybook`;
-    const arpadroidPath = `${project.path}/node_modules/@arpadroid/module/.storybook`;
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    return existsSync(projectPath) ? projectPath : arpadroidPath;
+    const locations = [
+        `${project.path}/.storybook`,
+        `${project.path}/node_modules/@arpadroid/module/.storybook`
+    ];
+    const loc = locations.find(location => existsSync(location));
+    if (!loc) {
+        console.warn(`Warning: Storybook configuration not found for project "${project.name}"`);
+    }
+    return loc || `${project.path}/.storybook`;
 }
 
 /**
@@ -36,7 +42,7 @@ export function getStorybookCmd(project, port) {
  */
 export async function runStorybook(project, { slim, storybook_port }) {
     if (!storybook_port || slim) {
-        return Promise.resolve(true);
+        return Promise.resolve(false);
     }
     const cmd = getStorybookCmd(project, storybook_port);
     return await spawnSync(cmd, { shell: true, stdio: 'inherit', cwd: project.path });

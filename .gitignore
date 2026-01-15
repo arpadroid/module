@@ -13,3 +13,4 @@ src/i18n
 /test/test-project/dist
 /test/test-project/node_modules
 /test/test-project/coverage
+storybook-static/

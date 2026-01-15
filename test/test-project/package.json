@@ -13,11 +13,12 @@
         "clean": "rm -rf ./dist ./node_modules package-lock.json"
     },
     "peerDependencies": {
+        "@arpadroid/module": "file:../../",
         "@arpadroid/ui": "file:../../../ui",
-        "@arpadroid/tools": "file:../../../tools"
+        "@arpadroid/tools": "file:../../../tools",
+        "@arpadroid/i18n": "file:../../../i18n"
     },
     "devDependencies": {
-        "@arpadroid/module": "file:../../",
         "@babel/core": "^7.23.9",
         "@babel/preset-env": "^7.23.9"
     }

@@ -11,7 +11,7 @@ import multiEntry from '@rollup/plugin-multi-entry';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import json from '@rollup/plugin-json';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
-import rollupAlias from '@rollup/plugin-alias';
+import rollupAlias, { Alias } from '@rollup/plugin-alias';
 import rollupWatch from 'rollup-plugin-watch';
 import terser from '@rollup/plugin-terser';
 import copy from 'rollup-plugin-copy';
@@ -26,7 +26,7 @@ export type StorybookConfigType = {
 };
 
 export type BuildConfigType = {
-    aliases?: string[];
+    aliases?: Alias[];
     buildDeps?: boolean;
     buildI18n?: boolean;
     buildType?: 'uiComponent' | 'library';
@@ -53,6 +53,7 @@ export type BuildConfigType = {
     verbose?: boolean;
     themesPath?: string;
     themes?: ThemesBundlerConfigType[];
+    watchCallback?: (payload: unknown) => void;
 };
 
 export type BuildInterface = {

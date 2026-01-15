@@ -56,6 +56,11 @@ class Project {
         return getPackageJson(this.path).then(response => {
             this.pkg = response || {};
             this.scripts = this.pkg?.scripts ?? {};
+            const result = this.validate();
+            this.valid = result === true;
+            if (!this.valid) {
+                return Promise.reject(result.toString());
+            }
             return Promise.resolve(response);
         });
     }
@@ -76,16 +81,16 @@ class Project {
         };
     }
 
-    static _getFileConfig(_cwd = cwd) {
+    static async _getFileConfig(_cwd = cwd) {
         const projectConfigPath = _cwd + '/src/arpadroid.config.js';
         if (existsSync(projectConfigPath)) {
-            return require(projectConfigPath).default;
+            return await import(projectConfigPath).then(mod => mod.default || {});
         }
         return {};
     }
 
     getDependencies(sortOrder = DEPENDENCY_SORT) {
-        return getDependencies(this.pkg, sortOrder);
+        return getDependencies(this, sortOrder);
     }
 
     /**
@@ -99,6 +104,9 @@ class Project {
         const locations = [path, `${cwd}/node_modules/@arpadroid/${name}`];
         if (name === 'test-project') {
             locations.unshift(`${cwd}/test/${name}`);
+        }
+        if (basename(cwd) === name) {
+            locations.unshift(cwd);
         }
         const location = locations.find(loc => existsSync(loc));
         if (location) return location;
@@ -179,7 +187,7 @@ class Project {
     validate() {
         if (!this.path || !existsSync(this.path)) {
             log.error(`Project ${this.name} does not exist`);
-            return false;
+            return `Project ${this.name} does not exist`;
         }
         return true;
     }
@@ -237,7 +245,7 @@ class Project {
         await this.rollup(rollupConfig, config);
         await buildTypes(this, rollupConfig, config);
         await runStorybook(this, config);
-        this.watch(rollupConfig, config);
+        this.watch(rollupConfig, config, config.watchCallback);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
         return true;
@@ -374,23 +382,26 @@ class Project {
         if (!watch) return;
         verbose || (!slim && log.task(this.name, 'watching for file changes'));
         this.watcher = rollupWatch(rollupConfig);
-        this.watcher.on('event', event => {
+
+        /**
+         * Watches for file changes.
+         * @param {Record<string, any>} event
+         * @returns {void}
+         */
+        const watcherCallback = event => {
             if (event.code === 'ERROR') {
                 log.error(`Error occurred while watching ${this.name}`, event.error);
             } else if (event.code === 'END') {
-                // console.log(chalk.green(`Stopped watching ${chalk.magenta(this.name)}`));
-            } else {
-                verbose && log.task(this.name, 'Got watch event');
+                // Build completed successfully
+                verbose && log.task(this.name, 'Build complete');
+            } else if (event.code === 'BUNDLE_START') {
+                verbose && log.task(this.name, 'Bundle started');
             }
-        });
-        /**
-         * Watches for file changes.
-         * @param {Record<string, any>} payload
-         * @returns {void}
-         */
-        const watcherCallback = payload => {
-            payload?.result?.close();
-            typeof callback === 'function' && callback(payload);
+
+            // Call the user's callback on any event
+            if (typeof callback === 'function') {
+                callback(event);
+            }
         };
 
         this.watcher.on('event', watcherCallback);
@@ -408,10 +419,13 @@ class Project {
      */
     async bundleI18n({ buildI18n, slim }) {
         if (buildI18n !== true || slim) return true;
-        const script = `${cwd}/node_modules/@arpadroid/i18n/scripts/compile.mjs`;
-        const scriptExists = existsSync(script);
-        if (scriptExists) {
-            const compiler = await import(script);
+        const locations = [
+            `${this.path}/node_modules/@arpadroid/i18n/scripts/compile.mjs`,
+            `${this.path}/node_modules/@arpadroid/module/node_modules/@arpadroid/i18n/scripts/compile.mjs`
+        ];
+        const loc = locations.find(async loc => await existsSync(loc));
+        if (loc) {
+            const compiler = await import(loc);
             this.i18nFiles = await compiler.compileI18n(this);
         }
         return true;

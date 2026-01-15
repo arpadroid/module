@@ -164,7 +164,8 @@
         "sass": "^1.97.1",
         "storybook": "^8.6.4",
         "typescript": "^5.8.2",
-        "yargs": "^17.7.2"
+        "yargs": "^17.7.2",
+        "@arpadroid/i18n": "file:../i18n"
     },
     "peerDependencies": {
         "@arpadroid/style-bun": "file:../style-bun"

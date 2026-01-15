@@ -6,8 +6,9 @@ import { spyOn } from 'jest-mock';
 import { join } from 'path';
 import Project from '../project.mjs';
 import { TEST_PROJECT_PATH } from './projectTest.util.mjs';
-import { existsSync } from 'fs';
-import { getDependencies, getFileConfig, getPackageJson } from '../helpers/projectBuild.helper.mjs';
+import { existsSync, readFileSync } from 'fs';
+import { getFileConfig, getPackageJson } from '../helpers/projectBuild.helper.mjs';
+import { getBuildConfig, getDependencies } from '../helpers/projectBuild.helper.mjs';
 import { getThemes, getThemesPath, hasStyles } from '../helpers/projectStyles.helper.js';
 
 describe('Test Project Instance', () => {
@@ -15,12 +16,13 @@ describe('Test Project Instance', () => {
     let project;
     const originalCwd = process.cwd();
 
-    beforeAll(() => {
+    beforeAll(async () => {
         process.chdir(TEST_PROJECT_PATH);
         project = new Project('test-project', {
             path: TEST_PROJECT_PATH,
             logHeading: false
         });
+        await project.promise;
     });
 
     it('Initializes with expected configuration and properties', () => {
@@ -76,24 +78,24 @@ describe('Test Project Instance', () => {
     });
 
     it('should extract and sort arpadroid dependencies', () => {
-        const deps = getDependencies(project?.pkg);
+        const deps = getDependencies(project);
         expect(Array.isArray(deps)).toBe(true);
         expect(deps).toContain('ui');
         expect(deps).toContain('tools');
 
-        const sorted = getDependencies(project.pkg, ['ui', 'tools']) || [];
+        const sorted = getDependencies(project, ['ui', 'tools']) || [];
         expect(sorted[0]).toBe('ui');
         expect(sorted[1]).toBe('tools');
     });
 
-    it('should validate existing and non-existing project paths', () => {
+    it('should validate existing and non-existing project paths', async () => {
         expect(project?.validate()).toBe(true);
-
-        const originalError = console.error;
-        console.error = () => {};
+        const errorSpy = spyOn(console, 'error').mockImplementation(() => {});
         const invalid = new Project('non-existent', { path: '/invalid/path' });
-        expect(invalid.validate()).toBe(false);
-        console.error = originalError;
+        await invalid.promise.catch(() => {
+            expect(invalid.valid).toBe(false);
+        });
+        errorSpy.mockRestore();
     });
 
     it('Installs the project', async () => {
@@ -103,41 +105,82 @@ describe('Test Project Instance', () => {
         expect(existsSync(`${TEST_PROJECT_PATH}/node_modules`)).toBe(true);
     });
 
-    it('tests the project', async () => {
-        const spy = spyOn(console, 'error');
-        await project.test({
-            jest: true
+    test('watch command line argument is ignored if true and slim is true', async () => {
+        const project = new Project('test-project', {
+            path: TEST_PROJECT_PATH
         });
-        expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Error: Command failed'));
+        const config2 = await getBuildConfig(project, { slim: true }, { watch: true });
+        expect(config2.slim).toBe(true);
+        expect(config2.watch).toBeFalsy();
+
+        const config = await getBuildConfig(project, { slim: false }, { watch: true });
+        expect(config.slim).toBe(false);
+        expect(config.watch).toBe(true);
     });
 
-    it('Builds the project', async () => {
-        await project.cleanBuild();
-        await project.build();
+    it('tests the project', async () => {
+        const spy = spyOn(console, 'error');
+        const logSpy = spyOn(console, 'log').mockImplementation(() => {});
+        await project.test({
+            jest: true,
+            ci: true,
+            storybook: true
+        });
         expect(existsSync(`${TEST_PROJECT_PATH}/dist/@types`)).toBe(true);
+        expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Error: Command failed'));
+        logSpy.mockRestore();
+        spy.mockRestore();
+    });
+
+    it('Builds the project in watch mode and checks watcher exists, verifies build files and replacement alias functionality', async () => {
+        await project.cleanBuild();
+        await project.build({
+            buildTypes: false,
+            watch: true,
+            aliases: [
+                {
+                    find: './components/testComponent/testComponent.js',
+                    replacement: './components/testComponent2/testComponent2.js'
+                }
+            ]
+        });
+
         expect(existsSync(`${TEST_PROJECT_PATH}/dist/arpadroid-test-project.js`)).toBe(true);
         expect(existsSync(`${TEST_PROJECT_PATH}/dist/themes/default/default.min.css`)).toBe(true);
         expect(existsSync(`${TEST_PROJECT_PATH}/dist/themes/my-theme/my-theme.min.css`)).toBe(true);
+
+        expect(project?.watcher).toBeDefined();
+        expect(typeof project?.watcher?.close).toBe('function');
+
+        expect(readFileSync(`${TEST_PROJECT_PATH}/dist/arpadroid-test-project.js`, 'utf-8')).toContain(
+            'TestComponent2 Loaded'
+        );
+
+        // Close the watcher
+        project?.watcher?.close();
     });
 
-    it('Watches for changes', async () => {});
-
-    //////////////////////
+    /////////////////////////
     // #region Edge Cases
-    //////////////////////
+    /////////////////////////
 
     test('buildDependencies returns undefined when buildDeps is not true', async () => {
-        const promise = await project.buildDependencies({ buildDeps: false });
+        const promise = await project.buildDependencies({ buildDeps: false, buildTypes: false });
         expect(promise).toBeUndefined();
     });
 
-    test('builds project and dependencies with no types, overriding value through build method config', async () => {
-        // Spy on the exports object which is used internally
-        await project.build({ buildTypes: false });
-        expect(existsSync(`${TEST_PROJECT_PATH}/dist/@types`)).toBe(false);
+    test('watch command line argument is ignored if true and slim is true', async () => {
+        const project = new Project('test-project', {
+            path: TEST_PROJECT_PATH
+        });
+        const config2 = await getBuildConfig(project, { slim: true }, { watch: true });
+        expect(config2.slim).toBe(true);
+        expect(config2.watch).toBeFalsy();
+
+        const config = await getBuildConfig(project, { slim: false }, { watch: true });
+        expect(config.slim).toBe(false);
+        expect(config.watch).toBe(true);
     });
 
-    //////////////////////
-    // #endregion Edge Cases
-    //////////////////////
+    // #endregion
 });

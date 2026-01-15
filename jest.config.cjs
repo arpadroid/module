@@ -2,7 +2,7 @@ module.exports = {
     verbose: true,
     coverageReporters: ['html', 'text', 'cobertura'],
     testEnvironment: 'node',
-    testMatch: ['**/__tests__/**/*.?(m)js?(x)', '**/?(*.)(spec|test).?(m)js?(x)'],
+    testMatch: ['<rootDir>/src/**/*.test.js', '<rootDir>/src/**/*.test.mjs', '<rootDir>/src/**/*.spec.js', '<rootDir>/src/**/*.spec.mjs'],
     moduleFileExtensions: ['js', 'mjs'],
     transform: {
         '^.+\\.m?js$': ['babel-jest', { presets: [['@babel/preset-env', { targets: { node: 'current' } }]] }]
