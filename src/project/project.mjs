@@ -1,6 +1,4 @@
-/* eslint-disable security/detect-non-literal-require */
 /* eslint-disable security/detect-non-literal-fs-filename */
-
 /**
  * @typedef {import('../rollup/builds/rollup-builds.types.js').BuildConfigType} BuildConfigType
  * @typedef {import('rollup').RollupOptions} RollupOptions
@@ -18,8 +16,11 @@ import alias from '@rollup/plugin-alias';
 
 import { log, logStyle } from '../utils/terminalLogger.mjs';
 import ProjectTest from '../projectTest/projectTest.mjs';
-import { DEPENDENCY_SORT, getBuildConfig, MINIFY, SLIM, STORYBOOK } from './helpers/projectBuild.helper.mjs';
+
+import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK } from './helpers/projectBuild.helper.mjs';
 import { buildDependencies, getPackageJson, getDependencies } from './helpers/projectBuild.helper.mjs';
+import { getBuildConfig } from './helpers/projectBuild.helper.mjs';
+
 import { runStorybook } from './helpers/projectStorybook.helper.js';
 import { buildTypes } from './helpers/projectTypes.helper.mjs';
 import { bundleStyles } from './helpers/projectStyles.helper.js';
@@ -244,8 +245,8 @@ class Project {
         const rollupConfig = await this.getRollupConfig();
         await this.rollup(rollupConfig, config);
         await buildTypes(this, rollupConfig, config);
-        await runStorybook(this, config);
         this.watch(rollupConfig, config, config.watchCallback);
+        runStorybook(this, config);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
         return true;
@@ -379,7 +380,8 @@ class Project {
      * @param {(payload: Record<string, any>) => void} [callback]
      */
     watch(rollupConfig, { watch, slim, verbose }, callback) {
-        if (!watch) return;
+        const $watch = WATCH || watch;
+        if (!$watch || !rollupConfig || rollupConfig.length === 0) return;
         verbose || (!slim && log.task(this.name, 'watching for file changes'));
         this.watcher = rollupWatch(rollupConfig);
 

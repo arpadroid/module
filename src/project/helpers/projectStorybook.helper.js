@@ -3,7 +3,7 @@
  * @typedef {import('../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
  * @typedef {import('../project.mjs').default} Project
  */
-import { spawnSync } from 'child_process';
+import { spawn } from 'child_process';
 import { existsSync } from 'fs';
 
 /**
@@ -45,5 +45,15 @@ export async function runStorybook(project, { slim, storybook_port }) {
         return Promise.resolve(false);
     }
     const cmd = getStorybookCmd(project, storybook_port);
-    return await spawnSync(cmd, { shell: true, stdio: 'inherit', cwd: project.path });
+    return new Promise((resolve, reject) => {
+        const child = spawn(cmd, { shell: true, stdio: 'inherit', cwd: project.path });
+
+        child.on('error', error => {
+            reject(error);
+        });
+
+        child.on('close', code => {
+            resolve(code);
+        });
+    });
 }

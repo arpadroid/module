@@ -38,6 +38,7 @@ export const DEPENDENCY_SORT = [
 export const MINIFY = Boolean(argv.minify);
 export const SLIM = Boolean(argv.slim);
 export const STORYBOOK = argv.storybook;
+export const WATCH = Boolean(argv.watch);
 
 ////////////////////////////////
 // #region Build  Config
@@ -61,7 +62,8 @@ export function getDefaultBuildConfig(project) {
         minify: MINIFY,
         style_patterns: argv['style-patterns'],
         verbose: Boolean(argv.verbose),
-        storybook_port: STORYBOOK
+        storybook_port: STORYBOOK,
+        watch: WATCH
     };
     return mergeObjects(config, project.config);
 }

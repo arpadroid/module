@@ -189,7 +189,7 @@ export function getAliases(projectName, projects = []) {
  * @param {Project} project
  * @returns {(RollupPlugin | null)[]}
  */
-export function getWatchers(envDeps = [], project) {
+export function getStyleWatchers(envDeps = [], project) {
     const deps = [...new Set(envDeps.concat(project.getDependencies()))];
     return deps.map(dep => {
         const depPath = path.join(cwd, 'node_modules', '@arpadroid', dep, 'src', 'themes');
@@ -257,7 +257,7 @@ export function getFatPlugins(project, config) {
             keep_classnames: false
         }),
         watch && fs.existsSync(path.resolve(cwd, 'src/themes')) && rollupWatch({ dir: 'src/themes' }),
-        Boolean(watch) && getWatchers(deps, project),
+        Boolean(watch) && getStyleWatchers(deps, project),
         deps && deps?.length > 0 && multiEntry(),
         bundleStats(),
         getAliases(project.name, aliases),
