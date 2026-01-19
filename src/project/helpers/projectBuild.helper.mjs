@@ -8,9 +8,9 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { existsSync, readFileSync } from 'fs';
 import { cwd } from 'process';
-import { mergeObjects } from '../../utils/object.util.js';
-import { Project } from '../../index.js';
-import { log, logStyle } from '../../utils/terminalLogger.mjs';
+import { mergeObjects } from '@arpadroid/tools-iso';
+import { log, logStyle } from '@arpadroid/logger';
+import Project from '../project.mjs';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv;
@@ -18,7 +18,7 @@ const argv = yargs(hideBin(process.argv)).argv;
 export const NO_TYPES = Boolean(argv.noTypes);
 export const STYLE_SORT = ['ui', 'lists', 'navigation', 'messages', 'form'];
 export const DEPENDENCY_SORT = [
-    'module',
+    'tools-iso',
     'style-bun',
     'module',
     'tools',
@@ -70,13 +70,16 @@ export function getDefaultBuildConfig(project) {
 
 /**
  * Retrieves the project configuration for a project.
- * @param {string} projectPath
+ * @param {Project} project
  * @returns {Promise<BuildConfigType>}
  */
-export async function getFileConfig(projectPath = cwd()) {
-    const configFile = `${projectPath}/src/arpadroid.config.js`;
-    if (!existsSync(configFile)) {
-        return {};
+export async function getFileConfig(project) {
+    const { configPath } = project.config || {};
+    const locations = [configPath, `${project.path}/src/arpadroid.config.js`];
+    const configFile = locations.find(location => location && existsSync(location));
+    if (!configFile) {
+        log.error('Could not find configuration file, looked in the following locations:', locations);
+        return Promise.resolve({});
     }
     return await import(configFile).then(mod => mod.default || {});
 }
@@ -95,7 +98,7 @@ export async function getFileConfig(projectPath = cwd()) {
  * @returns {Promise<BuildConfigType>}
  */
 export async function getBuildConfig(project, clientConfig = {}, args = argv) {
-    const fileConfig = (await getFileConfig(project.path || cwd())) || {};
+    const fileConfig = (await getFileConfig(project)) || {};
     const conf = mergeObjects(getDefaultBuildConfig(project), fileConfig);
     /** @type {BuildConfigType} */
     const config = mergeObjects(conf, clientConfig);

@@ -1,7 +1,7 @@
 /**
  * @typedef {import('./storybookTool.types.js').StoryContextType} StoryContextType
  */
-import { mergeObjects } from '../utils/object.util.js';
+import { mergeObjects } from '@arpadroid/tools-iso';
 
 /**
  * Returns the context object for the current story.

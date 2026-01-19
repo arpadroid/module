@@ -4,7 +4,6 @@
     "description": "Comprehensive build system and development toolkit for JavaScript/TypeScript projects with unified Rollup, Storybook, Jest, and ESLint configuration.",
     "exports": {
         ".": "./src/index.js",
-        "./logger": "./src/utils/terminalLogger.mjs",
         "./storybook/test": {
             "types": "./src/storybook/exports/test.d.ts",
             "import": "./src/storybook/exports/test.js"
@@ -14,7 +13,8 @@
         "./storybook/preview": "./src/storybook/preview.ui.js",
         "./storybook/middleware": "./.storybook/middleware.js",
         "./storybook/manager": "./.storybook/manager.jsx",
-        "./storybook/decorators": "./src/storybook/decorators.js"
+        "./storybook/decorators": "./src/storybook/decorators.js",
+        "./tsconfig": "./tsconfig.json"
     },
     "bin": {
         "arpadroid-build": "./scripts/build-project.mjs",
@@ -71,10 +71,15 @@
         "url": "https://github.com/arpadroid/module/issues"
     },
     "homepage": "https://github.com/arpadroid/module#readme",
-    "dependencies": {
-        "@types/node": "^22.10.10"
+    "dependencies": {},
+    "peerDependencies": {
+        "@arpadroid/logger": "file:../logger",
+        "@arpadroid/style-bun": "file:../style-bun",
+        "@arpadroid/tools-iso": "file:../tools-iso"
     },
     "devDependencies": {
+        "@types/node": "^22.10.10",
+        "@arpadroid/i18n": "file:../i18n",
         "@babel/core": "^7.24.7",
         "@babel/eslint-parser": "^7.26.8",
         "@babel/parser": "^7.26.5",
@@ -103,7 +108,7 @@
         "@storybook/addon-viewport": "^8.6.4",
         "@storybook/addon-webpack5-compiler-swc": "^2.1.0",
         "@storybook/blocks": "^8.6.4",
-        "@storybook/cli": "^8.6.4",
+        "@storybook/cli": "^10.1.11",
         "@storybook/test": "^8.6.4",
         "@storybook/test-runner": "^0.22.0",
         "@storybook/types": "^8.6.4",
@@ -149,7 +154,7 @@
         "jest-junit": "^16.0.0",
         "jsdom": "^24.1.1",
         "lit": "^3.1.2",
-        "node-polyfill-webpack-plugin": "^4.1.0",
+        "node-polyfill-webpack-plugin": "^4.0.0",
         "pm2": "^6.0.13",
         "rollup": "^4.18.0",
         "rollup-plugin-bundle-stats": "^4.13.2",
@@ -164,10 +169,6 @@
         "sass": "^1.97.1",
         "storybook": "^8.6.4",
         "typescript": "^5.8.2",
-        "yargs": "^17.7.2",
-        "@arpadroid/i18n": "file:../i18n"
-    },
-    "peerDependencies": {
-        "@arpadroid/style-bun": "file:../style-bun"
+        "yargs": "^17.7.2"
     }
 }

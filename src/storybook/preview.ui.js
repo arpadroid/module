@@ -1,5 +1,5 @@
 /** @type { import('@storybook/web-components').Preview } */
-import { mergeObjects } from '../utils/object.util.js';
+import { mergeObjects } from '@arpadroid/tools-iso';
 import { usagePanelDecorator } from './decorators.js';
 import flexLayoutDecorator from './layouts/flexLayout.jsx';
 

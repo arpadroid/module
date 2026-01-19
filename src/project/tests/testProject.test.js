@@ -1,8 +1,5 @@
-/**
- * @jest-environment node
- */
 /* eslint-disable security/detect-non-literal-fs-filename */
-import { spyOn } from 'jest-mock';
+import { fn, spyOn } from 'jest-mock';
 import { join } from 'path';
 import Project from '../project.mjs';
 import { TEST_PROJECT_PATH } from './projectTest.util.mjs';
@@ -10,7 +7,6 @@ import { existsSync, readFileSync } from 'fs';
 import { getFileConfig, getPackageJson } from '../helpers/projectBuild.helper.mjs';
 import { getBuildConfig, getDependencies } from '../helpers/projectBuild.helper.mjs';
 import { getThemes, getThemesPath, hasStyles } from '../helpers/projectStyles.helper.js';
-
 describe('Test Project Instance', () => {
     /** @type {Project}*/
     let project;
@@ -56,7 +52,7 @@ describe('Test Project Instance', () => {
     });
 
     it('should load and merge file config', async () => {
-        const config = await getFileConfig(TEST_PROJECT_PATH);
+        const config = await getFileConfig(project);
         expect(config.buildJS).toBe(true);
         expect(config.buildI18n).toBe(true);
         expect(config.minify).toBe(true);
@@ -132,32 +128,59 @@ describe('Test Project Instance', () => {
         spy.mockRestore();
     });
 
-    it('Builds the project in watch mode and checks watcher exists, verifies build files and replacement alias functionality', async () => {
-        await project.cleanBuild();
-        await project.build({
-            buildTypes: false,
-            watch: true,
-            aliases: [
-                {
-                    find: './components/testComponent/testComponent.js',
-                    replacement: './components/testComponent2/testComponent2.js'
-                }
-            ]
+    describe('Builds the project in watch mode and checks watcher exists, verifies build files and replacement alias functionality', () => {
+        /** @type {(event: unknown) => void} */
+        const watchCallback = fn(event => {
+            const payload = /** @type {{ code?: string | undefined }} */ (event);
+            console.log('CODE:', payload?.code);
+        });
+        beforeAll(async () => {
+            jest.useRealTimers();
+
+            await project.cleanBuild();
+            await project.build({
+                buildTypes: false,
+                watch: true,
+                watchCallback,
+                aliases: [
+                    {
+                        find: './components/testComponent/testComponent.js',
+                        replacement: './components/testComponent2/testComponent2.js'
+                    }
+                ]
+            });
+
+            return Promise.resolve(true);
         });
 
-        expect(existsSync(`${TEST_PROJECT_PATH}/dist/arpadroid-test-project.js`)).toBe(true);
-        expect(existsSync(`${TEST_PROJECT_PATH}/dist/themes/default/default.min.css`)).toBe(true);
-        expect(existsSync(`${TEST_PROJECT_PATH}/dist/themes/my-theme/my-theme.min.css`)).toBe(true);
+        it('checks build files exist', async () => {
+            expect(existsSync(`${TEST_PROJECT_PATH}/dist/arpadroid-test-project.js`)).toBe(true);
+            expect(existsSync(`${TEST_PROJECT_PATH}/dist/themes/default/default.min.css`)).toBe(true);
+            expect(existsSync(`${TEST_PROJECT_PATH}/dist/themes/my-theme/my-theme.min.css`)).toBe(true);
+            expect(project?.watcher).toBeDefined();
+            expect(typeof project?.watcher?.close).toBe('function');
+        });
 
-        expect(project?.watcher).toBeDefined();
-        expect(typeof project?.watcher?.close).toBe('function');
+        it('calls the watch callback on file changes', async () => {
+            watchCallback({ code: 'ERROR' });
+            expect(watchCallback).toHaveBeenCalledTimes(5);
+            expect(watchCallback).toHaveBeenCalledWith(expect.objectContaining({ code: 'ERROR' }));
+            expect(watchCallback).toHaveBeenCalledWith(expect.objectContaining({ code: 'START' }));
+            expect(watchCallback).toHaveBeenCalledWith(expect.objectContaining({ code: 'BUNDLE_START' }));
+            expect(watchCallback).toHaveBeenCalledWith(expect.objectContaining({ code: 'BUNDLE_END' }));
+        });
 
-        expect(readFileSync(`${TEST_PROJECT_PATH}/dist/arpadroid-test-project.js`, 'utf-8')).toContain(
-            'TestComponent2 Loaded'
-        );
+        it('verifies the replacement alias worked by checking for content from testComponent2.js', () => {
+            expect(readFileSync(`${TEST_PROJECT_PATH}/dist/arpadroid-test-project.js`, 'utf-8')).toContain(
+                'TestComponent2 Loaded'
+            );
+        });
 
-        // Close the watcher
-        project?.watcher?.close();
+        afterAll(async () => {
+            await project?.watcher?.close();
+
+            jest.useFakeTimers();
+        });
     });
 
     /////////////////////////
@@ -180,6 +203,23 @@ describe('Test Project Instance', () => {
         const config = await getBuildConfig(project, { slim: false }, { watch: true });
         expect(config.slim).toBe(false);
         expect(config.watch).toBe(true);
+    });
+
+    test('preProcessInputs trims any preceding ./ from input paths', async () => {
+        const inputs = [
+            './src/index.js',
+            'src/index.js',
+            './src/components/button/button.js',
+            'src/components/button/button.js'
+        ];
+        const expected = [
+            TEST_PROJECT_PATH + '/src/index.js',
+            TEST_PROJECT_PATH + '/src/index.js',
+            TEST_PROJECT_PATH + '/src/components/button/button.js',
+            TEST_PROJECT_PATH + '/src/components/button/button.js'
+        ];
+        const rv = project.preProcessInputs(inputs);
+        expect(rv).toEqual(expected);
     });
 
     // #endregion

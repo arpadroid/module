@@ -14,7 +14,7 @@ import { spawnSync } from 'child_process';
 import { rollup, watch as rollupWatch } from 'rollup';
 import alias from '@rollup/plugin-alias';
 
-import { log, logStyle } from '../utils/terminalLogger.mjs';
+import { log, logStyle } from '@arpadroid/logger';
 import ProjectTest from '../projectTest/projectTest.mjs';
 
 import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK } from './helpers/projectBuild.helper.mjs';
@@ -245,7 +245,8 @@ class Project {
         const rollupConfig = await this.getRollupConfig();
         await this.rollup(rollupConfig, config);
         await buildTypes(this, rollupConfig, config);
-        this.watch(rollupConfig, config, config.watchCallback);
+        await this.watch(rollupConfig, config, config.watchCallback);
+
         runStorybook(this, config);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
@@ -378,35 +379,35 @@ class Project {
      * @param {RollupOptions[]} rollupConfig
      * @param {BuildConfigType} config
      * @param {(payload: Record<string, any>) => void} [callback]
+     * @returns {Promise<boolean | import('rollup').RollupWatcher>}
      */
-    watch(rollupConfig, { watch, slim, verbose }, callback) {
+    async watch(rollupConfig, { watch, slim, verbose }, callback) {
         const $watch = WATCH || watch;
-        if (!$watch || !rollupConfig || rollupConfig.length === 0) return;
+        if (!$watch || !rollupConfig || rollupConfig.length === 0) return Promise.resolve(true);
         verbose || (!slim && log.task(this.name, 'watching for file changes'));
         this.watcher = rollupWatch(rollupConfig);
 
-        /**
-         * Watches for file changes.
-         * @param {Record<string, any>} event
-         * @returns {void}
-         */
-        const watcherCallback = event => {
-            if (event.code === 'ERROR') {
-                log.error(`Error occurred while watching ${this.name}`, event.error);
-            } else if (event.code === 'END') {
-                // Build completed successfully
-                verbose && log.task(this.name, 'Build complete');
-            } else if (event.code === 'BUNDLE_START') {
-                verbose && log.task(this.name, 'Bundle started');
-            }
-
-            // Call the user's callback on any event
-            if (typeof callback === 'function') {
-                callback(event);
-            }
-        };
-
-        this.watcher.on('event', watcherCallback);
+        return new Promise(resolve => {
+            let initialized = false;
+            /**
+             * Handles rollup watcher events.
+             * @param {import('rollup').RollupWatcherEvent} event
+             * @returns {void}
+             */
+            const handleEvent = (/** @type {import('rollup').RollupWatcherEvent} */ event) => {
+                if (event.code === 'ERROR') {
+                    // log.error(`Error occurred while watching ${this.name}`, event.error);
+                } else if (event.code === 'BUNDLE_START') {
+                    verbose && log.task(this.name, 'Bundle started');
+                }
+                typeof callback === 'function' && callback(event);
+                if (!initialized && event?.code === 'END') {
+                    initialized = true;
+                    resolve(/** @type {import('rollup').RollupWatcher} */ (this.watcher));
+                }
+            };
+            this.watcher?.on('event', handleEvent);
+        });
     }
 
     // #endregion Rollup
@@ -427,8 +428,15 @@ class Project {
         ];
         const loc = locations.find(async loc => await existsSync(loc));
         if (loc) {
-            const compiler = await import(loc);
-            this.i18nFiles = await compiler.compileI18n(this);
+            const compiler = await import(loc)
+                .then(async response => {
+                    this.i18nFiles = await compiler.compileI18n(this);
+                    return Promise.resolve(response);
+                })
+                .catch(err => {
+                    // log.error(`Failed to load i18n compiler for project ${this.name}`, err);
+                    return Promise.resolve(err);
+                });
         }
         return true;
     }

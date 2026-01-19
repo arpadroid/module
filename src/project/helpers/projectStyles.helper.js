@@ -4,7 +4,7 @@
  */
 
 import { ThemesBundler } from '@arpadroid/style-bun';
-import { log } from '../../utils/terminalLogger.mjs';
+import { log } from '@arpadroid/logger';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { getDependencies, STYLE_SORT } from './projectBuild.helper.mjs';
 import Project from '../project.mjs';
@@ -192,12 +192,13 @@ export async function copyUIStyleAssets(project) {
  * Compiles the project styles including other arpadroid module dependency styles.
  * @param {Project} project
  * @param {BuildConfigType} config
+ * @returns {Promise<boolean>}
  */
 export async function compileStyles(project, config) {
     const { buildStyles, slim } = config;
     const _hasStyles = await hasStyles(project);
     if (!_hasStyles || !buildStyles || slim === true) {
-        return;
+        return Promise.resolve(true);
     }
     log.task(project.name, 'Compiling dependency styles.');
     const minifiedDeps = (await getStylesheetsToCompile(project)) ?? [];
@@ -206,4 +207,5 @@ export async function compileStyles(project, config) {
     if (getDependencies(project).includes('ui')) {
         await copyUIStyleAssets(project);
     }
+    return Promise.resolve(true);
 }

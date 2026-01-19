@@ -9,8 +9,8 @@ import fs from 'fs';
 import { globSync } from 'glob';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
-import { log, logStyle } from '../utils/terminalLogger.mjs';
-import { mergeObjects } from '../utils/object.util.js';
+import { log, logStyle } from '@arpadroid/logger';
+import { mergeObjects } from '@arpadroid/tools-iso';
 import { getStorybookConfigPath } from '../project/helpers/projectStorybook.helper.js';
 
 /** @type {ProjectTestConfigType} */

@@ -5,6 +5,7 @@
  */
 import { spawn } from 'child_process';
 import { existsSync } from 'fs';
+import { log } from '@arpadroid/logger';
 
 /**
  * Returns the storybook configuration path.
@@ -18,7 +19,7 @@ export function getStorybookConfigPath(project) {
     ];
     const loc = locations.find(location => existsSync(location));
     if (!loc) {
-        console.warn(`Warning: Storybook configuration not found for project "${project.name}"`);
+        log.error(`Storybook configuration not found for project "${project.name}"`);
     }
     return loc || `${project.path}/.storybook`;
 }
@@ -38,18 +39,30 @@ export function getStorybookCmd(project, port) {
  * Runs the storybook.
  * @param {Project} project
  * @param {BuildConfigType} config
+ * @param {Record<string, unknown>} spawnConfig
  * @returns {Promise<any>}
  */
-export async function runStorybook(project, { slim, storybook_port }) {
+export async function runStorybook(project, { slim, storybook_port, verbose }, spawnConfig = {}) {
     if (!storybook_port || slim) {
         return Promise.resolve(false);
     }
     const cmd = getStorybookCmd(project, storybook_port);
     return new Promise((resolve, reject) => {
-        const child = spawn(cmd, { shell: true, stdio: 'inherit', cwd: project.path });
+        const child = spawn(cmd, {
+            shell: true,
+            stdio: 'inherit',
+            cwd: project.path,
+            ...spawnConfig
+        });
 
         child.on('error', error => {
             reject(error);
+        });
+
+        child.on('message', message => {
+            if (verbose) {
+                log.info('Message from Storybook process:' + message);
+            }
         });
 
         child.on('close', code => {

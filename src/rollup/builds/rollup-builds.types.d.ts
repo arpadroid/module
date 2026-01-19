@@ -33,6 +33,7 @@ export type BuildConfigType = {
     buildJS?: boolean;
     buildStyles?: boolean;
     buildTypes?: boolean;
+    configPath?: string;
     deps?: string[];
     external?: string[];
     file?: string;

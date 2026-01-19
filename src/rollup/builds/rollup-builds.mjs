@@ -7,7 +7,7 @@
  * @typedef {import('../../project/project.types.js').ProjectCliArgsType} ProjectCliArgsType
  */
 /* eslint-disable security/detect-non-literal-fs-filename */
-import { mergeObjects } from '../../utils/object.util.js';
+import { mergeObjects } from '@arpadroid/tools-iso';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
 import fs, { existsSync } from 'fs';
 import path from 'path';
@@ -30,7 +30,7 @@ import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import buildStyles from '../plugins/buildStyles.mjs';
 import typescript from 'rollup-plugin-typescript2';
-import { logError } from '../../utils/terminalLogger.mjs';
+import { logError } from '@arpadroid/logger';
 import Project from '../../project/project.mjs';
 
 /** @type {ProjectCliArgsType} */

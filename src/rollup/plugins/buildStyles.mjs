@@ -13,8 +13,8 @@ import { compileStyles } from '../../project/helpers/projectStyles.helper.js';
 export default function buildStyles(project, config) {
     return {
         name: 'build-styles',
-        buildEnd() {
-            compileStyles(project, config);
+        async buildEnd() {
+            await compileStyles(project, config);
         }
     };
 }

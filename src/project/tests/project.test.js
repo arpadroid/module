@@ -4,7 +4,7 @@ import Project from '../project.mjs';
 import { basename } from 'path';
 import { existsSync } from 'fs';
 import { spyOn } from 'jest-mock';
-import { getDependencies, getFileConfig } from '../helpers/projectBuild.helper.mjs';
+import { getDependencies } from '../helpers/projectBuild.helper.mjs';
 
 const cwd = process.cwd();
 
@@ -27,7 +27,7 @@ describe('@arpadroid/module Project Instance', () => {
     test('getDependencies returns default sort order', () => {
         const deps = project && getDependencies(project, []);
         expect(Array.isArray(deps)).toBe(true);
-        expect(deps).toEqual(['style-bun']);
+        expect(deps).toEqual(['logger', 'style-bun', 'tools-iso']);
     });
 
     test('_getFileConfig returns empty object when no config file exists', async () => {
@@ -61,10 +61,6 @@ describe('@arpadroid/module Project Instance', () => {
     test('_getFileConfig returns empty object when no config file exists', async () => {
         const config = await Project._getFileConfig('/non/existent/path');
         expect(config).toEqual({});
-
-        await getFileConfig('/non/existent/path').then(cfg => {
-            expect(cfg).toEqual({});
-        });
     });
 
     test('Logs error when a dependency is missing', async () => {
@@ -83,45 +79,6 @@ describe('@arpadroid/module Project Instance', () => {
                 expect(calls[1][0]).toContain('Project non-existent-dependency does not exist');
             });
         consoleErrorSpy.mockRestore();
-    });
-
-    test('watcherCallback handles ERROR event and calls user callback', async () => {
-        const project = new Project('module');
-        await project.promise;
-
-        const logErrorSpy = spyOn(console, 'error').mockImplementation(() => {});
-        const mockCallback = { fn: () => {} };
-        const userCallback = spyOn(mockCallback, 'fn');
-
-        // Create mock watcher
-        let eventHandler;
-        project.watcher = {
-            // @ts-ignore
-            on: (event, handler) => {
-                eventHandler = handler;
-            }, // @ts-ignore
-            close: () => {}
-        };
-
-        // Manually call watch to register the callback
-        project.watcher?.on('event', event => {
-            if (event.code === 'ERROR') {
-                console.error(`Error occurred while watching ${project.name}`, event.error);
-            }
-            if (typeof mockCallback.fn === 'function') {
-                // @ts-ignore
-                mockCallback.fn(event);
-            }
-        });
-
-        // Test ERROR event
-        const errorEvent = { code: 'ERROR', error: new Error('Test error') }; // @ts-ignore
-        typeof eventHandler === 'function' && eventHandler(errorEvent);
-
-        expect(logErrorSpy).toHaveBeenCalled();
-        expect(userCallback).toHaveBeenCalledWith(errorEvent);
-
-        logErrorSpy.mockRestore();
     });
 });
 

@@ -432,10 +432,7 @@ Available import paths from @arpadroid/module:
 ```javascript
 // Main exports
 import Project from '@arpadroid/module';
-import { getBuild, isSlim, mergeObjects, isObject } from '@arpadroid/module';
-
-// Logger utilities
-import { log, logStyle } from '@arpadroid/module/logger';
+import { getBuild, isSlim } from '@arpadroid/module';
 
 // Storybook utilities
 import { getStorybookContext } from '@arpadroid/module/storybook/test';

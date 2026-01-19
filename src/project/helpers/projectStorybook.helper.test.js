@@ -1,6 +1,3 @@
-/**
- * @jest-environment node
- */
 import { spyOn } from 'jest-mock';
 
 import Project from '../project.mjs';
@@ -48,4 +45,9 @@ describe('Project Storybook Helper', () => {
         const result = await runStorybook(project, { slim: false });
         expect(result).toBe(false);
     });
+
+    // test('Calls runStorybook with a port and spawns process', async () => {
+    //     const result = await runStorybook(project, { slim: false, storybook_port: 6006 }, { stdio: 'pipe' });
+    //     expect(result).toBe(0);
+    // });
 });

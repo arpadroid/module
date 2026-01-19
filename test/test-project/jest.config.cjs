@@ -4,9 +4,11 @@ module.exports = {
     testEnvironment: 'node',
     testMatch: ['**/__tests__/**/*.?(m)js?(x)', '**/?(*.)(spec|test).?(m)js?(x)'],
     moduleFileExtensions: ['js', 'mjs'],
+    setupFilesAfterEnv: ['<rootDir>/../setupTests.cjs'],
     transform: {
         '^.+\\.m?js$': 'babel-jest'
     },
+    injectGlobals: true,
     fakeTimers: { enableGlobally: true },
     globals: {},
     transformIgnorePatterns: [

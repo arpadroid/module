@@ -4,6 +4,7 @@ module.exports = {
     testEnvironment: 'node',
     testMatch: ['<rootDir>/src/**/*.test.js', '<rootDir>/src/**/*.test.mjs', '<rootDir>/src/**/*.spec.js', '<rootDir>/src/**/*.spec.mjs'],
     moduleFileExtensions: ['js', 'mjs'],
+    setupFilesAfterEnv: ['<rootDir>/test/setupTests.cjs'],
     transform: {
         '^.+\\.m?js$': ['babel-jest', { presets: [['@babel/preset-env', { targets: { node: 'current' } }]] }]
     },
