@@ -27,13 +27,13 @@ describe('@arpadroid/module Project Instance', () => {
     test('getDependencies returns default sort order', () => {
         const deps = project && getDependencies(project, []);
         expect(Array.isArray(deps)).toBe(true);
-        expect(deps?.map(dep => dep.name)).toEqual(['logger', 'style-bun', 'tools-iso']);
+        expect(deps?.map(dep => dep.name)).toEqual(['logger', 'style-bun', 'tools-iso', 'tools-node']);
     });
 
     test('getDependencies accepts options object', () => {
         const deps = project && getDependencies(project, { sort: [] });
         expect(Array.isArray(deps)).toBe(true);
-        expect(deps?.map(dep => dep.name)).toEqual(['logger', 'style-bun', 'tools-iso']);
+        expect(deps?.map(dep => dep.name)).toEqual(['logger', 'style-bun', 'tools-iso', 'tools-node']);
     });
 
     test('getAllDependencies resolves transitive dependencies', async () => {
@@ -46,6 +46,7 @@ describe('@arpadroid/module Project Instance', () => {
         expect(depNames).toContain('logger');
         expect(depNames).toContain('style-bun');
         expect(depNames).toContain('tools-iso');
+        expect(depNames).toContain('tools-node');
     });
 
     test('getAllDependencies completes without infinite loop', async () => {

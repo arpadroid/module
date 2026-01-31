@@ -37,7 +37,6 @@
         "build:project": "node ./scripts/build-project.js",
         "test": "node ./scripts/test-project.mjs --storybook --jest --port=6000",
         "install:project": "node ./scripts/install-projects.mjs",
-        "stop:storybook:ci": "pm2 stop srv-storybook && pm2 delete srv-storybook",
         "postinstall": "npx playwright install",
         "build": "node ./scripts/build-project.mjs --minify",
         "clean": "rm -rf ./dist ./node_modules package-lock.json",
@@ -75,7 +74,8 @@
     "peerDependencies": {
         "@arpadroid/logger": "file:../logger",
         "@arpadroid/style-bun": "file:../style-bun",
-        "@arpadroid/tools-iso": "file:../tools-iso"
+        "@arpadroid/tools-iso": "file:../tools-iso",
+        "@arpadroid/tools-node": "file:../tools-node"
     },
     "devDependencies": {
         "@types/node": "^22.10.10",
@@ -155,7 +155,6 @@
         "jsdom": "^24.1.1",
         "lit": "^3.1.2",
         "node-polyfill-webpack-plugin": "^4.0.0",
-        "pm2": "^6.0.13",
         "rollup": "^4.18.0",
         "rollup-plugin-bundle-stats": "^4.13.2",
         "rollup-plugin-copy": "^3.5.0",

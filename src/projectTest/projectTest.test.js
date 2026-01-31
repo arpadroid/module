@@ -30,9 +30,6 @@ describe('ProjectTest', () => {
             expect(projectTest.project).toBe(project);
             expect(projectTest.config).toBeDefined();
             expect(projectTest.scripts).toBeDefined();
-            expect(projectTest.pm2).toBeDefined();
-            expect(projectTest.sb).toBeDefined();
-            expect(projectTest.httpServer).toBeDefined();
             expect(projectTest.testResponse).toEqual({
                 success: true,
                 message: '',

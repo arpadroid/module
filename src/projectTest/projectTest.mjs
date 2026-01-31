@@ -1,9 +1,9 @@
+/* eslint-disable security/detect-non-literal-regexp */
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('../project/project.mjs').default} Project
  * @typedef {import('../project/project.types.js').ProjectTestConfigType} ProjectTestConfigType
  */
-/* eslint-disable security/detect-non-literal-regexp */
 import { execSync } from 'child_process';
 import fs from 'fs';
 import { globSync } from 'glob';
@@ -11,7 +11,8 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { log, logStyle } from '@arpadroid/logger';
 import { mergeObjects } from '@arpadroid/tools-iso';
-import { getStorybookConfigPath } from '../project/helpers/projectStorybook.helper.js';
+import { runStorybookCI, runStorybookTests } from '../project/helpers/projectStorybook.helper.js';
+import { isHTTPServerRunning } from '@arpadroid/tools-node';
 
 /** @type {ProjectTestConfigType} */
 const argv = yargs(hideBin(process.argv)).argv;
@@ -44,11 +45,7 @@ class ProjectTest {
     }
 
     async initialize() {
-        const modulePath = this.project.getModulePath();
         this.scripts = this.project.getScripts();
-        this.pm2 = modulePath + '/node_modules/pm2/bin/pm2';
-        this.sb = modulePath + '/node_modules/.bin/storybook';
-        this.httpServer = modulePath + '/node_modules/http-server/bin/http-server';
     }
 
     // #endregion
@@ -189,62 +186,22 @@ class ProjectTest {
     ///////////////////////////
 
     async testStorybook(config = this.config) {
-        const watch = WATCH ? ' --watch ' : '';
-        const configPath = getStorybookConfigPath(this.project);
-        const modulePath = this.project.getModulePath();
-        const executable = `${modulePath}/node_modules/@storybook/test-runner/dist/test-storybook`;
-        const script = `${executable} -c ${configPath} --maxWorkers=9 ${watch} --browsers ${config?.browsers ?? 'chromium'} --url="http://127.0.0.1:${PORT}"`;
-
-        /**
-         * If there is a query then filter the stories to run only the ones that match the query.
-         */
+        const port = config?.port ?? PORT;
+        // If there is a query then filter the stories to run only the ones that match the query.
         if (QUERY) {
             const query = new RegExp(QUERY, 'i');
             this.stories = this.stories.filter((/** @type {string} */ story) => query.test(story));
         }
-
-        /**
-         * If CI is true then start the storybook server.
-         */
-        if (config?.ci) {
-            await this.stopStorybookCI();
-            await this.startStorybookCI();
+        const isServerRunning = await isHTTPServerRunning(port);
+        console.log('hey1');
+        if (!isServerRunning) {
+            await runStorybookCI(this.project, { storybook_port: port, verbose: true });
+            console.log('hey');
         }
-        // run storybook test-runner
         log.task(this.project.name, 'Running storybook tests.');
-        execSync(`node ${script} -c ${configPath}`, {
-            shell: '/bin/sh',
-            stdio: 'inherit',
-            cwd: this.project.path
-        });
-        if (config?.ci) {
-            await this.stopStorybookCI();
-        }
+        return runStorybookTests(this.project, port);
     }
 
-    async startStorybookCI() {
-        const configPath = getStorybookConfigPath(this.project);
-        const cmd =
-            `cd ${this.project.path} && rm -rf ${this.project.path}/storybook-static && ` +
-            `${this.sb} build -c ${configPath} && ${this.pm2} start ${this.httpServer} --name 'srv-storybook' -- ./storybook-static --port ${PORT} --host 127.0.0.1 --silent`;
-        return execSync(cmd, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
-    }
-
-    isStorybookCIRunning() {
-        const processExists = Boolean(execSync(`${this.pm2} pid srv-storybook`).toString().trim());
-        return processExists;
-    }
-
-    async stopStorybookCI() {
-        if (!this.isStorybookCIRunning()) {
-            return Promise.resolve();
-        }
-        return execSync(`${this.pm2} stop srv-storybook && ${this.pm2} delete srv-storybook`, {
-            shell: '/bin/sh',
-            stdio: 'inherit',
-            cwd: this.project.path
-        });
-    }
     // #endregion Test Storybook
 }
 

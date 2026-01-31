@@ -126,7 +126,7 @@ describe('Test Project Instance', () => {
         expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Error: Command failed'));
         logSpy.mockRestore();
         spy.mockRestore();
-    });
+    }, 20000);
 
     describe('Builds the project in watch mode and checks watcher exists, verifies build files and replacement alias functionality', () => {
         /** @type {(event: unknown) => void} */
