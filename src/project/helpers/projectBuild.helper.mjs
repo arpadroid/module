@@ -1,5 +1,6 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
+ * @typedef {import('./projectBuilder.types.js').DependencyProjectPointerType} DependencyProjectPointerType
  * @typedef {import('../../rollup/builds/rollup-builds.mjs').ProjectCliArgsType} ProjectCliArgsType
  * @typedef {import("../../rollup/builds/rollup-builds.mjs").BuildConfigType} BuildConfigType
  */
@@ -11,6 +12,7 @@ import { cwd } from 'process';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { log, logStyle } from '@arpadroid/logger';
 import Project from '../project.mjs';
+import PROJECT_STORE from '../projectStore.mjs';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv;
@@ -19,7 +21,9 @@ export const NO_TYPES = Boolean(argv.noTypes);
 export const STYLE_SORT = ['ui', 'lists', 'navigation', 'messages', 'form'];
 export const DEPENDENCY_SORT = [
     'tools-iso',
+    'signals',
     'style-bun',
+    'logger',
     'module',
     'tools',
     'i18n',
@@ -128,31 +132,43 @@ export async function getPackageJson(path = cwd()) {
 
 /**
  * Returns arpadroid peer dependency package names, given a package.json parsed object.
- * @param {Record<string, unknown>} pkg
- * @returns {string[]}
+ * @param {Project} project
+ * @returns {DependencyProjectPointerType[]}
  */
-export function getDependencyPackages(pkg) {
-    return Object.entries(pkg?.peerDependencies ?? {})
-        .map(([name]) => name.startsWith('@arpadroid/') && name.replace('@arpadroid/', ''))
-        .filter(Boolean)
-        .filter(pkg => pkg !== false);
+export function getDependencyPackages(project) {
+    return Object.entries(project.pkg?.peerDependencies ?? {})
+        .filter(([name]) => name.startsWith('@arpadroid/'))
+        .map(([name]) => {
+            const depName = name.replace('@arpadroid/', '');
+            return {
+                name: depName,
+                path: `${project.path}/node_modules/@arpadroid/${depName}`
+            };
+        });
 }
 
 /**
  * Sorts the given dependency packages based on the provided sort order.
- * @param {string[]} packages
+ * @param {DependencyProjectPointerType[]} packages
  * @param {string[]} sort
- * @returns {string[]}
+ * @returns {DependencyProjectPointerType[]}
  */
 export function sortDependencies(packages, sort = DEPENDENCY_SORT) {
     if (sort?.length) {
-        /** @type {string[]} */
+        /** @type {Record<string, DependencyProjectPointerType>} */
+        const pkgMapObj = {};
+        /** @type {Record<string, DependencyProjectPointerType>} */
+        const pkgMap = packages.reduce((map, pkg) => {
+            map[pkg.name] = pkg;
+            return map;
+        }, pkgMapObj);
+        /** @type {DependencyProjectPointerType[]} */
         const rv = [];
-        sort.forEach(pkg => {
-            if (packages.includes(pkg)) {
-                rv.push(pkg);
-                packages.splice(packages.indexOf(pkg), 1);
-            }
+        sort.forEach(pkgName => {
+            const pkg = pkgMap[pkgName];
+            if (!pkg) return;
+            rv.push(pkg);
+            packages.splice(packages.indexOf(pkg), 1);
         });
         return rv.concat(packages);
     }
@@ -160,30 +176,61 @@ export function sortDependencies(packages, sort = DEPENDENCY_SORT) {
 }
 
 /**
- * Returns arpadroid peer dependencies sorted by build priority, given a package.json parsed object.
+ * Returns arpadroid peer dependencies sorted by build priority.
  * @param {Project} project
- * @param {string[]} sort
- * @returns {string[]}
+ * @param {string[] | { sort?: string[] }} [sortOrOptions]
+ * @returns {DependencyProjectPointerType[]}
  */
-export function getDependencies(project, sort = DEPENDENCY_SORT) {
-    let packages = getDependencyPackages(project.pkg);
-    if (project.buildConfig?.deps?.length) {
-        packages = [...new Set([...packages, ...project.buildConfig.deps])];
+export function getDependencies(project, sortOrOptions = DEPENDENCY_SORT) {
+    const sort = Array.isArray(sortOrOptions) ? sortOrOptions : (sortOrOptions.sort ?? DEPENDENCY_SORT);
+    const packages = getDependencyPackages(project);
+    const existingNames = new Set(packages.map(pkg => pkg.name));
+
+    for (const name of project.buildConfig?.deps ?? []) {
+        if (!existingNames.has(name)) {
+            packages.push({ name, path: `${project.path}/node_modules/@arpadroid/${name}` });
+        }
     }
     return sortDependencies(packages, sort);
 }
 
 /**
- * Creates Project instances for each arpadroid dependency.
- * @param {string[]} deps
- * @param {string} projectPath
- * @returns {Promise<Project[]>}
+ * Resolves dependencies recursively with cycle detection.
+ * @param {Project} project
+ * @param {Set<string>} visited
+ * @param {number} depth
+ * @param {number} maxDepth
+ * @returns {Promise<DependencyProjectPointerType[]>}
  */
-export async function createDependencyInstances(deps, projectPath = cwd()) {
-    return deps.map(
-        packageName =>
-            new Project(packageName, { path: `${projectPath}/node_modules/@arpadroid/${packageName}` })
-    );
+export async function getDependenciesRecursive(project, visited, depth = 0, maxDepth = 10) {
+    if (depth >= maxDepth) return [];
+    /** @type {DependencyProjectPointerType[]} */
+    const results = [];
+
+    for (const dep of getDependencies(project, { sort: [] })) {
+        if (visited.has(dep.name)) continue;
+        visited.add(dep.name);
+
+        const proj = PROJECT_STORE[dep.name] || new Project(dep.name, { path: dep.path });
+        results.push(dep);
+        dep.project = proj;
+        await proj.promise;
+        const dps = await getDependenciesRecursive(proj, visited, depth + 1, maxDepth);
+        results.push(...(dps || []));
+    }
+    return results;
+}
+
+/**
+ * Recursively resolves all arpadroid dependencies including transitive dependencies.
+ * @param {Project} project
+ * @param {{ sort?: string[], maxDepth?: number }} [options]
+ * @returns {Promise<DependencyProjectPointerType[]>}
+ */
+export async function getAllDependencies(project, options = {}) {
+    const { sort = DEPENDENCY_SORT, maxDepth = 10 } = options;
+    const deps = await getDependenciesRecursive(project, new Set(), 0, maxDepth);
+    return sortDependencies(deps, sort).filter(dep => project.name !== dep.name);
 }
 
 /**
@@ -216,13 +263,13 @@ export async function buildDependencies(project, config) {
     if (config.buildDeps !== true) {
         return { promise: undefined };
     }
-    const deps = getDependencies(project);
-    const projects = await createDependencyInstances(deps, project.path);
+    const deps = await getAllDependencies(project);
+    const projects = deps.map(dep => dep.project).filter(proj => proj instanceof Project);
     process.env.arpadroid_slim = 'true';
     const runPromises = async () => {
-        for (const dep of projects) {
-            await dep.promise;
-            await buildDependency(dep, project, config);
+        for (const proj of projects) {
+            await proj.promise;
+            await buildDependency(proj, project, config);
         }
     };
     const promise = await runPromises().catch(err => {

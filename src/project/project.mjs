@@ -7,7 +7,7 @@
  * @typedef {import('./project.types.js').ProjectCliArgsType} ProjectCliArgsType
  */
 
-import { basename } from 'path';
+import path, { basename } from 'path';
 import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 
@@ -24,6 +24,7 @@ import { getBuildConfig } from './helpers/projectBuild.helper.mjs';
 import { runStorybook } from './helpers/projectStorybook.helper.js';
 import { buildTypes } from './helpers/projectTypes.helper.mjs';
 import { bundleStyles } from './helpers/projectStyles.helper.js';
+import PROJECT_STORE from './projectStore.mjs';
 
 const cwd = process.cwd();
 /** @type {ProjectCliArgsType} */
@@ -39,8 +40,13 @@ class Project {
      */
     constructor(name, config = {}) {
         this.name = name;
+        PROJECT_STORE[name] = this;
         /** @type {Record<string, unknown>} */
         this.pkg = {};
+        /** @type {import('rollup').RollupWatcher[]} */
+        this.watchers = [];
+        /** @type {import('rollup').RollupWatcher | undefined} */
+        this.watcher = undefined;
         /** @type {string[]} */
         this.i18nFiles = [];
         this.setConfig(config);
@@ -49,6 +55,9 @@ class Project {
     }
 
     async initialize() {
+        this.handleCloseSignal = this.handleCloseSignal.bind(this);
+        process.on('SIGINT', this.handleCloseSignal);
+        process.on('SIGTERM', this.handleCloseSignal);
         const promises = [this.initializePackageJson()];
         return Promise.all(promises);
     }
@@ -243,10 +252,14 @@ class Project {
         await this.bundleI18n(config);
         process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
         const rollupConfig = await this.getRollupConfig();
-        await this.rollup(rollupConfig, config);
-        await buildTypes(this, rollupConfig, config);
-        await this.watch(rollupConfig, config, config.watchCallback);
 
+        if (config.watch || WATCH) {
+            await this.watch(rollupConfig, config, config.watchCallback);
+        } else {
+            await this.rollup(rollupConfig, config);
+        }
+
+        await buildTypes(this, rollupConfig, config);
         runStorybook(this, config);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
@@ -264,7 +277,8 @@ class Project {
      * @returns {Promise<boolean | void>}
      */
     async buildDependencies(buildConfig) {
-        buildConfig.buildDeps && log.task(this.name, 'Building dependencies.');
+        if (!buildConfig.buildDeps) return;
+        log.task(this.name, 'Building dependencies.');
         const { promise, projects } = await buildDependencies(this, buildConfig);
         this.dependencyProjects = projects;
         return promise;
@@ -312,41 +326,57 @@ class Project {
     /////////////////////////////
 
     /**
+     * Preprocesses rollup configs with resolved paths and aliases.
+     * @param {RollupOptions[]} configs
+     * @param {{ find: string | RegExp, replacement: string }[]} [aliases]
+     */
+    preprocessRollupConfigs(configs, aliases = []) {
+        for (const conf of configs) {
+            this.preprocessRollupConfig(conf);
+        }
+        if (aliases.length && Array.isArray(configs[0]?.plugins)) {
+            configs[0].plugins.push(alias({ entries: aliases }));
+        }
+    }
+
+    /**
+     * Preprocesses a single rollup config with resolved paths.
+     * @param {RollupOptions} conf
+     */
+    preprocessRollupConfig(conf) {
+        // @ts-ignore - preProcessInputs handles the type conversion
+        conf.input = this.preProcessInputs(conf.input);
+        const output = conf?.output;
+        if (output && !Array.isArray(output) && output.file) {
+            // Only prepend path if output.file is a relative path
+            if (!path.isAbsolute(output.file)) {
+                output.file = `${this.path}/${output.file}`;
+            }
+        }
+    }
+
+    /**
+     * Bundles a single rollup config.
+     * @param {RollupOptions} conf
+     */
+    async bundleConfig(conf) {
+        const bundle = await rollup(conf);
+        if (!conf.output) return;
+        const outputs = Array.isArray(conf.output) ? conf.output : [conf.output];
+        for (const output of outputs) await bundle.write(output);
+    }
+
+    /**
      * Bundles the project using rollup.
-     * @param {RollupOptions[]} rollupConfig
+     * @param {RollupOptions[]} configs
      * @param {BuildConfigType} config
-     * @param {string} [heading]
      * @returns {Promise<boolean>}
      */
-    async rollup(rollupConfig, config = {}, heading = 'Rolling up') {
-        const { slim, buildJS, verbose } = config;
-        if (buildJS !== true) {
-            return true;
-        }
-        const { aliases = [] } = config;
-        verbose || (!slim && log.task(this.name, heading));
-        const appBuild = rollupConfig[0];
-        const plugins = appBuild?.plugins;
-        if (aliases?.length && Array.isArray(plugins)) {
-            plugins?.push(alias({ entries: aliases }));
-        }
-        /**
-         * Maps the rollup configs.
-         * @param {Record<string, any>} conf
-         * @returns {Promise<boolean>}
-         */
-        const mapConfigs = async conf => {
-            return new Promise(async resolve => {
-                conf.input = this.preProcessInputs(conf.input);
-                conf?.output?.file && (conf.output.file = `${this.path}/${conf.output.file}`);
-                const bundle = await rollup(conf);
-                if (conf.output) {
-                    await bundle.write(conf.output);
-                }
-                resolve(true);
-            });
-        };
-        await Promise.all(rollupConfig.map(mapConfigs));
+    async rollup(configs, config = {}) {
+        if (config.buildJS !== true) return true;
+        !config.slim && log.task(this.name, 'Rolling up');
+        this.preprocessRollupConfigs(configs, config.aliases);
+        await Promise.all(configs.map(conf => this.bundleConfig(conf)));
         return true;
     }
 
@@ -376,37 +406,31 @@ class Project {
 
     /**
      * Watches the project for file changes.
-     * @param {RollupOptions[]} rollupConfig
+     * @param {RollupOptions[]} configs
      * @param {BuildConfigType} config
      * @param {(payload: Record<string, any>) => void} [callback]
      * @returns {Promise<boolean | import('rollup').RollupWatcher>}
      */
-    async watch(rollupConfig, { watch, slim, verbose }, callback) {
-        const $watch = WATCH || watch;
-        if (!$watch || !rollupConfig || rollupConfig.length === 0) return Promise.resolve(true);
+    async watch(configs, config, callback) {
+        const { slim, verbose, aliases } = config;
+        if (!configs?.length) return Promise.resolve(true);
         verbose || (!slim && log.task(this.name, 'watching for file changes'));
-        this.watcher = rollupWatch(rollupConfig);
+        this.preprocessRollupConfigs(configs, aliases);
+        !slim && log.task(this.name, 'Rolling up (watch mode)');
+        this.watcher = await rollupWatch(configs);
 
         return new Promise(resolve => {
             let initialized = false;
-            /**
-             * Handles rollup watcher events.
-             * @param {import('rollup').RollupWatcherEvent} event
-             * @returns {void}
-             */
-            const handleEvent = (/** @type {import('rollup').RollupWatcherEvent} */ event) => {
-                if (event.code === 'ERROR') {
-                    // log.error(`Error occurred while watching ${this.name}`, event.error);
-                } else if (event.code === 'BUNDLE_START') {
-                    verbose && log.task(this.name, 'Bundle started');
+            this.watcher?.on('event', event => {
+                if (event.code === 'BUNDLE_START' && verbose) {
+                    log.task(this.name, 'Bundle started');
                 }
-                typeof callback === 'function' && callback(event);
-                if (!initialized && event?.code === 'END') {
+                callback?.(event);
+                if (!initialized && event.code === 'END') {
                     initialized = true;
                     resolve(/** @type {import('rollup').RollupWatcher} */ (this.watcher));
                 }
-            };
-            this.watcher?.on('event', handleEvent);
+            });
         });
     }
 
@@ -442,6 +466,57 @@ class Project {
     }
 
     // #endregion i18n
+
+    /////////////////////////////
+    // #region Cleanup
+    /////////////////////////////
+
+    /**
+     * Closes all watchers and cleans up resources.
+     * @returns {Promise<void>}
+     */
+    async close() {
+        if (this.watcher) {
+            this.watcher.close();
+            this.watcher = undefined;
+        }
+        if (!Array.isArray(this.watchers)) {
+            this.watchers = [];
+        }
+        for (const watcher of this.watchers) {
+            if (typeof watcher?.close === 'function') {
+                watcher.close();
+            }
+        }
+        this.watchers = [];
+        return Promise.resolve();
+    }
+
+    /**
+     * Handles termination signals for cleanup.
+     * @param {string} signal
+     */
+    async handleCloseSignal(signal) {
+        try {
+            if (!this.buildConfig?.isDependency) {
+                log.task(this.name, 'Shutting down...');
+            }
+            await this.close();
+        } catch (err) {
+            console.log('ERROR');
+            log.error(`Error during shutdown of project ${this.name}:`, {
+                err,
+                signal
+            });
+        } finally {
+            if (!this.buildConfig?.isDependency) {
+                log.success('Have a nice day ;)');
+            }
+            process.exit(0);
+        }
+    }
+
+    // #endregion Cleanup
 }
 
 export default Project;

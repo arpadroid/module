@@ -102,12 +102,6 @@ await project.build();
     Copies \*.types.d.ts files into a temp types directory preserving structure.
 
 - ```typescript
-  createDependencyInstances(): Project[]
-  ```
-
-    Creates Project instances for each dependency package.
-
-- ```typescript
   distTypes(): Promise<void>
   ```
 

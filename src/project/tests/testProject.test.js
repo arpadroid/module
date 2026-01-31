@@ -76,12 +76,12 @@ describe('Test Project Instance', () => {
     it('should extract and sort arpadroid dependencies', () => {
         const deps = getDependencies(project);
         expect(Array.isArray(deps)).toBe(true);
-        expect(deps).toContain('ui');
-        expect(deps).toContain('tools');
+        expect(deps.find(dep => dep.name === 'ui')).toBeDefined();
+        expect(deps.find(dep => dep.name === 'tools')).toBeDefined();
 
         const sorted = getDependencies(project, ['ui', 'tools']) || [];
-        expect(sorted[0]).toBe('ui');
-        expect(sorted[1]).toBe('tools');
+        expect(sorted[0]).toEqual({ name: 'ui', path: project.path + '/node_modules/@arpadroid/ui' });
+        expect(sorted[1]).toEqual({ name: 'tools', path: project.path + '/node_modules/@arpadroid/tools' });
     });
 
     it('should validate existing and non-existing project paths', async () => {

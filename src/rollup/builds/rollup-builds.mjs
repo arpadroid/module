@@ -8,7 +8,8 @@
  */
 /* eslint-disable security/detect-non-literal-fs-filename */
 import { mergeObjects } from '@arpadroid/tools-iso';
-import nodePolyfills from 'rollup-plugin-polyfill-node';
+import { logError } from '@arpadroid/logger';
+
 import fs, { existsSync } from 'fs';
 import path from 'path';
 import yargs from 'yargs';
@@ -16,6 +17,7 @@ import { hideBin } from 'yargs/helpers';
 /**
  * Rollup plugins.
  */
+import nodePolyfills from 'rollup-plugin-polyfill-node';
 import { bundleStats } from 'rollup-plugin-bundle-stats';
 import gzipPlugin from 'rollup-plugin-gzip';
 import { dts } from 'rollup-plugin-dts';
@@ -30,8 +32,9 @@ import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import buildStyles from '../plugins/buildStyles.mjs';
 import typescript from 'rollup-plugin-typescript2';
-import { logError } from '@arpadroid/logger';
+
 import Project from '../../project/project.mjs';
+import PROJECT_STORE from '../../project/projectStore.mjs';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv || {};
@@ -136,17 +139,21 @@ export function getTypesBuild() {
  */
 export function getInput(project, config = {}) {
     const { deps, slim } = config;
-    const entry = 'src/index.js';
-    if (slim || !deps?.length) {
+    const entry = path.join('src', 'index.js');
+    if (!deps?.length || (slim && !config.requireDeps)) {
         return entry;
     }
     const rv = [entry];
-    deps.forEach(dep => {
-        const depPath = path.join('node_modules', '@arpadroid', dep, 'dist', `arpadroid-${dep}.js`);
-        if (project.path && fs.existsSync(path.join(project.path, depPath))) {
-            rv.push(depPath);
+    deps.forEach(async dep => {
+        const base = path.join(project.path || '', 'node_modules', '@arpadroid');
+        const distPath = path.join(base, dep, 'dist', `arpadroid-${dep}.js`);
+        const nodePath = path.join(base, dep, 'src', 'index.js');
+        const locations = [nodePath, distPath];
+        const location = locations.find(loc => fs.existsSync(loc))?.replace(project.path + path.sep, '');
+        if (location) {
+            rv.push(location);
         } else {
-            logError(`Dependency ${dep} not found`, { depPath });
+            logError(`Dependency not found: ${dep}`, { location });
         }
     });
     return rv;
@@ -163,17 +170,26 @@ export function getAliases(projectName, projects = []) {
         logError('Invalid projects configuration, expecting an array instead got: ', projects);
     }
     const aliases = [
-        projectName && { find: `@arpadroid/${projectName}`, replacement: path.resolve('./src/index.js') },
+        projectName && {
+            find: `@arpadroid/${projectName}`,
+            replacement: path.resolve(path.join('src', 'index.js'))
+        },
         (projectName !== 'module' && {
             find: 'rollup-plugin-copy',
-            replacement: './node_modules/@arpadroid/module/node_modules/rollup-plugin-copy'
+            replacement: path.join(
+                'node_modules',
+                '@arpadroid',
+                'module',
+                'node_modules',
+                'rollup-plugin-copy'
+            )
         }) ||
             undefined,
         projects?.map(dep => {
             if (typeof dep === 'string') {
                 return {
                     find: `@arpadroid/${dep}`,
-                    replacement: `${cwd}/node_modules/@arpadroid/${dep}/src/index.js`
+                    replacement: path.join(cwd, 'node_modules', '@arpadroid', dep, 'src', 'index.js')
                 };
             }
             return dep;
@@ -184,16 +200,35 @@ export function getAliases(projectName, projects = []) {
 }
 
 /**
+ * Default exclusion patterns for file watchers.
+ * @type {string[]}
+ */
+const WATCHER_EXCLUDES = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/*.d.ts'];
+
+/**
  * Returns the watchers for the project dependencies.
- * @param {string[]} envDeps
+ * @param {string[]} _envDeps
  * @param {Project} project
+ * @param {BuildConfigType} config
  * @returns {(RollupPlugin | null)[]}
  */
-export function getStyleWatchers(envDeps = [], project) {
-    const deps = [...new Set(envDeps.concat(project.getDependencies()))];
+export function getStyleWatchers(_envDeps = [], project, { watch = WATCH } = {}) {
+    if (!watch) return [];
+    const envDeps = _envDeps.map(dep => ({
+        name: dep,
+        path: path.join(project.path || '', 'node_modules', '@arpadroid', dep)
+    }));
+    const main = { name: project.name, path: project.path || '' };
+    const deps = project.getDependencies().concat(envDeps).concat(main);
     return deps.map(dep => {
-        const depPath = path.join(cwd, 'node_modules', '@arpadroid', dep, 'src', 'themes');
-        return fs.existsSync(depPath) ? rollupWatch({ dir: depPath }) : null;
+        const srcPath = path.join(dep.path, 'src');
+        const locations = [srcPath, dep.path];
+        const location = locations.find(loc => fs.existsSync(loc));
+        if (!location) return null;
+        return rollupWatch({
+            dir: location,
+            exclude: WATCHER_EXCLUDES
+        });
     });
 }
 
@@ -208,10 +243,14 @@ export function getStyleWatchers(envDeps = [], project) {
  * @returns {RollupPlugin[]}
  */
 export function getSlimPlugins(project, config = {}) {
-    const { parent, aliases = [] } = config;
+    const { parent, aliases = [], deps } = config;
     const plugins = [peerDepsExternal(), nodeResolve({ browser: true, preferBuiltins: false })];
     const _aliases = getAliases(parent, aliases);
     _aliases && plugins.push(_aliases);
+    if (deps && deps.length > 0 && config.requireDeps) {
+        // @ts-ignore - multiEntry does accept options, types may be mismatched
+        plugins.push(multiEntry({ entryFileName: `arpadroid-${project.name}.js` }));
+    }
     return plugins.filter(Boolean);
 }
 
@@ -249,16 +288,16 @@ export function getCopyTargets(project, config = {}) {
  * @returns {RollupPlugin[]}
  */
 export function getFatPlugins(project, config) {
-    const { watch = WATCH, deps, aliases } = config;
+    const { deps, aliases } = config;
     /** @type {(RollupPlugin  | any)[]} */
     const plugins = [
         nodeResolve({ browser: true, preferBuiltins: false }),
         terser({
             keep_classnames: false
         }),
-        watch && fs.existsSync(path.resolve(cwd, 'src/themes')) && rollupWatch({ dir: 'src/themes' }),
-        Boolean(watch) && getStyleWatchers(deps, project),
-        deps && deps?.length > 0 && multiEntry(),
+        getStyleWatchers(deps, project, config),
+        // @ts-ignore - multiEntry does accept options, types may be mismatched
+        deps && deps?.length > 0 && multiEntry({ entryFileName: `arpadroid-${project.name}.js` }),
         bundleStats(),
         getAliases(project.name, aliases),
         copy({
@@ -301,13 +340,21 @@ export function getPlugins(project, config) {
 /**
  * Returns the rollup output configuration.
  * @param {Project} project
+ * @param {string | string[]} input
  * @returns {import('rollup').OutputOptions}
  */
-export function getOutput(project) {
+export function getOutput(project, input) {
+    const distDir = project.path ? path.join(project.path, 'dist') : 'dist';
+    if (Array.isArray(input) && input.length > 1) {
+        return {
+            dir: distDir,
+            format: 'esm',
+            entryFileNames: `arpadroid-${project.name}.js`
+        };
+    }
     return {
-        file: `dist/arpadroid-${project.name}.js`,
+        file: path.join(distDir, `arpadroid-${project.name}.js`),
         format: 'esm'
-        // preserveModules: true,
     };
 }
 
@@ -331,11 +378,13 @@ export function getExternal(config = {}) {
  * @returns {import('rollup').RollupOptions}
  */
 export function getBuildDefaults(project, config) {
+    const input = getInput(project, config);
+    const output = getOutput(project, input);
     return {
-        input: getInput(project, config),
+        input,
         plugins: getPlugins(project, config),
         external: getExternal(config),
-        output: getOutput(project),
+        output,
         treeshake: true
     };
 }
@@ -393,7 +442,7 @@ export function getBuild(projectName, config = {}) {
         return {};
     }
     const buildConfig = getBuildConfig(config);
-    const project = new Project(projectName, buildConfig);
+    const project = PROJECT_STORE[projectName] || new Project(projectName, buildConfig);
     const appBuild = buildFn(project, buildConfig);
     const typesBuild = getTypesBuild();
     const build = [appBuild].filter(Boolean);

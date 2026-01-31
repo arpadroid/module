@@ -46,6 +46,7 @@ export type BuildConfigType = {
     plugins?: Plugin[];
     copyTestAssets?: boolean;
     processBuilds?: (builds: RollupOptions[]) => void;
+    requireDeps?: boolean;
     slim?: boolean;
     storybook?: StorybookConfigType;
     storybook_port?: number;

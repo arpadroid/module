@@ -4,7 +4,7 @@ import Project from '../project.mjs';
 import { basename } from 'path';
 import { existsSync } from 'fs';
 import { spyOn } from 'jest-mock';
-import { getDependencies } from '../helpers/projectBuild.helper.mjs';
+import { getAllDependencies, getDependencies } from '../helpers/projectBuild.helper.mjs';
 
 const cwd = process.cwd();
 
@@ -27,7 +27,34 @@ describe('@arpadroid/module Project Instance', () => {
     test('getDependencies returns default sort order', () => {
         const deps = project && getDependencies(project, []);
         expect(Array.isArray(deps)).toBe(true);
-        expect(deps).toEqual(['logger', 'style-bun', 'tools-iso']);
+        expect(deps?.map(dep => dep.name)).toEqual(['logger', 'style-bun', 'tools-iso']);
+    });
+
+    test('getDependencies accepts options object', () => {
+        const deps = project && getDependencies(project, { sort: [] });
+        expect(Array.isArray(deps)).toBe(true);
+        expect(deps?.map(dep => dep.name)).toEqual(['logger', 'style-bun', 'tools-iso']);
+    });
+
+    test('getAllDependencies resolves transitive dependencies', async () => {
+        await project?.promise;
+        const deps = project && (await getAllDependencies(project, { sort: [] }));
+        expect(Array.isArray(deps)).toBe(true);
+        // Module's direct deps are logger, style-bun, tools-iso
+        // Each of those may have their own deps which should be included
+        const depNames = deps?.map(dep => dep.name) || [];
+        expect(depNames).toContain('logger');
+        expect(depNames).toContain('style-bun');
+        expect(depNames).toContain('tools-iso');
+    });
+
+    test('getAllDependencies completes without infinite loop', async () => {
+        await project?.promise;
+        const deps = project && (await getAllDependencies(project, { sort: [] }));
+        expect(deps?.length).toBeGreaterThan(0);
+        // Each dependency should appear only once (deduplication via visited set)
+        const names = deps?.map(dep => dep.name) ?? [];
+        expect(names.length).toBe(new Set(names).size);
     });
 
     test('_getFileConfig returns empty object when no config file exists', async () => {

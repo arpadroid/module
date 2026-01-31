@@ -10,6 +10,7 @@ import { getDependencies, STYLE_SORT } from './projectBuild.helper.mjs';
 import Project from '../project.mjs';
 import { join } from 'path';
 import chalk from 'chalk';
+import PROJECT_STORE from '../projectStore.mjs';
 
 //////////////////////////
 // #region Styles Helpers
@@ -50,10 +51,16 @@ export async function hasStyles(project) {
 /**
  * Retrieves the style packages for the project and its dependencies.
  * @param {Project} project
- * @returns {string[]}
+ * @returns {import('./projectBuilder.types.js').DependencyProjectPointerType[]}
  */
 export function getStyleDependencies(project) {
-    return [...getDependencies(project, STYLE_SORT), project.name];
+    return [
+        ...getDependencies(project, STYLE_SORT),
+        {
+            name: project.name,
+            path: project.path || ''
+        }
+    ];
 }
 
 // #endregion
@@ -118,12 +125,11 @@ export async function getStylesheetsToCompile(project) {
     const styleDeps = getStyleDependencies(project);
 
     for (const styleDep of styleDeps) {
-        const dep = new Project(styleDep, {
-            path:
-                project.name === styleDep
-                    ? project.path
-                    : `${project.path}/node_modules/@arpadroid/${styleDep}`
-        });
+        const dep =
+            PROJECT_STORE[styleDep.name] ||
+            new Project(styleDep.name, {
+                path: styleDep.path
+            });
         await dep.getBuildConfig();
         if (!(await hasStyles(dep))) continue;
         getThemes(dep).forEach(theme => {
@@ -204,7 +210,7 @@ export async function compileStyles(project, config) {
     const minifiedDeps = (await getStylesheetsToCompile(project)) ?? [];
     Object.entries(minifiedDeps).forEach(([theme, files]) => deployTheme(project, theme, files));
 
-    if (getDependencies(project).includes('ui')) {
+    if (getDependencies(project).find(dep => dep.name === 'ui')) {
         await copyUIStyleAssets(project);
     }
     return Promise.resolve(true);
