@@ -1,12 +1,13 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
+ * @typedef {import('./projectBuilder.types.js').DependencyProjectPointerType} DependencyProjectPointerType
  */
 
 import { ThemesBundler } from '@arpadroid/style-bun';
 import { log } from '@arpadroid/logger';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
-import { getDependencies, STYLE_SORT } from './projectBuild.helper.mjs';
+import { getAllDependencies, STYLE_SORT } from './projectBuild.helper.mjs';
 import Project from '../project.mjs';
 import { join } from 'path';
 import chalk from 'chalk';
@@ -51,11 +52,11 @@ export async function hasStyles(project) {
 /**
  * Retrieves the style packages for the project and its dependencies.
  * @param {Project} project
- * @returns {import('./projectBuilder.types.js').DependencyProjectPointerType[]}
+ * @returns {Promise<DependencyProjectPointerType[]>}
  */
-export function getStyleDependencies(project) {
+export async function getStyleDependencies(project) {
     return [
-        ...getDependencies(project, STYLE_SORT),
+        ...((await getAllDependencies(project, { sort: STYLE_SORT })) || []),
         {
             name: project.name,
             path: project.path || ''
@@ -122,8 +123,7 @@ export async function getStylesheetsToCompile(project) {
     }
     /** @type {Record<string, string[]>} */
     const minifiedDeps = {};
-    const styleDeps = getStyleDependencies(project);
-
+    const styleDeps = await getStyleDependencies(project);
     for (const styleDep of styleDeps) {
         const dep =
             PROJECT_STORE[styleDep.name] ||
@@ -185,7 +185,9 @@ export async function deployTheme(project, theme, files) {
  * @param {Project} project
  */
 export async function copyUIStyleAssets(project) {
-    const uiPath = join(project.path || '', 'node_modules', '@arpadroid', 'ui');
+    const uiProject = PROJECT_STORE.ui;
+    const uiPath = uiProject?.path;
+    if (!uiPath) return;
     cpSync(`${uiPath}/src/themes/default/fonts`, `${project.path}/dist/themes/default/fonts`, {
         recursive: true
     });
@@ -209,8 +211,8 @@ export async function compileStyles(project, config) {
     log.task(project.name, 'Compiling dependency styles.');
     const minifiedDeps = (await getStylesheetsToCompile(project)) ?? [];
     Object.entries(minifiedDeps).forEach(([theme, files]) => deployTheme(project, theme, files));
-
-    if (getDependencies(project).find(dep => dep.name === 'ui')) {
+    const styleDeps = await getStyleDependencies(project);
+    if (styleDeps.find(dep => dep.name === 'ui')) {
         await copyUIStyleAssets(project);
     }
     return Promise.resolve(true);
