@@ -24,6 +24,7 @@ import { dts } from 'rollup-plugin-dts';
 import multiEntry from '@rollup/plugin-multi-entry';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import json from '@rollup/plugin-json';
+// @ts-ignore
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import rollupAlias from '@rollup/plugin-alias';
 import rollupWatch from 'rollup-plugin-watch';
@@ -195,7 +196,7 @@ export function getAliases(projectName, projects = []) {
             return dep;
         })
     ].filter(item => typeof item !== 'undefined');
-
+    // @ts-ignore
     return aliases?.length ? rollupAlias({ entries: aliases }) : undefined;
 }
 
@@ -245,6 +246,7 @@ export function getStyleWatchers(_envDeps = [], project, { watch = WATCH } = {})
 export function getSlimPlugins(project, config = {}) {
     const { parent, aliases = [], deps } = config;
     const plugins = [peerDepsExternal(), nodeResolve({ browser: true, preferBuiltins: false })];
+    // @ts-ignore
     const _aliases = getAliases(parent, aliases);
     _aliases && plugins.push(_aliases);
     if (deps && deps.length > 0 && config.requireDeps) {
@@ -299,6 +301,7 @@ export function getFatPlugins(project, config) {
         // @ts-ignore - multiEntry does accept options, types may be mismatched
         deps && deps?.length > 0 && multiEntry({ entryFileName: `arpadroid-${project.name}.js` }),
         bundleStats(),
+        // @ts-ignore
         getAliases(project.name, aliases),
         copy({
             targets: getCopyTargets(project, config)
