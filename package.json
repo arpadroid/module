@@ -167,8 +167,8 @@
         "rollup-plugin-visualizer": "^5.14.0",
         "rollup-plugin-watch": "1.0.4",
         "sass": "^1.97.1",
-        "storybook": "^8.6.4",
         "typescript": "^5.8.2",
+        "storybook": "^8.6.4",
         "yargs": "^17.7.2"
     }
 }

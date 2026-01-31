@@ -40,6 +40,10 @@ class ProjectTest {
         /** @type {Project} */
         this.project = project;
         this.setConfig(config);
+        this.initialize();
+    }
+
+    async initialize() {
         const modulePath = this.project.getModulePath();
         this.scripts = this.project.getScripts();
         this.pm2 = modulePath + '/node_modules/pm2/bin/pm2';
@@ -155,7 +159,8 @@ class ProjectTest {
      * @returns {Promise<Buffer | string>}
      */
     async testJest(_config) {
-        const binary = this.project.getModulePath() + '/node_modules/jest/bin/jest.js';
+        const modulePath = this.project.getModulePath();
+        const binary = `${modulePath}/node_modules/jest/bin/jest.js`;
         let script = `node --experimental-vm-modules ${binary} --coverage --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
         QUERY && (script += ` --testNamePattern="${QUERY}"`);
         WATCH && (script += ' --watch');
@@ -186,7 +191,8 @@ class ProjectTest {
     async testStorybook(config = this.config) {
         const watch = WATCH ? ' --watch ' : '';
         const configPath = getStorybookConfigPath(this.project);
-        const executable = `${this.project.getModulePath()}/node_modules/@storybook/test-runner/dist/test-storybook`;
+        const modulePath = this.project.getModulePath();
+        const executable = `${modulePath}/node_modules/@storybook/test-runner/dist/test-storybook`;
         const script = `${executable} -c ${configPath} --maxWorkers=9 ${watch} --browsers ${config?.browsers ?? 'chromium'} --url="http://127.0.0.1:${PORT}"`;
 
         /**

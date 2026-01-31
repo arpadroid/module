@@ -135,8 +135,16 @@ class Project {
         return /** @type {Record<string, string | undefined>} */ (this.pkg?.scripts || {});
     }
 
-    getModulePath(name = this.name, path = this.path) {
-        return name === 'module' ? path : `${path}/node_modules/@arpadroid/module`;
+    /**
+     * Returns the module path.
+     * @param {string} [name]
+     * @returns {string | undefined}
+     */
+    getModulePath(name = this.name) {
+        const parent = this.buildConfig?.parent || name;
+        const project = PROJECT_STORE[parent] || this;
+        if (project.name === 'module') return project.path;
+        return `${project.path}/node_modules/@arpadroid/module`;
     }
 
     /**
@@ -259,7 +267,7 @@ class Project {
             await this.rollup(rollupConfig, config);
         }
 
-        await buildTypes(this, rollupConfig, config);
+        await buildTypes(this, config);
         runStorybook(this, config);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
@@ -480,14 +488,14 @@ class Project {
             this.watcher.close();
             this.watcher = undefined;
         }
-        if (!Array.isArray(this.watchers)) {
-            this.watchers = [];
-        }
-        for (const watcher of this.watchers) {
-            if (typeof watcher?.close === 'function') {
-                watcher.close();
+        if (Array.isArray(this.watchers)) {
+            for (const watcher of this.watchers) {
+                if (typeof watcher?.close === 'function') {
+                    watcher.close();
+                }
             }
         }
+
         this.watchers = [];
         return Promise.resolve();
     }

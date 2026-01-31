@@ -10,6 +10,7 @@ import fs, { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from '
 import { dirname, join } from 'path';
 import { glob } from 'glob';
 import { NO_TYPES } from './projectBuild.helper.mjs';
+import { log } from '@arpadroid/logger';
 
 /**
  * Copies all types.d.ts files to the dist/@types directory maintaining the directory structure.
@@ -57,15 +58,13 @@ export async function compileTypeDeclarations(project, config) {
     const { watch } = config;
     const watchString = watch ? '--watch --preserveWatchOutput &' : '';
     // Try to find TypeScript binary in local node_modules
-    const localTsc = `${project.path}/node_modules/.bin/tsc`;
-    const moduleTsc = `${project.getModulePath()}/node_modules/.bin/tsc`;
-    const globalTsc = 'tsc';
-
-    let tscPath = globalTsc;
-    if (existsSync(localTsc)) {
-        tscPath = localTsc;
-    } else if (existsSync(moduleTsc)) {
-        tscPath = moduleTsc;
+    const locations = [
+        project.getModulePath() + '/node_modules/.bin/tsc',
+        `${project.path}/node_modules/.bin/tsc`
+    ];
+    const tscPath = locations.find(loc => existsSync(loc));
+    if (!tscPath) {
+        throw new Error(`TypeScript compiler not found for project ${project.name}`);
     }
 
     const cmd = `cd ${project.path} && ${tscPath} -b --declaration --emitDeclarationOnly ${watchString}`;
@@ -113,13 +112,15 @@ export async function distTypes(project) {
 /**
  * Builds the project types.
  * @param {Project} project
- * @param {RollupOptions[]} rollupConfig
  * @param {BuildConfigType} config
  * @returns {Promise<boolean>}
  */
-export async function buildTypes(project, rollupConfig, config) {
+export async function buildTypes(project, config) {
     if (config?.buildTypes !== true || NO_TYPES) {
         return Promise.resolve(true);
+    }
+    if (!config.isDependency) {
+        log.task(project.name, 'Building types.');
     }
     await compileTypes(project);
     await compileTypeDeclarations(project, config);
