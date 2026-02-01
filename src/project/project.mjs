@@ -426,11 +426,15 @@ class Project {
         verbose || (!slim && log.task(this.name, 'watching for file changes'));
         await this.preprocessRollupConfigs(configs, aliases);
         !slim && log.task(this.name, 'Rolling up (watch mode)');
-        this.watcher = await rollupWatch(configs);
+        this.watcher = rollupWatch(configs);
 
         return new Promise(resolve => {
             let initialized = false;
             this.watcher?.on('event', event => {
+                if (event.code === 'ERROR') {
+                    log.error('Error', event.error);
+                    resolve(false);
+                }
                 if (event.code === 'BUNDLE_START' && verbose) {
                     log.task(this.name, 'Bundle started');
                 }

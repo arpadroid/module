@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "baseUrl": ".",
         "allowJs": true,
         "checkJs": true,
         "composite": true,
@@ -16,13 +17,22 @@
         "strict": true,
         "strictPropertyInitialization": false,
         "target": "ESNext",
-        "types": ["react", "node"],
+        "types": ["node"],
         "useDefineForClassFields": false,
         "allowSyntheticDefaultImports": true,
         "typeRoots": [
             "../../../node_modules/@types",
             "../../../node_modules/@arpadroid/module/node_modules/@types"
-        ]
+        ],
+        "paths": {
+            "rollup-plugin-copy": ["./node_modules/@arpadroid/module/node_modules/rollup-plugin-copy"],
+            "@storybook/web-components-vite": [
+                "./node_modules/@arpadroid/module/node_modules/@storybook/web-components/dist/index.d.ts"
+            ],
+            "storybook/test": ["./node_modules/@arpadroid/module/node_modules/storybook/dist/test/index.d.ts"]
+
+            // @storybook/preview-api mapping removed; not needed in Storybook 10+
+        }
         /**
          * @warning: props rootDir and outdir must be overriden in the project's tsconfig.json in order to take effect.
             "rootDir": "./src",

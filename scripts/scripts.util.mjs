@@ -3,6 +3,7 @@ import yargs from 'yargs';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import Project from '../src/project/project.mjs';
+import PROJECT_STORE from '../src/project/projectStore.mjs';
 const argv = yargs(hideBin(process.argv)).argv;
 const cwd = process.cwd();
 
@@ -31,6 +32,9 @@ export function getProject(name = getProjectName()) {
     if (!name) {
         console.log('No project name could be determined.');
         process.exit(1);
+    }
+    if (PROJECT_STORE[name]) {
+        return PROJECT_STORE[name];
     }
     return new Project(name);
 }

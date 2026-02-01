@@ -144,7 +144,8 @@ export async function getStorybookCICmd(project, port) {
 export async function runStorybook(project, { slim, storybook_port, verbose }, spawnConfig = {}) {
     if (!storybook_port || slim) return Promise.resolve(false);
     const port = storybook_port || 6006;
-    if (await isHTTPServerRunning(port)) {
+    const isServerRunning = await isHTTPServerRunning(port, 'localhost');
+    if (isServerRunning) {
         log.task(project.name, `Stopping existing Storybook on port ${port}...`);
         await stopHTTPServer({ port });
     }

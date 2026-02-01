@@ -46,7 +46,8 @@ export async function hasStyles(project) {
     if (buildStyles === false) {
         return false;
     }
-    return getThemes(project).length > 0;
+    const themes = getThemes(project);
+    return themes.length > 0;
 }
 
 /**

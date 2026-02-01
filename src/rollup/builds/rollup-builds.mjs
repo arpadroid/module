@@ -36,6 +36,7 @@ import typescript from 'rollup-plugin-typescript2';
 
 import Project from '../../project/project.mjs';
 import PROJECT_STORE from '../../project/projectStore.mjs';
+import { hasStyles } from '../../project/helpers/projectStyles.helper.js';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv || {};
@@ -201,36 +202,40 @@ export function getAliases(projectName, projects = []) {
 }
 
 /**
- * Default exclusion patterns for file watchers.
- * @type {string[]}
+ * Returns a simple watch plugin for style directories.
+ * Uses Rollup's built-in addWatchFile API.
+ * @param {Project[]} deps - Dependency projects to watch
+ * @returns {RollupPlugin | null}
  */
-const WATCHER_EXCLUDES = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/*.d.ts'];
+function getStyleWatchPlugin(deps) {
+    const themePaths = deps
+        .filter(proj => hasStyles(proj))
+        .map(proj => path.join(proj?.path || '', 'src', 'themes'))
+        .filter(proj => fs.existsSync(proj));
+
+    if (!themePaths.length) return null;
+
+    return {
+        name: 'watch-styles',
+        buildStart() {
+            for (const dir of themePaths) {
+                this.addWatchFile(dir);
+            }
+        }
+    };
+}
 
 /**
  * Returns the watchers for the project dependencies.
  * @param {string[]} _envDeps
  * @param {Project} project
  * @param {BuildConfigType} config
- * @returns {(RollupPlugin | null)[]}
+ * @returns {RollupPlugin | null}
  */
 export function getStyleWatchers(_envDeps = [], project, { watch = WATCH } = {}) {
-    if (!watch) return [];
-    const envDeps = _envDeps.map(dep => ({
-        name: dep,
-        path: path.join(project.path || '', 'node_modules', '@arpadroid', dep)
-    }));
-    const main = { name: project.name, path: project.path || '' };
-    const deps = project.getDependencies().concat(envDeps).concat(main);
-    return deps.map(dep => {
-        const srcPath = path.join(dep.path, 'src');
-        const locations = [srcPath, dep.path];
-        const location = locations.find(loc => fs.existsSync(loc));
-        if (!location) return null;
-        return rollupWatch({
-            dir: location,
-            exclude: WATCHER_EXCLUDES
-        });
-    });
+    if (!watch) return null;
+    const deps = project.dependencyProjects || [];
+    return getStyleWatchPlugin(deps);
 }
 
 //////////////////////////////
