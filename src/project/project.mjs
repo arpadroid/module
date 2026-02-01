@@ -12,7 +12,6 @@ import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 
 import { rollup, watch as rollupWatch } from 'rollup';
-import alias from '@rollup/plugin-alias';
 
 import { log, logStyle } from '@arpadroid/logger';
 import ProjectTest from '../projectTest/projectTest.mjs';
@@ -338,11 +337,13 @@ class Project {
      * @param {RollupOptions[]} configs
      * @param {{ find: string | RegExp, replacement: string }[]} [aliases]
      */
-    preprocessRollupConfigs(configs, aliases = []) {
+    async preprocessRollupConfigs(configs, aliases = []) {
         for (const conf of configs) {
             this.preprocessRollupConfig(conf);
         }
         if (aliases.length && Array.isArray(configs[0]?.plugins)) {
+            // Dynamic import to avoid loading ESM-only package at module initialization
+            const { default: alias } = await import('@rollup/plugin-alias');
             configs[0].plugins.push(alias({ entries: aliases }));
         }
     }
@@ -383,7 +384,7 @@ class Project {
     async rollup(configs, config = {}) {
         if (config.buildJS !== true) return true;
         !config.slim && log.task(this.name, 'Rolling up');
-        this.preprocessRollupConfigs(configs, config.aliases);
+        await this.preprocessRollupConfigs(configs, config.aliases);
         await Promise.all(configs.map(conf => this.bundleConfig(conf)));
         return true;
     }
@@ -423,7 +424,7 @@ class Project {
         const { slim, verbose, aliases } = config;
         if (!configs?.length) return Promise.resolve(true);
         verbose || (!slim && log.task(this.name, 'watching for file changes'));
-        this.preprocessRollupConfigs(configs, aliases);
+        await this.preprocessRollupConfigs(configs, aliases);
         !slim && log.task(this.name, 'Rolling up (watch mode)');
         this.watcher = await rollupWatch(configs);
 

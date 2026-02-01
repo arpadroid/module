@@ -110,7 +110,8 @@ export function getStorybookBuildCmd(project) {
 export function getStorybookTestCmd(project, port) {
     const configPath = getStorybookConfigPath(project);
     const script = getStorybookTestScript(project);
-    return `node ${script} -c "${configPath}" --url "http://127.0.0.1:${port}" --browsers chromium webkit firefox --maxWorkers=9 `;
+    // Use --index-json to run against built storybook's index.json, avoiding ESM/CommonJS transform issues
+    return `node ${script} -c "${configPath}" --url "http://127.0.0.1:${port}" --browsers chromium webkit firefox --maxWorkers=9 --index-json `;
 }
 
 /**

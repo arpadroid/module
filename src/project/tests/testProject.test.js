@@ -117,13 +117,16 @@ describe('Test Project Instance', () => {
     it('tests the project', async () => {
         const spy = spyOn(console, 'error');
         const logSpy = spyOn(console, 'log').mockImplementation(() => {});
-        await project.test({
+        const result = await project.test({
             jest: true,
             ci: true,
             storybook: true
         });
         expect(existsSync(`${TEST_PROJECT_PATH}/dist/@types`)).toBe(true);
         expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Error: Command failed'));
+        // Verify that the test-runner actually passed
+        expect(result).not.toHaveProperty('success', false);
+        expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Storybook test-runner failed'));
         logSpy.mockRestore();
         spy.mockRestore();
     }, 20000);
