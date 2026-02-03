@@ -24,7 +24,11 @@ export function getStaticDirs() {
 export async function getMainConfig() {
     const path = resolve(cwd, 'src', 'storybook', 'main.js');
     if (existsSync(path)) {
-        const module = await import(`file://${path}`);
+        let module = await import(`file://${path}`);
+        module = module.default || module || {};
+        if (module instanceof Promise) {
+            module = await module;
+        }
         return module;
     }
     return {};
@@ -52,7 +56,10 @@ export function previewConfigPlugin(previewPath) {
 
     let moduleCode = 'export default {};';
     if (typeof previewPath === 'string' && previewPath) {
-        const template = readFileSync(resolve(import.meta.dirname, '../preview/preview-template.js'), 'utf-8');
+        const template = readFileSync(
+            resolve(import.meta.dirname, '../preview/preview-template.js'),
+            'utf-8'
+        );
         moduleCode = template.replaceAll('__PREVIEW_PATH__', previewPath);
     }
 

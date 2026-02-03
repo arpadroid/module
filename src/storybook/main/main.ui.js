@@ -7,9 +7,7 @@ import { mergeObjects } from '@arpadroid/tools-iso';
 import { renderStorybookBody, renderStorybookHead } from '../templates/mainTemplates.js';
 import { getMainConfig, getPreviewConfigFile, getStaticDirs, previewConfigPlugin } from './main.helper.js';
 const cwd = process.cwd();
-const userConfig = await getMainConfig();
-const mainConfig = userConfig.default || userConfig || {};
-
+const mainConfig = await getMainConfig();
 const defaultConfig = {
     stories: [cwd + '/src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
     staticDirs: getStaticDirs(),
@@ -36,7 +34,7 @@ const defaultConfig = {
 };
 
 const config = mergeObjects(defaultConfig, mainConfig, {
-    mergeArrays: true,
-    ...(userConfig?.mergeOptions || {})
+    mergeArrays: true
 });
+
 export default config;

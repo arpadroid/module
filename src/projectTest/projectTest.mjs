@@ -100,8 +100,9 @@ class ProjectTest {
         this.stories = (config.storybook && globSync(`${this.project.path}/src/**/*.stories.js`)) || [];
         this.jestTests = (config.jest && globSync(`${this.project.path}/src/**/*.test.js`)) || [];
         console.log(logStyle.heading(`Testing: ${subjectLog}`));
+        const isFramework = this.project.name === 'framework';
 
-        if (!this.stories?.length && !this.jestTests?.length) {
+        if (!isFramework && !this.stories?.length && !this.jestTests?.length) {
             log.info('Nothing to test');
             return true;
         }
@@ -117,7 +118,7 @@ class ProjectTest {
         if (config.jest && this.jestTests?.length) {
             await this.testJest(config);
         }
-        if (config.storybook && this.stories?.length) {
+        if (isFramework || (config.storybook && this.stories?.length)) {
             await this.testStorybook(config);
         }
         return this.testResponse;
