@@ -27,3 +27,9 @@ export type ProjectTestConfigType = Record<string, any> & {
     port?: number;
     query?: string;
 };
+
+export type DeferredOperationType = {
+    name?: string;
+    description?: string;
+    operation: () => Promise<any>;
+};

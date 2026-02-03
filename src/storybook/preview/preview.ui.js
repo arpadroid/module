@@ -1,7 +1,8 @@
-/** @type { import('@storybook/web-components').Preview } */
+// Extend ImportMeta to include 'env' property for Vite
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { usagePanelDecorator } from './decorators.js';
-import flexLayoutDecorator from './layouts/flexLayout.jsx';
+import flexLayoutDecorator from '../layouts/flexLayout.jsx';
+import previewConfig from 'virtual:preview-config';
 
 const defaultConfig = {
     decorators: [usagePanelDecorator(), flexLayoutDecorator()],
@@ -18,6 +19,7 @@ const defaultConfig = {
         }
     }
 };
-const config = JSON.parse(process?.env?.PROJECT_CONFIG ?? '{}')?.storybook?.preview ?? {};
-const preview = mergeObjects(defaultConfig, config);
-export default preview;
+
+const config = mergeObjects(defaultConfig, previewConfig, { mergeArrays: true });
+
+export default config;

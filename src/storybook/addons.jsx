@@ -1,7 +1,7 @@
 import React from 'react';
-import { Source } from '@storybook/blocks';
-import { AddonPanel } from '@storybook/components';
-import { addons, types } from '@storybook/manager-api';
+import { Source } from '@storybook/addon-docs/blocks';
+import { AddonPanel } from 'storybook/internal/components';
+import { addons, types } from 'storybook/manager-api';
 import { getStoryContextValue } from './storybookTool.js';
 
 export function usagePanelAddon() {
@@ -15,7 +15,7 @@ export function usagePanelAddon() {
                 const usage = String(getStoryContextValue(story?.id, 'usage'));
                 return (
                     <AddonPanel active={Boolean(props.active)}>
-                        <Source code={usage} language="html" dark format="html" />
+                        <Source code={usage} language="html" dark />
                     </AddonPanel>
                 );
             }

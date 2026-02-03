@@ -193,10 +193,8 @@ class ProjectTest {
             this.stories = this.stories.filter((/** @type {string} */ story) => query.test(story));
         }
         const isServerRunning = await isHTTPServerRunning(port);
-        console.log('hey1');
         if (!isServerRunning) {
             await runStorybookCI(this.project, { storybook_port: port, verbose: true });
-            console.log('hey');
         }
         log.task(this.project.name, 'Running storybook tests.');
         return runStorybookTests(this.project, port);

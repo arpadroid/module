@@ -10,7 +10,7 @@ if (typeof jest === 'undefined') {
                 global.jest = jestGlobal;
             }
         }
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
         // If require is not available, Jest globals should already be injected
         console.warn('Could not manually inject jest globals:', err.message);
     }

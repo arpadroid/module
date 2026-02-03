@@ -110,21 +110,52 @@ export async function distTypes(project) {
 }
 
 /**
+ * Determines if the types build should be skipped for the project.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @returns {Promise<boolean>}
+ */
+export async function shouldSkipTypesBuild(project, config) {
+    const parent = await project.getParentProject();
+    return Boolean(
+        NO_TYPES || config.buildTypes !== true || parent?.buildConfig?.skipTypesBuild?.includes(project.name)
+    );
+}
+
+/**
  * Builds the project types.
  * @param {Project} project
  * @param {BuildConfigType} config
  * @returns {Promise<boolean>}
  */
 export async function buildTypes(project, config) {
-    if (config?.buildTypes !== true || NO_TYPES) {
+    if (await shouldSkipTypesBuild(project, config)) {
         return Promise.resolve(true);
     }
+
     if (!config.isDependency) {
         log.task(project.name, 'Building types.');
     }
-    await compileTypes(project);
-    await compileTypeDeclarations(project, config);
-    await addEntryTypesFile(project);
-    await distTypes(project);
-    return true;
+
+    const run = async () => {
+        await compileTypes(project);
+        await compileTypeDeclarations(project, config);
+        await addEntryTypesFile(project);
+        await distTypes(project);
+        return true;
+    };
+
+    const parent = await project.getParentProject();
+    if (parent?.buildConfig?.deferTypesBuild?.includes(project.name)) {
+        parent.deferredOperations.push({
+            operation: run,
+            name: project.name,
+            description: 'Build types'
+        });
+        return Promise.resolve(true);
+    }
+
+    await run();
+
+    return Promise.resolve(true);
 }

@@ -87,7 +87,9 @@ export function getHTTPServerCmd(project, port) {
 export function getStorybookCmd(project, port) {
     const configPath = getStorybookConfigPath(project);
     const script = getStorybookScript(project);
-    return `node ${script} dev -p ${port} -c "${configPath}"`;
+    const modulePath = project.getModulePath();
+    // Set NODE_PATH to help resolve storybook from module's node_modules
+    return `NODE_PATH="${modulePath}/node_modules:$NODE_PATH" node ${script} dev -p ${port} -c "${configPath}"`;
 }
 
 /**
@@ -110,7 +112,8 @@ export function getStorybookBuildCmd(project) {
 export function getStorybookTestCmd(project, port) {
     const configPath = getStorybookConfigPath(project);
     const script = getStorybookTestScript(project);
-    return `node ${script} -c "${configPath}" --url "http://127.0.0.1:${port}" --browsers chromium webkit firefox --maxWorkers=9 `;
+    // Use --index-json to run against built storybook's index.json, avoiding ESM/CommonJS transform issues
+    return `node ${script} -c "${configPath}" --url "http://127.0.0.1:${port}" --browsers chromium webkit firefox --maxWorkers=9 --index-json `;
 }
 
 /**
@@ -143,7 +146,8 @@ export async function getStorybookCICmd(project, port) {
 export async function runStorybook(project, { slim, storybook_port, verbose }, spawnConfig = {}) {
     if (!storybook_port || slim) return Promise.resolve(false);
     const port = storybook_port || 6006;
-    if (await isHTTPServerRunning(port)) {
+    const isServerRunning = await isHTTPServerRunning(port, 'localhost');
+    if (isServerRunning) {
         log.task(project.name, `Stopping existing Storybook on port ${port}...`);
         await stopHTTPServer({ port });
     }

@@ -4,7 +4,7 @@ export type StorybookToolConfigType = {
     };
 };
 
-export type StoryContextType = Record<string, any>;
+export type StoryContextType = Record<string, unknown>;
 
 declare global {
     interface Window {

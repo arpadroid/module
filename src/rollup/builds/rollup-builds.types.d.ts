@@ -2,7 +2,7 @@ import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup'
 import type Project from '../../project/project.mjs';
 // import { RollupPlugin } from './rollup-builds.mjs';
 import { Plugin } from 'rollup';
-import { Preview } from '@storybook/web-components';
+import { Preview } from '@storybook/web-components-vite';
 
 import { bundleStats } from 'rollup-plugin-bundle-stats';
 import gzipPlugin from 'rollup-plugin-gzip';
@@ -18,11 +18,12 @@ import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import typescript from 'rollup-plugin-typescript2';
 import { ThemesBundlerConfigType } from '@arpadroid/style-bun';
+import { Options } from 'storybook/internal/types';
 
 export type StorybookConfigType = {
     preview?: Preview;
-    previewHead?: (head) => string;
-    previewBody?: (body) => string;
+    previewHead?: (head: string | undefined, options: Options, project: Project) => string;
+    previewBody?: (body: string | undefined, options: Options, project: Project) => string;
 };
 
 export type BuildConfigType = {
@@ -33,6 +34,8 @@ export type BuildConfigType = {
     buildJS?: boolean;
     buildStyles?: boolean;
     buildTypes?: boolean;
+    skipTypesBuild?: string[];
+    deferTypesBuild?: string[];
     configPath?: string;
     deps?: string[];
     external?: string[];

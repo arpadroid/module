@@ -12,7 +12,6 @@ import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 
 import { rollup, watch as rollupWatch } from 'rollup';
-import alias from '@rollup/plugin-alias';
 
 import { log, logStyle } from '@arpadroid/logger';
 import ProjectTest from '../projectTest/projectTest.mjs';
@@ -49,6 +48,9 @@ class Project {
         this.watcher = undefined;
         /** @type {string[]} */
         this.i18nFiles = [];
+        /** @type {{name: string, description: string, operation: () => Promise<unknown>}[]} */
+        this.deferredOperations = [];
+
         this.setConfig(config);
         this.path = this.getPath();
         this.promise = this.initialize();
@@ -182,6 +184,12 @@ class Project {
         );
     }
 
+    async getParentProject() {
+        await this.promise;
+        const config = await this.getBuildConfig();
+        return PROJECT_STORE[config.parent || this.name];
+    }
+
     // #endregion Get
 
     ////////////////////
@@ -246,31 +254,59 @@ class Project {
      * @returns {Promise<boolean>}
      */
     async build(clientConfig = {}) {
-        this.buildStartTime = Date.now();
-        const config = await this.getBuildConfig(clientConfig, false);
-        this.buildConfig = config;
-        const slim = config.slim;
-        this.logBuild(config);
-        await this.cleanBuild(config);
-        await mkdirSync(`${this.path}/dist`, { recursive: true });
-        if (!slim) {
-            await this.buildDependencies(config);
-        }
+        const config = await this.initializeBuild(clientConfig);
+        const { slim } = config;
+        !slim && (await this.buildDependencies(config));
         await bundleStyles(this, config);
         await this.bundleI18n(config);
         process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
-        const rollupConfig = await this.getRollupConfig();
-
-        if (config.watch || WATCH) {
-            await this.watch(rollupConfig, config, config.watchCallback);
-        } else {
-            await this.rollup(rollupConfig, config);
-        }
-
+        await this.runBuild(config);
         await buildTypes(this, config);
+        await this.runDeferredOperations();
         runStorybook(this, config);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
+        return true;
+    }
+
+    /**
+     * Initializes the build process.
+     * @param {BuildConfigType} clientConfig
+     * @returns {Promise<BuildConfigType>}
+     */
+    async initializeBuild(clientConfig = {}) {
+        this.deferredOperations = [];
+        this.buildStartTime = Date.now();
+        const config = await this.getBuildConfig(clientConfig, false);
+        this.buildConfig = config;
+        process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
+        this.logBuild(config);
+        await this.cleanBuild(config);
+        mkdirSync(`${this.path}/dist`, { recursive: true });
+        return Promise.resolve(config);
+    }
+
+    /**
+     * Runs the build process.
+     * @param {BuildConfigType} config
+     * @returns {Promise<boolean | import('rollup').RollupWatcher>}
+     */
+    async runBuild(config) {
+        const rollupConfig = await this.getRollupConfig();
+        if (config.watch || WATCH) {
+            return await this.watch(rollupConfig, config, config.watchCallback);
+        }
+        return await this.rollup(rollupConfig, config);
+    }
+
+    async runDeferredOperations() {
+        const count = this.deferredOperations.length;
+        if (!count) return true;
+        log.task(this.name, `Running ${count} deferred operations.`);
+        for (const item of this.deferredOperations) {
+            log.task(item.name || this.name, `${item.description}`);
+            await item.operation();
+        }
         return true;
     }
 
@@ -338,11 +374,13 @@ class Project {
      * @param {RollupOptions[]} configs
      * @param {{ find: string | RegExp, replacement: string }[]} [aliases]
      */
-    preprocessRollupConfigs(configs, aliases = []) {
+    async preprocessRollupConfigs(configs, aliases = []) {
         for (const conf of configs) {
             this.preprocessRollupConfig(conf);
         }
         if (aliases.length && Array.isArray(configs[0]?.plugins)) {
+            // Dynamic import to avoid loading ESM-only package at module initialization
+            const { default: alias } = await import('@rollup/plugin-alias');
             configs[0].plugins.push(alias({ entries: aliases }));
         }
     }
@@ -383,7 +421,7 @@ class Project {
     async rollup(configs, config = {}) {
         if (config.buildJS !== true) return true;
         !config.slim && log.task(this.name, 'Rolling up');
-        this.preprocessRollupConfigs(configs, config.aliases);
+        await this.preprocessRollupConfigs(configs, config.aliases);
         await Promise.all(configs.map(conf => this.bundleConfig(conf)));
         return true;
     }
@@ -423,13 +461,17 @@ class Project {
         const { slim, verbose, aliases } = config;
         if (!configs?.length) return Promise.resolve(true);
         verbose || (!slim && log.task(this.name, 'watching for file changes'));
-        this.preprocessRollupConfigs(configs, aliases);
+        await this.preprocessRollupConfigs(configs, aliases);
         !slim && log.task(this.name, 'Rolling up (watch mode)');
-        this.watcher = await rollupWatch(configs);
+        this.watcher = rollupWatch(configs);
 
         return new Promise(resolve => {
             let initialized = false;
             this.watcher?.on('event', event => {
+                if (event.code === 'ERROR') {
+                    log.error('Error', event.error);
+                    resolve(false);
+                }
                 if (event.code === 'BUNDLE_START' && verbose) {
                     log.task(this.name, 'Bundle started');
                 }
