@@ -35,6 +35,7 @@ const config = {
             target: 'esnext'
         }
     },
+    plugins: [],
     define: {}
 };
 export default config;

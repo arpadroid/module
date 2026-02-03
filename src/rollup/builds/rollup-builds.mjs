@@ -204,7 +204,7 @@ export function getAliases(projectName, projects = []) {
 /**
  * Returns a simple watch plugin for style directories.
  * Uses Rollup's built-in addWatchFile API.
- * @param {Project[]} deps - Dependency projects to watch
+ * @param {Project[]} deps - Dependency projects to watch.
  * @returns {RollupPlugin | null}
  */
 function getStyleWatchPlugin(deps) {

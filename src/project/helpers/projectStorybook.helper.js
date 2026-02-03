@@ -87,7 +87,9 @@ export function getHTTPServerCmd(project, port) {
 export function getStorybookCmd(project, port) {
     const configPath = getStorybookConfigPath(project);
     const script = getStorybookScript(project);
-    return `node ${script} dev -p ${port} -c "${configPath}"`;
+    const modulePath = project.getModulePath();
+    // Set NODE_PATH to help resolve storybook from module's node_modules
+    return `NODE_PATH="${modulePath}/node_modules:$NODE_PATH" node ${script} dev -p ${port} -c "${configPath}"`;
 }
 
 /**

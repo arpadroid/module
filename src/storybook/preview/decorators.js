@@ -2,7 +2,7 @@
  * @typedef {import('@storybook/web-components-vite').StorybookConfig} StorybookConfig
  * @typedef {import('@storybook/web-components-vite').StoryFn} StoryFn
  */
-import { setStoryContextValue } from './storybookTool.js';
+import { setStoryContextValue } from '../storybookTool.js';
 /**
  * A decorator that sets the usage panel for the story.
  * @returns {StoryFn}

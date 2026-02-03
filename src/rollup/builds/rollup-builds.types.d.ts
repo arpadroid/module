@@ -2,7 +2,7 @@ import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup'
 import type Project from '../../project/project.mjs';
 // import { RollupPlugin } from './rollup-builds.mjs';
 import { Plugin } from 'rollup';
-import { Preview } from '@storybook/web-components';
+import { Preview } from '@storybook/web-components-vite';
 
 import { bundleStats } from 'rollup-plugin-bundle-stats';
 import gzipPlugin from 'rollup-plugin-gzip';
@@ -34,6 +34,8 @@ export type BuildConfigType = {
     buildJS?: boolean;
     buildStyles?: boolean;
     buildTypes?: boolean;
+    skipTypesBuild?: string[];
+    deferTypesBuild?: string[];
     configPath?: string;
     deps?: string[];
     external?: string[];

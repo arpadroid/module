@@ -28,7 +28,7 @@ export function getStoryContext(id = '') {
     if (id && typeof StoryContext[id] === 'undefined') {
         StoryContext[id] = {};
     }
-    return StoryContext[id];
+    return /** @type {StoryContextType} */ (StoryContext[id]);
 }
 
 /**
@@ -40,7 +40,7 @@ export function getStoryContext(id = '') {
 export function setStoryContext(id, payload) {
     const context = getContext();
     context[id] = payload;
-    return context[id];
+    return /** @type {StoryContextType} */ (context[id]);
 }
 
 /**
@@ -54,7 +54,7 @@ export function editStoryContext(id, payload) {
     const storyContext = getStoryContext(id);
     if (storyContext) {
         context[id] = mergeObjects(storyContext, payload);
-        return context[id];
+        return /** @type {StoryContextType} */ (context[id]);
     }
 }
 

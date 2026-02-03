@@ -29,9 +29,15 @@
             "@storybook/web-components-vite": [
                 "./node_modules/@arpadroid/module/node_modules/@storybook/web-components/dist/index.d.ts"
             ],
-            "storybook/test": ["./node_modules/@arpadroid/module/node_modules/storybook/dist/test/index.d.ts"]
-
-            // @storybook/preview-api mapping removed; not needed in Storybook 10+
+            "@storybook/builder-vite": [
+                "./node_modules/@arpadroid/module/node_modules/@storybook/builder-vite/dist/index.d.ts"
+            ],
+            "storybook/test": [
+                "./node_modules/@arpadroid/module/node_modules/storybook/dist/test/index.d.ts"
+            ],
+            "storybook/actions": [
+                "./node_modules/@arpadroid/module/node_modules/storybook/dist/actions/index.d.ts"
+            ],
         }
         /**
          * @warning: props rootDir and outdir must be overriden in the project's tsconfig.json in order to take effect.

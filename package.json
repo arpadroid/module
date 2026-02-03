@@ -9,11 +9,11 @@
             "import": "./src/storybook/exports/test.js"
         },
         "./storybook/addons": "./src/storybook/index.mjs",
-        "./storybook/main": "./src/storybook/main.ui.js",
-        "./storybook/preview": "./src/storybook/preview.ui.js",
-        "./storybook/middleware": "./.storybook/middleware.cjs",
-        "./storybook/manager": "./.storybook/manager.jsx",
-        "./storybook/decorators": "./src/storybook/decorators.js",
+        "./storybook/main": "./src/storybook/main/main.ui.js",
+        "./storybook/preview": "./src/storybook/preview/preview.ui.js",
+        "./storybook/middleware": "./storybook/middleware.cjs",
+        "./storybook/manager": "./storybook/manager.jsx",
+        "./storybook/decorators": "./src/storybook/preview/decorators.js",
         "./tsconfig": "./tsconfig.json"
     },
     "bin": {

@@ -1,4 +1,4 @@
-import config from '../src/storybook/main.ui.js';
+import config from '../src/storybook/main/main.ui.js';
 export default {
     ...config
 };
