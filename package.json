@@ -11,8 +11,8 @@
         "./storybook/addons": "./src/storybook/index.mjs",
         "./storybook/main": "./src/storybook/main/main.ui.js",
         "./storybook/preview": "./src/storybook/preview/preview.ui.js",
-        "./storybook/middleware": "./storybook/middleware.cjs",
-        "./storybook/manager": "./storybook/manager.jsx",
+        "./storybook/middleware": "./.storybook/middleware.cjs",
+        "./storybook/manager": "./.storybook/manager.jsx",
         "./storybook/decorators": "./src/storybook/preview/decorators.js",
         "./tsconfig": "./tsconfig.json"
     },
