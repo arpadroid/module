@@ -35,7 +35,7 @@ import buildStyles from '../plugins/buildStyles.mjs';
 import typescript from 'rollup-plugin-typescript2';
 
 import Project from '../../project/project.mjs';
-import PROJECT_STORE from '../../project/projectStore.mjs';
+import { getProjectInstance } from '../../project/projectStore.mjs';
 import { hasStyles } from '../../project/helpers/projectStyles.helper.js';
 
 /** @type {ProjectCliArgsType} */
@@ -450,7 +450,7 @@ export function getBuild(projectName, config = {}) {
         return {};
     }
     const buildConfig = getBuildConfig(config);
-    const project = PROJECT_STORE[projectName] || new Project(projectName, buildConfig);
+    const project = getProjectInstance(projectName, buildConfig);
     const appBuild = buildFn(project, buildConfig);
     const typesBuild = getTypesBuild();
     const build = [appBuild].filter(Boolean);

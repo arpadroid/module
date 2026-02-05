@@ -2,7 +2,7 @@
  * @typedef {import('storybook/internal/types').Options} Options
  */
 
-import { getProject } from '../../../scripts/scripts.util.mjs';
+import { getProject } from '../../project/projectStore.mjs';
 import Project from '../../project/project.mjs';
 
 const html = String.raw;
@@ -14,7 +14,7 @@ const html = String.raw;
  * @param {Project} [project]
  * @returns {Promise<string>}
  */
-export async function renderStorybookHead(head, options, project = getProject()) {
+export async function renderStorybookHead(head = '', options, project = getProject()) {
     if (!(project instanceof Project)) {
         throw new Error('Invalid project instance passed to renderArpadroidHead');
     }
@@ -52,7 +52,7 @@ export async function renderStorybookHead(head, options, project = getProject())
  * @param {Project} [project]
  * @returns {Promise<string>}
  */
-export async function renderStorybookBody(body, options, project = getProject()) {
+export async function renderStorybookBody(body = '', options, project = getProject()) {
     if (!(project instanceof Project)) {
         throw new Error('Invalid project instance passed to renderArpadroidHead');
     }

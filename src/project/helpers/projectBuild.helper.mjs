@@ -12,7 +12,7 @@ import { cwd } from 'process';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { log, logStyle } from '@arpadroid/logger';
 import Project from '../project.mjs';
-import PROJECT_STORE from '../projectStore.mjs';
+import { getProject } from '../projectStore.mjs';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv;
@@ -211,11 +211,11 @@ export async function getDependenciesRecursive(project, visited, depth = 0, maxD
         if (visited.has(dep.name)) continue;
         visited.add(dep.name);
 
-        const proj = PROJECT_STORE[dep.name] || new Project(dep.name, { path: dep.path });
+        const proj = getProject(dep.name, { path: dep.path });
         results.push(dep);
         dep.project = proj;
-        await proj.promise;
-        const dps = await getDependenciesRecursive(proj, visited, depth + 1, maxDepth);
+        await proj?.promise;
+        const dps = !proj ? [] : await getDependenciesRecursive(proj, visited, depth + 1, maxDepth);
         results.push(...(dps || []));
     }
     return results;

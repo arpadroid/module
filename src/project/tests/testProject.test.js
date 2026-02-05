@@ -7,12 +7,13 @@ import { existsSync, readFileSync } from 'fs';
 import { getFileConfig, getPackageJson } from '../helpers/projectBuild.helper.mjs';
 import { getBuildConfig, getDependencies } from '../helpers/projectBuild.helper.mjs';
 import { getThemes, getThemesPath, hasStyles } from '../helpers/projectStyles.helper.js';
+
 describe('Test Project Instance', () => {
+    let originalCwd = '';
     /** @type {Project}*/
     let project;
-    const originalCwd = process.cwd();
-
     beforeAll(async () => {
+        originalCwd = process.cwd();
         process.chdir(TEST_PROJECT_PATH);
         project = new Project('test-project', {
             path: TEST_PROJECT_PATH,
@@ -20,7 +21,9 @@ describe('Test Project Instance', () => {
         });
         await project.promise;
     });
-
+    afterAll(() => {
+        process.chdir(originalCwd);
+    });
     it('Initializes with expected configuration and properties', () => {
         expect(project).toBeInstanceOf(Project);
         expect(project?.name).toBe('test-project');
@@ -40,7 +43,7 @@ describe('Test Project Instance', () => {
         const _path = project?.getPath();
         project?.config && (project.config.path = undefined);
         expect(project?.getPath()).toBe(process.cwd());
-        expect(project?.getPath()).toBe(originalCwd + '/test/test-project');
+        expect(project?.getPath()).toBe(TEST_PROJECT_PATH);
         project?.config && (project.config.path = _path);
     });
 

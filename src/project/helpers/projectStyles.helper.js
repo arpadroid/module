@@ -11,7 +11,7 @@ import { getAllDependencies, STYLE_SORT } from './projectBuild.helper.mjs';
 import Project from '../project.mjs';
 import { join } from 'path';
 import chalk from 'chalk';
-import PROJECT_STORE from '../projectStore.mjs';
+import PROJECT_STORE, { getProjectInstance } from '../projectStore.mjs';
 
 //////////////////////////
 // #region Styles Helpers
@@ -118,19 +118,14 @@ export async function bundleStyles(project, config) {
  */
 export async function getStylesheetsToCompile(project) {
     await project.getBuildConfig();
-    const _hasStyles = await hasStyles(project);
-    if (!_hasStyles) {
+    if (!(await hasStyles(project))) {
         return false;
     }
     /** @type {Record<string, string[]>} */
     const minifiedDeps = {};
     const styleDeps = await getStyleDependencies(project);
     for (const styleDep of styleDeps) {
-        const dep =
-            PROJECT_STORE[styleDep.name] ||
-            new Project(styleDep.name, {
-                path: styleDep.path
-            });
+        const dep = getProjectInstance(styleDep.name, { path: styleDep.path });
         await dep.getBuildConfig();
         if (!(await hasStyles(dep))) continue;
         getThemes(dep).forEach(theme => {
