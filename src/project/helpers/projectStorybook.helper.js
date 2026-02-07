@@ -7,6 +7,10 @@ import { spawn, execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { log } from '@arpadroid/logger';
 import { isHTTPServerRunning, runServer, stopHTTPServer } from '@arpadroid/tools-node';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+
+const argv = /** @type {{watch?: boolean}} */ (yargs(hideBin(process.argv)).argv || {});
 
 /////////////////////////////////
 // #region Get
@@ -119,7 +123,9 @@ export function getStorybookBuildCmd(project) {
 export function getStorybookTestCmd(project) {
     const script = getStorybookTestScript(project);
     const vitestConfig = getStorybookVitestConfigPath(project);
-    return `${script} --config "${vitestConfig}" --run`;
+    const run = !argv.watch ? '--run' : '';
+    const watch = argv.watch ? '--watch' : '';
+    return `${script} --config "${vitestConfig}" ${watch} ${run} `;
 }
 
 /**

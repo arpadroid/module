@@ -1,28 +1,31 @@
-// @ts-nocheck
 import { defineConfig } from 'vitest/config';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { resolve } from 'path';
 import { playwright } from '@vitest/browser-playwright';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { hideBin } from 'yargs/helpers';
+import yargs from 'yargs';
+import { getProject } from '../project/projectStore.mjs';
 
-const { STORYBOOK_PORT, STORYBOOK_URL, STORYBOOK_CONFIG_DIR } = process.env;
+const argv = /** @type {import('yargs').Arguments} */ (yargs(hideBin(process.argv)).argv) || {};
+const project = getProject();
+await project?.promise;
+const projectConfig = await project?.getBuildConfig();
+const STORYBOOK_PORT = argv?.storybook || process.env.STORYBOOK_PORT || projectConfig?.storybook_port || 6006;
+const BROWSERS = project?.getBrowsers();
+console.log('BROWSERS', BROWSERS);
+const { STORYBOOK_URL, STORYBOOK_CONFIG_DIR } = process.env;
 const storybookUrl = STORYBOOK_URL || `http://127.0.0.1:${STORYBOOK_PORT || 6006}`;
 const configDir = STORYBOOK_CONFIG_DIR || '.storybook';
 const setupFile = resolve(configDir, 'vitest.setup.ts');
 export default defineConfig({
-    appType: 'spa',
     plugins: [storybookTest({ storybookUrl, configDir })],
     test: {
-        uiBase: true,
         globals: true,
         browser: {
             enabled: true,
-            name: 'chromium',
             provider: playwright(),
-            instances: [{ browser: 'chromium' }],
+            instances: BROWSERS,
             headless: true
         },
         setupFiles: [setupFile]

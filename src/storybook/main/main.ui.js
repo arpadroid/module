@@ -36,11 +36,9 @@ const defaultConfig = {
      */
     viteFinal: async (config = {}) => {
         const cfg = mergeObjects(config, viteConfig, { mergeArrays: true });
-        // cfg.define['import.meta.env.STORYBOOK_PROJECT_CONFIG'] = JSON.stringify(fileConfig || {});
         const previewConfig = getPreviewConfigFile();
         cfg.plugins.push(previewConfigPlugin(previewConfig));
         addAliasResolutions(cfg.resolve.alias);
-
         return cfg;
     }
 };

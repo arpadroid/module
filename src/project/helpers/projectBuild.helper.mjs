@@ -43,7 +43,7 @@ export const MINIFY = Boolean(argv.minify);
 export const SLIM = Boolean(argv.slim);
 export const STORYBOOK = argv.storybook;
 export const WATCH = Boolean(argv.watch);
-
+export const BROWSERS = argv.browsers;
 ////////////////////////////////
 // #region Build  Config
 ////////////////////////////////

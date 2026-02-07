@@ -19,7 +19,7 @@ const argv = yargs(hideBin(process.argv)).argv;
 const CI = Boolean(argv.ci ?? process.env.ci);
 const WATCH = Boolean(argv.watch ?? process.env.watch);
 const QUERY = argv.query ?? process.env.query ?? '';
-const STORYBOOK = Boolean(argv.storybook ?? process.env.storybook);
+const STORYBOOK = Boolean(argv.storybook);
 const JEST = Boolean(argv.jest ?? process.env.jest);
 const BUILD = Boolean(argv.build ?? process.env.build);
 const BROWSERS = argv.browsers ?? process.env.browsers ?? 'webkit chromium firefox';
@@ -122,7 +122,7 @@ class ProjectTest {
         }
         const storybookPort = config.port || process.env.port || 6006;
         let ranStorybook = false;
-        if (isFramework || (config.storybook && this.stories?.length)) {
+        if (STORYBOOK && (this.stories?.length || isFramework)) {
             ranStorybook = true;
             await this.testStorybook(config);
         }
@@ -134,6 +134,7 @@ class ProjectTest {
                 log.error('Failed to stop Storybook http-server:', error);
             }
         }
+
         return this.testResponse;
     }
 

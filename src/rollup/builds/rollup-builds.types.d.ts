@@ -58,6 +58,7 @@ export type BuildConfigType = {
     verbose?: boolean;
     themesPath?: string;
     themes?: ThemesBundlerConfigType[];
+    test_browsers?: string;
     watchCallback?: (payload: unknown) => void;
     hooks?: {
         onBuildStart?: (project: Project, config: BuildConfigType) => void;

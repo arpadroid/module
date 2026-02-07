@@ -17,7 +17,7 @@ import { rollup, watch as rollupWatch } from 'rollup';
 import { log, logStyle } from '@arpadroid/logger';
 import ProjectTest from '../projectTest/projectTest.mjs';
 
-import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK } from './helpers/projectBuild.helper.mjs';
+import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK, BROWSERS } from './helpers/projectBuild.helper.mjs';
 import { buildDependencies, getPackageJson, getDependencies } from './helpers/projectBuild.helper.mjs';
 import { getBuildConfig } from './helpers/projectBuild.helper.mjs';
 
@@ -128,6 +128,21 @@ class Project {
             path,
             locations
         });
+    }
+
+    /**
+     * Returns the browsers to be used for testing.
+     * @returns {{ browser: 'chromium' | 'firefox' | 'webkit' }[]}
+     */
+    getBrowsers() {
+        const browsers = String(
+            BROWSERS || process.env.BROWSERS || this.config?.test_browsers || 'chromium firefox webkit'
+        );
+        return browsers
+            .split(' ')
+            .map(browser => browser.trim())
+            .filter(Boolean)
+            ?.map(browser => ({ browser: /** @type {'chromium' | 'firefox' | 'webkit'} */ (browser) }));
     }
 
     /**
@@ -265,7 +280,7 @@ class Project {
         await this.runBuild(config);
         await buildTypes(this, config);
         await this.runDeferredOperations();
-        runStorybook(this, config);
+        STORYBOOK && runStorybook(this, config);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
         this.runHook('onBuildEnd', config);
