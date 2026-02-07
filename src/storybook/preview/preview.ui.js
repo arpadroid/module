@@ -8,9 +8,7 @@ const defaultConfig = {
     decorators: [usagePanelDecorator(), flexLayoutDecorator()],
     parameters: {
         layout: 'centered', //'centered' | 'fullscreen' | 'padded'
-        options: {
-            storySort: {}
-        },
+        options: {},
         controls: {
             matchers: {
                 color: /(background|color)$/i,
@@ -22,4 +20,4 @@ const defaultConfig = {
 
 const config = mergeObjects(defaultConfig, previewConfig, { mergeArrays: true });
 
-export default config;
+export default { ...config };
