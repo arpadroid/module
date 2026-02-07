@@ -59,6 +59,10 @@ export type BuildConfigType = {
     themesPath?: string;
     themes?: ThemesBundlerConfigType[];
     watchCallback?: (payload: unknown) => void;
+    hooks?: {
+        onBuildStart?: (project: Project, config: BuildConfigType) => void;
+        onBuildEnd?: (project: Project, config: BuildConfigType) => void;
+    };
 };
 
 export type BuildInterface = {
@@ -91,3 +95,5 @@ export type BuildInterface = {
     };
     output?: OutputOptions | OutputOptions[] | undefined;
 };
+
+export type BuildHookType = 'onBuildStart' | 'onBuildEnd';

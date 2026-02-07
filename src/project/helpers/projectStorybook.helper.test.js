@@ -18,7 +18,7 @@ describe('Project Storybook Helper', () => {
     test('getStorybookConfigPath returns correct path when .storybook exists', () => {
         const configPath = getStorybookConfigPath(project);
         // The test project does not have .storybook, so it should return the module path
-        expect(configPath).toBe(`${project.path}/node_modules/@arpadroid/module/.storybook`);
+        expect(configPath).toBe(`${project.path}/.storybook`);
     });
 
     test('throws warning when no storybook config found', async () => {

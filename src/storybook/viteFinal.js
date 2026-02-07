@@ -3,6 +3,7 @@ import { basename } from 'node:path';
 const cwd = process.cwd();
 /** @type {import('vite').UserConfig} */
 const config = {
+    base: '/',
     build: {
         target: 'esnext'
     },
@@ -14,17 +15,12 @@ const config = {
         }
     },
     resolve: {
-        alias: [
-            // Example alias for backward compatibility
-            // {
-            //     find: '@old-module/path',
-            //     replacement: '/absolute/path/to/src/new-module/path'
-            // }
-        ]
+        alias: [],
+        conditions: ['import', 'module', 'browser', 'default']
     },
     server: {
         fs: {
-            allow: [basename(cwd), cwd, '/var/www/arpadroid']
+            allow: [basename(cwd), cwd, '/var/www/arpadroid', cwd + '/.storybook']
         },
         watch: {
             ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**/@types/**', '**/*.d.ts', '**/.tmp/**']
@@ -33,7 +29,13 @@ const config = {
     optimizeDeps: {
         esbuildOptions: {
             target: 'esnext'
-        }
+        },
+        exclude: [
+            'storybook',
+            '@storybook/web-components',
+            'storybook/internal/preview/runtime',
+            '@storybook/addon-vitest'
+        ]
     },
     plugins: [],
     define: {}

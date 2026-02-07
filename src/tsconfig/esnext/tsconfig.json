@@ -27,7 +27,13 @@
         "paths": {
             "rollup-plugin-copy": ["./node_modules/@arpadroid/module/node_modules/rollup-plugin-copy"],
             "@storybook/web-components-vite": [
+                "./node_modules/@arpadroid/module/node_modules/@storybook/web-components-vite/dist/index.d.ts"
+            ],
+            "@storybook/web-components": [
                 "./node_modules/@arpadroid/module/node_modules/@storybook/web-components/dist/index.d.ts"
+            ],
+            "@storybook/addon-vitest": [
+                "./node_modules/@arpadroid/module/node_modules/@storybook/addon-vitest/dist/index.d.ts"
             ],
             "@storybook/builder-vite": [
                 "./node_modules/@arpadroid/module/node_modules/@storybook/builder-vite/dist/index.d.ts"
@@ -37,7 +43,7 @@
             ],
             "storybook/actions": [
                 "./node_modules/@arpadroid/module/node_modules/storybook/dist/actions/index.d.ts"
-            ],
+            ]
         }
         /**
          * @warning: props rootDir and outdir must be overriden in the project's tsconfig.json in order to take effect.

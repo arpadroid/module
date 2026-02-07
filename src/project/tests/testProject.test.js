@@ -127,9 +127,9 @@ describe('Test Project Instance', () => {
         });
         expect(existsSync(`${TEST_PROJECT_PATH}/dist/@types`)).toBe(true);
         expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Error: Command failed'));
-        // Verify that the test-runner actually passed
+        // Verify that the Storybook Vitest tests actually passed
         expect(result).not.toHaveProperty('success', false);
-        expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Storybook test-runner failed'));
+        expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Storybook Vitest tests failed'));
         logSpy.mockRestore();
         spy.mockRestore();
     }, 20000);

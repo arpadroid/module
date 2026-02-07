@@ -51,14 +51,24 @@ export function getStorybookScript(project) {
 }
 
 /**
- * Returns the storybook test-runner script path.
+ * Returns the Vitest script path.
  * @param {Project} project
  * @returns {string}
  */
 export function getStorybookTestScript(project) {
     const modulePath = project.getModulePath();
-    const script = `${modulePath}/node_modules/@storybook/test-runner/dist/test-storybook`;
+    const script = `${modulePath}/node_modules/.bin/vitest`;
     return script;
+}
+
+/**
+ * Returns the Vitest config path for Storybook tests.
+ * @param {Project} project
+ * @returns {string}
+ */
+export function getStorybookVitestConfigPath(project) {
+    const modulePath = project.getModulePath();
+    return `${modulePath}/src/storybook/vitest.config.mjs`;
 }
 
 // #endregion Scripts
@@ -87,9 +97,7 @@ export function getHTTPServerCmd(project, port) {
 export function getStorybookCmd(project, port) {
     const configPath = getStorybookConfigPath(project);
     const script = getStorybookScript(project);
-    const modulePath = project.getModulePath();
-    // Set NODE_PATH to help resolve storybook from module's node_modules
-    return `NODE_PATH="${modulePath}/node_modules:$NODE_PATH" node ${script} dev -p ${port} -c "${configPath}"`;
+    return `node ${script} dev -p ${port} -c "${configPath}"`;
 }
 
 /**
@@ -104,16 +112,14 @@ export function getStorybookBuildCmd(project) {
 }
 
 /**
- * Returns the storybook test command.
+ * Returns the Storybook Vitest test command.
  * @param {Project} project
- * @param {number} port
  * @returns {string}
  */
-export function getStorybookTestCmd(project, port) {
-    const configPath = getStorybookConfigPath(project);
+export function getStorybookTestCmd(project) {
     const script = getStorybookTestScript(project);
-    // Use --index-json to run against built storybook's index.json, avoiding ESM/CommonJS transform issues
-    return `node ${script} -c "${configPath}" --url "http://127.0.0.1:${port}" --browsers chromium webkit firefox --maxWorkers=9 --index-json `;
+    const vitestConfig = getStorybookVitestConfigPath(project);
+    return `${script} --config "${vitestConfig}" --run`;
 }
 
 /**
@@ -222,22 +228,32 @@ export async function runStorybookCI(project, options = {}, spawnConfig = {}) {
 }
 
 /**
- * Runs the storybook tests using storybook test-runner.
+ * Runs the storybook tests using the Vitest addon.
  * @param {Project} project
  * @param {number} port
  * @returns {Promise<boolean>}
  */
 export async function runStorybookTests(project, port) {
-    const child = spawn(getStorybookTestCmd(project, port), [], {
+    const STORYBOOK_CONFIG_DIR = getStorybookConfigPath(project);
+    const cmd = getStorybookTestCmd(project);
+    const child = spawn(cmd, [], {
         shell: '/bin/sh',
         stdio: 'inherit',
-        cwd: project.path
+        cwd: project.path,
+        env: {
+            ...process.env,
+            PROJECT_PATH: project.path,
+            STORYBOOK_CONFIG_DIR,
+            STORYBOOK_TEST: 'true',
+            STORYBOOK_URL: `http://localhost:${port}`,
+            STORYBOOK_PORT: String(port)
+        }
     });
 
     return new Promise((resolve, reject) => {
         child.on('close', code => {
             if (code === 0) resolve(true);
-            else reject(new Error('Storybook test-runner failed'));
+            else reject(new Error('Storybook Vitest tests failed'));
         });
         child.on('error', err => reject(err));
     });

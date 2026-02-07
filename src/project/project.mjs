@@ -1,6 +1,7 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('../rollup/builds/rollup-builds.types.js').BuildConfigType} BuildConfigType
+ * @typedef {import('../rollup/builds/rollup-builds.types.js').BuildHookType} BuildHookType
  * @typedef {import('rollup').RollupOptions} RollupOptions
  * @typedef {import('rollup').InputOption} InputOption
  * @typedef {import('./project.types.js').CompileTypesType} CompileTypesType
@@ -255,6 +256,7 @@ class Project {
      */
     async build(clientConfig = {}) {
         const config = await this.initializeBuild(clientConfig);
+        this.runHook('onBuildStart', config);
         const { slim } = config;
         !slim && (await this.buildDependencies(config));
         await bundleStyles(this, config);
@@ -266,7 +268,28 @@ class Project {
         runStorybook(this, config);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
+        this.runHook('onBuildEnd', config);
         return true;
+    }
+
+    /**
+     * Runs a build hook if defined.
+     * @param {BuildHookType} hookName
+     * @param {BuildConfigType} config
+     */
+    async runHook(hookName, config) {
+        const hook = config?.hooks?.[hookName];
+        if (typeof hook === 'function') {
+            try {
+                /** @type {Promise<unknown> | unknown} */
+                const rv = hook(this, config);
+                if (rv instanceof Promise) {
+                    await rv;
+                }
+            } catch (err) {
+                log.error(`Error running hook ${hookName} for project ${this.name}:`, err);
+            }
+        }
     }
 
     /**

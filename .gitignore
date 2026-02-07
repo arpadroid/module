@@ -10,6 +10,8 @@ src/i18n
 *.bundled.css
 *.compiled.d.ts
 *.min.css
+*.d.cts
+*.d.cts.map
 /test/test-project/dist
 /test/test-project/node_modules
 /test/test-project/coverage

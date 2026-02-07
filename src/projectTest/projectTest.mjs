@@ -11,8 +11,8 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { log, logStyle } from '@arpadroid/logger';
 import { mergeObjects } from '@arpadroid/tools-iso';
-import { runStorybookCI, runStorybookTests } from '../project/helpers/projectStorybook.helper.js';
-import { isHTTPServerRunning } from '@arpadroid/tools-node';
+import { stopHTTPServer } from '@arpadroid/tools-node';
+import { runStorybookTests } from '../project/helpers/projectStorybook.helper.js';
 
 /** @type {ProjectTestConfigType} */
 const argv = yargs(hideBin(process.argv)).argv;
@@ -24,6 +24,7 @@ const JEST = Boolean(argv.jest ?? process.env.jest);
 const BUILD = Boolean(argv.build ?? process.env.build);
 const BROWSERS = argv.browsers ?? process.env.browsers ?? 'webkit chromium firefox';
 const PORT = argv.port ?? process.env.port ?? 6006;
+const SLIM = Boolean(argv.slim ?? process.env.slim);
 
 class ProjectTest {
     //////////////////////////////
@@ -74,6 +75,7 @@ class ProjectTest {
      * @returns {Promise<boolean | unknown>}
      */
     async test(_config = {}) {
+        console.log('SLIM', SLIM);
         try {
             return await this.runTest(_config);
         } catch (error) {
@@ -106,20 +108,32 @@ class ProjectTest {
             log.info('Nothing to test');
             return true;
         }
-        if (config.ci && this.scripts?.build) {
+        if (!SLIM) {
             await execSync('npm run build -- --logHeading=false', {
                 shell: '/bin/sh',
                 stdio: 'inherit',
                 cwd: this.project.path
             });
         }
+
         await this.testNodeJS(config);
 
         if (config.jest && this.jestTests?.length) {
             await this.testJest(config);
         }
+        const storybookPort = config.port || process.env.port || 6006;
+        let ranStorybook = false;
         if (isFramework || (config.storybook && this.stories?.length)) {
+            ranStorybook = true;
             await this.testStorybook(config);
+        }
+        // Ensure http-server is stopped after Storybook tests
+        if (ranStorybook) {
+            try {
+                await stopHTTPServer({ port: Number(storybookPort) });
+            } catch (error) {
+                log.error('Failed to stop Storybook http-server:', error);
+            }
         }
         return this.testResponse;
     }
@@ -192,10 +206,6 @@ class ProjectTest {
         if (QUERY) {
             const query = new RegExp(QUERY, 'i');
             this.stories = this.stories.filter((/** @type {string} */ story) => query.test(story));
-        }
-        const isServerRunning = await isHTTPServerRunning(port);
-        if (!isServerRunning) {
-            await runStorybookCI(this.project, { storybook_port: port, verbose: true });
         }
         log.task(this.project.name, 'Running storybook tests.');
         return runStorybookTests(this.project, port);
