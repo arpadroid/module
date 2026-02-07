@@ -75,7 +75,6 @@ class ProjectTest {
      * @returns {Promise<boolean | unknown>}
      */
     async test(_config = {}) {
-        console.log('SLIM', SLIM);
         try {
             return await this.runTest(_config);
         } catch (error) {
