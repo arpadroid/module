@@ -2,7 +2,7 @@
  * @typedef {import("./rollup/builds/rollup-builds.types.js").BuildConfigType} BuildConfigType
  */
 
-import { installStorybook } from './project/hooks/buildEnd.hooks.js';
+import { installStorybook } from './project/helpers/projectStorybook.helper.js';
 
 
 /** @type {BuildConfigType} */

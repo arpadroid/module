@@ -15,7 +15,8 @@
         "./storybook/middleware": "./.storybook/middleware.cjs",
         "./storybook/manager": "./.storybook/manager.jsx",
         "./storybook/decorators": "./src/storybook/preview/decorators.js",
-        "./tsconfig": "./tsconfig.json"
+        "./tsconfig": "./tsconfig.json",
+        "./vitest/config": "./src/storybook/vitest.config.mjs"
     },
     "bin": {
         "arpadroid-build": "./scripts/build-project.mjs",
@@ -151,6 +152,7 @@
         "typescript": "^5.8.2",
         "vite": "^6.3.5",
         "vitest": "^4.0.18",
-        "yargs": "^18.0.0"
+        "yargs": "^18.0.0",
+        "@vitest/coverage-v8": "^4.0.18"
     }
 }

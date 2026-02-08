@@ -20,10 +20,15 @@ const resolutions = {
     'storybook/test': join(moduleRoot, 'node_modules/storybook/dist/test/index.js'),
     'vitest/internal/browser': join(moduleRoot, 'node_modules/vitest/dist/browser.js'),
     'vitest/runners': join(moduleRoot, 'node_modules/vitest/dist/runners.js'),
+    'magic-string': join(moduleRoot, 'node_modules/magic-string'),
+    chai: join(moduleRoot, 'node_modules/chai'),
+    'expect-type': join(moduleRoot, 'node_modules/expect-type'),
     vitest: {
         find: /^vitest$/,
         replacement: join(moduleRoot, 'node_modules/vitest/dist/index.js')
-    }
+    },
+    playwright: join(moduleRoot, 'node_modules/playwright'), // Add Playwright resolution
+    '@vitest/coverage-v8': join(moduleRoot, 'node_modules/@vitest/coverage-v8/dist')
 };
 
 /**

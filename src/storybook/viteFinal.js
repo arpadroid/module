@@ -30,12 +30,7 @@ const config = {
         esbuildOptions: {
             target: 'esnext'
         },
-        exclude: [
-            'storybook',
-            '@storybook/web-components',
-            'storybook/internal/preview/runtime',
-            '@storybook/addon-vitest'
-        ]
+        exclude: ['storybook', '@storybook/web-components', 'storybook/internal/preview/runtime']
     },
     plugins: [],
     define: {}
