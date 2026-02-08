@@ -281,13 +281,9 @@ export async function runStorybookTests(project, port) {
  */
 export async function initializeInstall(moduleProject, config) {
     const { slim } = config;
-    if (slim) {
-        return false;
-    }
+    if (!slim) return false;
     const parent = await moduleProject.getParentProject();
-    if (parent.name === 'module') {
-        return false;
-    }
+    if (parent.name === 'module') return false;
     await parent.promise;
     const parentConfig = await parent.getBuildConfig();
     return parentConfig.buildType === 'uiComponent' ? { parent, config: parentConfig } : false;
