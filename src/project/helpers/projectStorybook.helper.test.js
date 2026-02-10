@@ -36,7 +36,6 @@ describe('Project Storybook Helper', () => {
 
     test('Returns the expected storybook command string', () => {
         const cmd = getStorybookCmd(project, 5000);
-        console.log('cmd', cmd);
         expect(cmd.includes('5000')).toBe(true);
         expect(cmd.includes(project.path || '')).toBe(true);
     });

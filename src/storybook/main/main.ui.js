@@ -1,6 +1,9 @@
 /**
  * Storybook main configuration for Vite-based Web Components projects.
  * This configuration is shared across all @arpadroid projects.
+ * @typedef {import('vite').UserConfig} ViteConfig
+ * @typedef {import('@storybook/web-components-vite').StorybookConfig} StorybookConfig
+ *
  */
 import path from 'node:path';
 import viteConfig from '../viteFinal.js';
@@ -8,18 +11,19 @@ import { mergeObjects } from '@arpadroid/tools-iso';
 import { renderStorybookBody, renderStorybookHead } from '../templates/mainTemplates.js';
 import { getMainConfig, getPreviewConfigFile, getStaticDirs, previewConfigPlugin } from './main.helper.js';
 import { addAliasResolutions } from './mainResolutions.js';
+import { getConfigStoryPatterns } from '../../project/helpers/projectStorybook.helper.js';
+import { getProject } from '../../project/projectStore.mjs';
 
 const mainConfig = await getMainConfig();
 const moduleRoot = path.resolve(import.meta.dirname, '../../..');
 const addonVitestPath = path.resolve(moduleRoot, 'node_modules/@storybook/addon-vitest');
 
-/**@type {import('@storybook/web-components-vite').StorybookConfig['stories']} */
-const stories = ['../src/**/*.stories.{ts,tsx,js,jsx}'];
 const staticDirs = getStaticDirs();
-
-/** @type {import('@storybook/web-components-vite').StorybookConfig} */
+const project = await getProject();
+await project?.getBuildConfig();
+/** @type {StorybookConfig} */
 const defaultConfig = {
-    stories,
+    stories: getConfigStoryPatterns(project),
     staticDirs,
     addons: [addonVitestPath],
     framework: {
@@ -31,8 +35,8 @@ const defaultConfig = {
     previewHead: renderStorybookHead,
     /**
      * Configures Vite for Storybook.
-     * @param {import('vite').UserConfig} config - The Vite configuration.
-     * @returns {Promise<import('vite').UserConfig>} The updated Vite configuration.
+     * @param {ViteConfig} config
+     * @returns {Promise<ViteConfig>}
      */
     viteFinal: async (config = {}) => {
         const cfg = mergeObjects(config, viteConfig, { mergeArrays: true });

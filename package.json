@@ -16,11 +16,17 @@
         "./storybook/manager": "./.storybook/manager.jsx",
         "./storybook/decorators": "./src/storybook/preview/decorators.js",
         "./tsconfig": "./tsconfig.json",
-        "./vitest/config": "./src/storybook/vitest.config.mjs"
+        "./vitest/config": "./src/storybook/vitest.config.mjs",
+        "./jest/setup": "./src/jest/setupTests.mjs",
+        "./jest/config/jsdom": "./src/jest/jest-jsdom.config.mjs",
+        "./jest/config/node": "./src/jest/jest-node.config.mjs",
+        "./jest/config": "./src/jest/jest-global.config.mjs"
     },
     "bin": {
         "arpadroid-build": "./scripts/build-project.mjs",
-        "arpadroid-test": "./scripts/test-project.mjs"
+        "arpadroid-test": "./scripts/test-project.mjs",
+        "arpadroid-install": "./scripts/install-project.mjs",
+        "arpadroid-clean": "./scripts/clean-project.mjs"
     },
     "types": "./dist/@types/types.compiled.d.ts",
     "type": "module",
@@ -37,11 +43,12 @@
     },
     "scripts": {
         "build:project": "node ./scripts/build-project.js",
-        "test": "node ./scripts/test-project.mjs --storybook --jest --port=6000",
+        "test": "node ./scripts/test-project.mjs --storybook --jest",
+        "test:jest": "node ./scripts/test-project.mjs --jest",
         "install:project": "node ./scripts/install-projects.mjs",
         "postinstall": "npx playwright install",
         "build": "node ./scripts/build-project.mjs --minify",
-        "clean": "rm -rf ./dist ./node_modules package-lock.json",
+        "clean": "arpadroid-clean",
         "clean:build": "npm run clean && npm install && npm run build"
     },
     "repository": {
@@ -98,7 +105,6 @@
         "@storybook/addon-links": "^10.2.7",
         "@storybook/addon-vitest": "^10.2.7",
         "@storybook/cli": "^10.2.7",
-        "@storybook/web-components": "^10.2.7",
         "@storybook/web-components-vite": "^10.2.7",
         "@types/express": "^5.0.6",
         "@types/jest": "^30.0.0",

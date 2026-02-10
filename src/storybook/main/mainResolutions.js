@@ -5,30 +5,33 @@
 import { join, resolve } from 'path';
 
 const moduleRoot = resolve(import.meta.dirname, '../../..');
-const addonVitestPath = resolve(moduleRoot, 'node_modules/@storybook/addon-vitest');
+const addonVitestPath = join(moduleRoot, 'node_modules', '@storybook', 'addon-vitest', 'dist');
+const modulesRoot = join(moduleRoot, 'node_modules');
+const storybookPath = join(modulesRoot, 'storybook', 'dist');
+const vitestPath = join(modulesRoot, 'vitest', 'dist');
 
 /** @type {ResolutionTypes} */
 const resolutions = {
-    '@storybook/web-components-vite': join(moduleRoot, 'node_modules/@storybook/web-components-vite'),
+    '@storybook/web-components-vite': join(modulesRoot, '@storybook', 'web-components-vite'),
     '/node_modules/@arpadroid/module/.storybook/preview.js': 'virtual:preview-config',
-    '@storybook/addon-vitest/internal/test-utils': join(addonVitestPath, 'dist/vitest-plugin/test-utils.js'),
-    '@storybook/addon-vitest/internal/plugin': join(addonVitestPath, 'dist/vitest-plugin/plugin.js'),
-    '@storybook/addon-vitest': addonVitestPath,
-    '@storybook/builder-vite': join(moduleRoot, 'node_modules/@storybook/builder-vite'),
-    'storybook/internal/preview/runtime': join(moduleRoot, 'node_modules/storybook/dist/preview/runtime.js'),
-    'storybook/internal/csf': join(moduleRoot, 'node_modules/storybook/dist/csf/index.js'),
-    'storybook/test': join(moduleRoot, 'node_modules/storybook/dist/test/index.js'),
-    'vitest/internal/browser': join(moduleRoot, 'node_modules/vitest/dist/browser.js'),
-    'vitest/runners': join(moduleRoot, 'node_modules/vitest/dist/runners.js'),
-    'magic-string': join(moduleRoot, 'node_modules/magic-string'),
-    chai: join(moduleRoot, 'node_modules/chai'),
-    'expect-type': join(moduleRoot, 'node_modules/expect-type'),
+    'storybook/internal/preview/runtime': join(storybookPath, 'preview', 'runtime.js'),
+    'storybook/internal/csf': join(storybookPath, 'csf', 'index.js'),
+    'storybook/test': join(storybookPath, 'test', 'index.js'),
+    '@storybook/builder-vite': join(modulesRoot, '@storybook', 'builder-vite'),
+    'vitest/internal/browser': join(vitestPath, 'browser.js'),
+    'vitest/runners': join(vitestPath, 'runners.js'),
+    'magic-string': join(modulesRoot, 'magic-string'),
+    chai: join(modulesRoot, 'chai'),
+    'expect-type': join(modulesRoot, 'expect-type'),
     vitest: {
         find: /^vitest$/,
-        replacement: join(moduleRoot, 'node_modules/vitest/dist/index.js')
+        replacement: join(vitestPath, 'index.js')
     },
-    playwright: join(moduleRoot, 'node_modules/playwright'), // Add Playwright resolution
-    '@vitest/coverage-v8': join(moduleRoot, 'node_modules/@vitest/coverage-v8/dist')
+    playwright: join(modulesRoot, 'playwright'),
+    '@storybook/addon-vitest/internal/test-utils': join(addonVitestPath, 'vitest-plugin', 'test-utils.js'),
+    '@storybook/addon-vitest/internal/plugin': join(addonVitestPath, 'vitest-plugin', 'plugin.js'),
+    '@storybook/addon-vitest': addonVitestPath,
+    '@storybook/addon-vitest/internal/global-setup': join(addonVitestPath, 'vitest-plugin', 'global-setup.js')
 };
 
 /**

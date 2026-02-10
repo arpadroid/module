@@ -5,9 +5,3 @@ export type StorybookToolConfigType = {
 };
 
 export type StoryContextType = Record<string, unknown>;
-
-declare global {
-    interface Window {
-        _storyContext?: Record<string, unknown>;
-    }
-}

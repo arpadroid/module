@@ -2,6 +2,7 @@ import ProjectTest from './projectTest.mjs';
 import Project from '../project/project.mjs';
 import { TEST_PROJECT_PATH } from '../project/tests/projectTest.util.mjs';
 import { join } from 'path';
+import { getJestConfigPath } from '../project/helpers/projectJest.helper.js';
 
 describe('ProjectTest', () => {
     /** @type {Project} */
@@ -74,9 +75,9 @@ describe('ProjectTest', () => {
     describe('getJestConfigLocation', () => {
         it('should return a path containing jest config', () => {
             projectTest = new ProjectTest(project);
-            const configPath = projectTest.getJestConfigLocation();
+            const configPath = getJestConfigPath(projectTest.project);
 
-            expect(configPath).toContain('jest.config');
+            expect(configPath).toContain('.config.mjs');
             expect(typeof configPath).toBe('string');
         });
     });

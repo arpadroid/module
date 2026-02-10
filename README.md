@@ -99,8 +99,8 @@ my-project
     "main": "dist/arpadroid-my-project.js",
     "scripts": {
         "build": "arpadroid-build --minify",
-        "dev": "arpadroid-build --storybook=6001 --watch",
-        "test": "arpadroid-test --jest --storybook --port=6001"
+        "dev": "arpadroid-build --storybook --watch",
+        "test": "arpadroid-test --jest --storybook"
     }
 }
 ```
@@ -204,7 +204,7 @@ dist/
     "name": "@company/ui-library",
     "scripts": {
         "build": "arpadroid-build --minify",
-        "dev": "npm run build -- --storybook=6001 --watch",
+        "dev": "npm run build -- --storybook --watch",
         "test": "arpadroid-test --jest --storybook"
     },
     "devDependencies": {

@@ -1,15 +1,23 @@
-module.exports = {
+import { getProject } from '../project/projectStore.mjs';
+import { getJestSetupFiles } from '../project/helpers/projectJest.helper.js';
+
+const project = getProject();
+if (!project) throw new Error('Project not found');
+const config = await project?.getBuildConfig();
+const { jest: jestConfig } = config || {};
+
+export default {
     verbose: true,
     coverageReporters: ['html', 'text', 'cobertura'],
     testEnvironment: 'node',
-    testMatch: ['**/__tests__/**/*.?(m)js?(x)', '**/?(*.)(spec|test).?(m)js?(x)'],
+    testMatch: jestConfig?.testMatch,
     moduleFileExtensions: ['js', 'mjs'],
-    setupFilesAfterEnv: ['<rootDir>/../setupTests.cjs'],
+    setupFilesAfterEnv: await getJestSetupFiles(project),
     transform: {
-        '^.+\\.m?js$': 'babel-jest'
+        '^.+\\.m?js$': ['babel-jest', { presets: [['@babel/preset-env', { targets: { node: 'current' } }]] }]
     },
-    injectGlobals: true,
     fakeTimers: { enableGlobally: true },
+    injectGlobals: true,
     globals: {},
     transformIgnorePatterns: [
         'node_modules/(?!(@arpadroid|chokidar|readdirp|anymatch|normalize-path|picomatch|glob-parent|braces|fill-range|to-regex-range|is-number|is-extglob|is-glob|chalk|glob|minimatch|yargs|yargs-parser)/)'

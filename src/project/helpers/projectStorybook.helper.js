@@ -2,21 +2,119 @@
 /**
  * @typedef {import('../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
  * @typedef {import('../project.mjs').default} Project
+ * @typedef {import('../../rollup/builds/rollup-builds.types.js').TestMatchType} TestMatchType
  */
 import { spawn, execSync } from 'child_process';
-import { existsSync, cpSync } from 'fs';
+import { existsSync, cpSync, globSync } from 'fs';
 import { log } from '@arpadroid/logger';
 import { isHTTPServerRunning, runServer, stopHTTPServer } from '@arpadroid/tools-node';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { join } from 'path';
+import { join, resolve } from 'path';
+import { getProject } from '../projectStore.mjs';
 
 const cwd = process.cwd();
-const argv = /** @type {{watch?: boolean}} */ (yargs(hideBin(process.argv)).argv || {});
+const argv = /** @type {{watch?: boolean, storybook?: number}} */ (yargs(hideBin(process.argv)).argv || {});
 
 /////////////////////////////////
 // #region Get
 /////////////////////////////////
+
+/**
+ * Returns the Storybook port number from the project configuration, environment variables, or command-line arguments.
+ * @param {Project} project
+ * @returns {Promise<number>} The Storybook port number.
+ */
+export async function getStorybookPort(project) {
+    const projectConfig = await project.getBuildConfig();
+    return Number(projectConfig?.storybook_port || argv?.storybook || process.env.STORYBOOK_PORT || 6006);
+}
+
+/**
+ * Returns the story patterns from the project configuration or defaults to a standard pattern.
+ * @param {Project | undefined} project
+ * @returns {string[]} An array of glob patterns for Storybook stories.
+ */
+export function getStoryPatterns(project = getProject()) {
+    let patterns = project?.buildConfig?.storybook?.stories;
+    if (!patterns) patterns = [`${project?.path}/src/**/*.stories.{js,jsx,ts,tsx}`];
+    if (patterns?.length && !Array.isArray(patterns)) {
+        patterns = [String(patterns)];
+    }
+    if (Array.isArray(patterns)) {
+        patterns = patterns.map(pattern => resolve(pattern));
+    }
+    return /** @type {string[]} */ (patterns);
+}
+
+/**
+ * Converts absolute story patterns to relative patterns based on the project path.
+ * @param {Project | undefined} project
+ * @returns {string[]} An array of relative glob patterns for Storybook stories.
+ */
+export function getConfigStoryPatterns(project = getProject()) {
+    if (!project) {
+        log.error('getConfigStoryPatterns: Project not found', project);
+        return [];
+    }
+    const path = project.path || '';
+    const patterns = getStoryPatterns(project);
+    const rv = patterns.map(pattern => {
+        if (pattern.startsWith(path)) {
+            pattern = pattern.replace(path + '/', '');
+        }
+        if (pattern.startsWith('./')) {
+            pattern = pattern.substring(2);
+        }
+        if (pattern.startsWith(cwd)) {
+            pattern = pattern.replace(cwd + '/', '');
+        }
+        if (pattern.startsWith('/')) {
+            pattern = pattern.substring(1);
+        }
+        return '../' + pattern;
+    });
+    if (!rv.length) {
+        return ['../src/**/*.stories.{ts,tsx,js,jsx}'];
+    }
+    return rv;
+}
+
+/**
+ * Returns an array of paths to Storybook story files for the given project.
+ * @param {Project} project
+ * @returns {string[]}
+ */
+export function getStories(project) {
+    let patterns = getStoryPatterns(project);
+    /** @type {string[]} */
+    const stories = [];
+    Array.isArray(patterns) &&
+        patterns?.forEach(pattern => {
+            const path = resolve(pattern);
+            const found = globSync(path);
+            stories.push(...found);
+        });
+    return stories;
+}
+
+/**
+ * Returns the number of Storybook story files for the given project.
+ * @param {Project} project
+ * @returns {number}
+ */
+export function getStoryCount(project) {
+    return getStories(project).length;
+}
+
+/**
+ * Checks if the given project has any Storybook story files.
+ * @param {Project} project
+ * @returns {boolean}
+ */
+export function hasStories(project) {
+    return getStoryCount(project) > 0;
+}
 
 /**
  * Returns the storybook configuration path.
@@ -239,11 +337,12 @@ export async function runStorybookCI(project, options = {}, spawnConfig = {}) {
  * Runs the storybook tests using the Vitest addon.
  * @param {Project} project
  * @param {number} port
- * @returns {Promise<boolean>}
+ * @returns {Promise<boolean | Error>} Resolves to true if tests pass, false if they fail, or an Error if the process encounters an error.
  */
 export async function runStorybookTests(project, port) {
     const STORYBOOK_CONFIG_DIR = getStorybookConfigPath(project);
-    const cmd = getStorybookTestCmd(project);
+    let cmd = getStorybookTestCmd(project);
+
     const child = spawn(cmd, [], {
         shell: '/bin/sh',
         stdio: 'inherit',
@@ -261,9 +360,11 @@ export async function runStorybookTests(project, port) {
     return new Promise((resolve, reject) => {
         child.on('close', code => {
             if (code === 0) resolve(true);
-            else reject(new Error('Storybook Vitest tests failed'));
+            else resolve(new Error('Storybook Vitest tests failed'));
         });
-        child.on('error', err => reject(err));
+        child.on('error', err => {
+            resolve(err);
+        });
     });
 }
 
@@ -299,7 +400,7 @@ export async function installStorybook(moduleProject, config) {
     const { parent } = (await initializeInstall(moduleProject, config)) || {};
     if (!parent) return;
     const configPath = join(parent?.path || cwd, '.storybook');
-    const appConfigPath = join(moduleProject.path || cwd, 'src', 'storybook', 'appConfig');
+    const appConfigPath = join(moduleProject.path || cwd, 'src', 'install', 'appConfig');
 
     if (!existsSync(configPath)) {
         const filesPath = join(appConfigPath, '.storybook');

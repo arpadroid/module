@@ -20,7 +20,16 @@ import typescript from 'rollup-plugin-typescript2';
 import { ThemesBundlerConfigType } from '@arpadroid/style-bun';
 import { Options } from 'storybook/internal/types';
 
+type TestMatchContentType = string | string[];
+type TestMatchType = TestMatchContentType | (() => Promise<TestMatchContentType>);
+
+export type JestConfigType = {
+    testMatch?: TestMatchType;
+    environment?: 'jsdom' | 'node';
+};
+
 export type StorybookConfigType = {
+    stories?: TestMatchType;
     preview?: Preview;
     previewHead?: (head: string | undefined, options: Options, project: Project) => string;
     previewBody?: (body: string | undefined, options: Options, project: Project) => string;
@@ -41,6 +50,7 @@ export type BuildConfigType = {
     external?: string[];
     file?: string;
     isDependency?: boolean;
+    jest?: JestConfigType;
     logHeading?: boolean;
     logo?: string;
     minify?: boolean;

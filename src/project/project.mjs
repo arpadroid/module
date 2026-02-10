@@ -1,7 +1,7 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
+ * @typedef {import('vitest/config').TestUserConfig['browser']} BrowserConfigOptions
  * @typedef {import('../rollup/builds/rollup-builds.types.js').BuildConfigType} BuildConfigType
- * @typedef {import('../rollup/builds/rollup-builds.types.js').BuildHookType} BuildHookType
  * @typedef {import('rollup').RollupOptions} RollupOptions
  * @typedef {import('rollup').InputOption} InputOption
  * @typedef {import('./project.types.js').CompileTypesType} CompileTypesType
@@ -11,19 +11,18 @@
 import path, { basename } from 'path';
 import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
-
 import { rollup, watch as rollupWatch } from 'rollup';
-
 import { log, logStyle } from '@arpadroid/logger';
-import ProjectTest from '../projectTest/projectTest.mjs';
 
-import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK, BROWSERS } from './helpers/projectBuild.helper.mjs';
+import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK } from './helpers/projectBuild.helper.mjs';
 import { buildDependencies, getPackageJson, getDependencies } from './helpers/projectBuild.helper.mjs';
-import { getBuildConfig } from './helpers/projectBuild.helper.mjs';
+import { getBuildConfig, cleanupFiles, runHook } from './helpers/projectBuild.helper.mjs';
 
 import { runStorybook } from './helpers/projectStorybook.helper.js';
 import { buildTypes } from './helpers/projectTypes.helper.mjs';
 import { bundleStyles } from './helpers/projectStyles.helper.js';
+
+import ProjectTest from '../projectTest/projectTest.mjs';
 import PROJECT_STORE from './projectStore.mjs';
 
 const cwd = process.cwd();
@@ -131,21 +130,6 @@ class Project {
     }
 
     /**
-     * Returns the browsers to be used for testing.
-     * @returns {{ browser: 'chromium' | 'firefox' | 'webkit' }[]}
-     */
-    getBrowsers() {
-        const browsers = String(
-            BROWSERS || process.env.BROWSERS || this.config?.test_browsers || 'chromium firefox webkit'
-        );
-        return browsers
-            .split(' ')
-            .map(browser => browser.trim())
-            .filter(Boolean)
-            ?.map(browser => ({ browser: /** @type {'chromium' | 'firefox' | 'webkit'} */ (browser) }));
-    }
-
-    /**
      * Returns the project scripts.
      * @returns {Record<string, string | undefined>}
      */
@@ -244,6 +228,28 @@ class Project {
         return this.projectTest.test(config);
     }
 
+    /**
+     * Cleans all project build files and caches.
+     * @param {{ reInstall?: boolean, reBuild?: boolean }} [opt]
+     */
+    async clean(opt = {}) {
+        const { reInstall = true, reBuild = false } = opt;
+        const config = await this.getBuildConfig();
+        log.arpadroid(config?.logo);
+        const subjectLog = logStyle.subject(`@arpadroid ${this.name}`);
+        console.log(logStyle.heading(`Cleaning-up project build files and caches: ${subjectLog} \n`));
+        await this?.promise;
+        await cleanupFiles(this);
+        if (reInstall || reBuild) {
+            await this.install();
+        }
+        if (reBuild) {
+            await this.build();
+        }
+        log.success('Clean-up complete, have a nice day ;)');
+        return true;
+    }
+
     // #endregion
 
     ////////////////////////////
@@ -251,7 +257,7 @@ class Project {
     ///////////////////////////
 
     getInstallCmd() {
-        return `cd ${this.path} && rm -rf node_modules && rm package-lock.json && npm install && npm audit fix`;
+        return `cd ${this.path} && npm install && npm audit fix`;
     }
 
     async install() {
@@ -271,7 +277,7 @@ class Project {
      */
     async build(clientConfig = {}) {
         const config = await this.initializeBuild(clientConfig);
-        this.runHook('onBuildStart', config);
+        runHook(this, 'onBuildStart', config);
         const { slim } = config;
         !slim && (await this.buildDependencies(config));
         await bundleStyles(this, config);
@@ -283,28 +289,8 @@ class Project {
         STORYBOOK && runStorybook(this, config);
         this.buildEndTime = Date.now();
         !slim && this.logBuildComplete();
-        this.runHook('onBuildEnd', config);
+        runHook(this, 'onBuildEnd', config);
         return true;
-    }
-
-    /**
-     * Runs a build hook if defined.
-     * @param {BuildHookType} hookName
-     * @param {BuildConfigType} config
-     */
-    async runHook(hookName, config) {
-        const hook = config?.hooks?.[hookName];
-        if (typeof hook === 'function') {
-            try {
-                /** @type {Promise<unknown> | unknown} */
-                const rv = hook(this, config);
-                if (rv instanceof Promise) {
-                    await rv;
-                }
-            } catch (err) {
-                log.error(`Error running hook ${hookName} for project ${this.name}:`, err);
-            }
-        }
     }
 
     /**

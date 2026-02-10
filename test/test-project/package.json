@@ -8,9 +8,9 @@
     "exports": "./dist/arpadroid-test-project.js",
     "scripts": {
         "build": "arpadroid-build --minify",
-        "dev": "arpadroid-build --watch --storybook=6101",
-        "test": "arpadroid-test --storybook --jest --port=6101 --ci",
-        "clean": "rm -rf ./dist ./node_modules package-lock.json"
+        "dev": "arpadroid-build --watch --storybook",
+        "test": "arpadroid-test --storybook --jest --ci",
+        "clean": "arpadroid-clean"
     },
     "peerDependencies": {
         "@arpadroid/module": "file:../../",

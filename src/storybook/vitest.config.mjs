@@ -1,46 +1,33 @@
+/**
+ * @typedef {import('vitest/config').TestUserConfig['browser']} BrowserConfigOptions
+ */
 import { defineConfig } from 'vitest/config';
 import { join, resolve } from 'path';
 import { playwright } from '@vitest/browser-playwright';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-import { hideBin } from 'yargs/helpers';
-import yargs from 'yargs';
 import { getProject } from '../project/projectStore.mjs';
-import { getStorybookCmd } from '../project/helpers/projectStorybook.helper.js';
+import { getStorybookCmd, getStorybookPort } from '../project/helpers/projectStorybook.helper.js';
+import { getStorybookConfigPath } from '../project/helpers/projectStorybook.helper.js';
+import { getBrowsersConfig } from './vitest.helper.js';
 
-const argv = /** @type {import('yargs').Arguments} */ (yargs(hideBin(process.argv)).argv) || {};
 const project = /** @type {import('../project/project.mjs').default} */ (getProject());
-await project?.promise;
-const projectConfig = await project?.getBuildConfig();
-const STORYBOOK_PORT = Number(
-    projectConfig?.storybook_port || argv?.storybook || process.env.STORYBOOK_PORT || 6006
-);
-const BROWSERS = project?.getBrowsers();
-const { STORYBOOK_URL, STORYBOOK_CONFIG_DIR } = process.env;
-const storybookUrl = STORYBOOK_URL || `http://127.0.0.1:${STORYBOOK_PORT || 6006}`;
-const configDir = STORYBOOK_CONFIG_DIR || '.storybook';
+
+const configDir = getStorybookConfigPath(project);
 const moduleRoot = project.getModulePath() || '';
+const port = await getStorybookPort(project);
 
 /** @type {import('vitest/config').UserProjectConfigExport} */
 const config = {
-    resolve: {
-        alias: [
-            {
-                find: '@vitest/coverage-v8',
-                replacement: join(moduleRoot, 'node_modules/@vitest/coverage-v8/dist')
-            }
-        ]
-    },
     test: {
         globals: true,
         projects: [
             {
                 extends: true,
-
                 plugins: [
                     storybookTest({
-                        storybookUrl,
+                        storybookUrl: `http://127.0.0.1:${port}`,
                         configDir,
-                        storybookScript: getStorybookCmd(project, STORYBOOK_PORT)
+                        storybookScript: getStorybookCmd(project, port) + ' --ci'
                     })
                 ],
                 test: {
@@ -52,11 +39,19 @@ const config = {
                     browser: {
                         enabled: true,
                         provider: playwright({}),
-                        headless: true,
-                        instances: BROWSERS
+                        // @ts-ignore
+                        instances: getBrowsersConfig(project)
                     },
                     setupFiles: [resolve(configDir, 'vitest.setup.ts')]
                 }
+            }
+        ]
+    },
+    resolve: {
+        alias: [
+            {
+                find: '@vitest/coverage-v8',
+                replacement: join(moduleRoot, 'node_modules/@vitest/coverage-v8/dist')
             }
         ]
     }

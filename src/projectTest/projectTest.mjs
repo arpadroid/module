@@ -5,25 +5,24 @@
  * @typedef {import('../project/project.types.js').ProjectTestConfigType} ProjectTestConfigType
  */
 import { execSync } from 'child_process';
-import fs from 'fs';
 import { globSync } from 'glob';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { log, logStyle } from '@arpadroid/logger';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { stopHTTPServer } from '@arpadroid/tools-node';
-import { runStorybookTests } from '../project/helpers/projectStorybook.helper.js';
+import { getStorybookPort, runStorybookCI, runStorybookTests } from '../project/helpers/projectStorybook.helper.js';
+import { runJestTests } from '../project/helpers/projectJest.helper.js';
+import { getTests } from '../project/helpers/projectBuild.helper.mjs';
 
 /** @type {ProjectTestConfigType} */
 const argv = yargs(hideBin(process.argv)).argv;
 const CI = Boolean(argv.ci ?? process.env.ci);
-const WATCH = Boolean(argv.watch ?? process.env.watch);
 const QUERY = argv.query ?? process.env.query ?? '';
-const STORYBOOK = Boolean(argv.storybook);
+const STORYBOOK = Boolean(argv.storybook ?? process.env.storybook);
 const JEST = Boolean(argv.jest ?? process.env.jest);
 const BUILD = Boolean(argv.build ?? process.env.build);
 const BROWSERS = argv.browsers ?? process.env.browsers ?? 'webkit chromium firefox';
-const PORT = argv.port ?? process.env.port ?? 6006;
 const SLIM = Boolean(argv.slim ?? process.env.slim);
 
 class ProjectTest {
@@ -98,12 +97,12 @@ class ProjectTest {
         const buildConfig = await this.project.getBuildConfig();
         log.arpadroid(buildConfig?.logo);
         const subjectLog = logStyle.subject(`@arpadroid ${this.project?.name}`);
-        this.stories = (config.storybook && globSync(`${this.project.path}/src/**/*.stories.js`)) || [];
-        this.jestTests = (config.jest && globSync(`${this.project.path}/src/**/*.test.js`)) || [];
         console.log(logStyle.heading(`Testing: ${subjectLog}`));
-        const isFramework = this.project.name === 'framework';
 
-        if (!isFramework && !this.stories?.length && !this.jestTests?.length) {
+        this.testInfo = getTests(this.project);
+        const { totalTests, stories, jest } = this.testInfo;
+
+        if (!totalTests) {
             log.info('Nothing to test');
             return true;
         }
@@ -111,53 +110,21 @@ class ProjectTest {
             await execSync('npm run build -- --logHeading=false', {
                 shell: '/bin/sh',
                 stdio: 'inherit',
-                cwd: this.project.path
+                cwd: this.project.path,
+                env: { ...process.env }
             });
         }
-
-        await this.testNodeJS(config);
-
-        if (config.jest && this.jestTests?.length) {
-            await this.testJest(config);
+        if (JEST && jest.length) {
+            await this.testJest();
         }
-        const storybookPort = config.port || process.env.port || 6006;
-        let ranStorybook = false;
-        if (STORYBOOK && (this.stories?.length || isFramework)) {
-            ranStorybook = true;
+        if (STORYBOOK && stories.length) {
             await this.testStorybook(config);
         }
-        // Ensure http-server is stopped after Storybook tests
-        if (ranStorybook) {
-            try {
-                await stopHTTPServer({ port: Number(storybookPort) });
-            } catch (error) {
-                log.error('Failed to stop Storybook http-server:', error);
-            }
-        }
-
+        log.success(`Testing completed, have a nice day! 😀`);
         return this.testResponse;
     }
 
     // endregion Tests
-
-    ////////////////////////////
-    // #region Test NodeJS
-    ///////////////////////////
-
-    /**
-     * Tests the node.js scripts.
-     * @param {ProjectTestConfigType} _config
-     * @returns {Promise<boolean | unknown>}
-     */
-    async testNodeJS(_config) {
-        const file = `${this.project.path}/test/test.mjs`;
-        if (!fs.existsSync(file)) {
-            return true;
-        }
-        const script = `node ${file}`;
-        log.task(this.project.name, 'Running node tests');
-        return execSync(script, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
-    }
 
     // #endregion Test NodeJS
 
@@ -167,51 +134,32 @@ class ProjectTest {
 
     /**
      * Runs the jest tests.
-     * @param {ProjectTestConfigType} _config
-     * @returns {Promise<Buffer | string>}
+     * @returns {Promise<Buffer | string | boolean>}
      */
-    async testJest(_config) {
-        const modulePath = this.project.getModulePath();
-        const binary = `${modulePath}/node_modules/jest/bin/jest.js`;
-        let script = `node --experimental-vm-modules ${binary} --coverage --rootDir="${this.project.path}" --config="${this.getJestConfigLocation()}"`;
-        QUERY && (script += ` --testNamePattern="${QUERY}"`);
-        WATCH && (script += ' --watch');
-        log.task(this.project.name, 'running jest tests');
-        return execSync(script, { shell: '/bin/sh', stdio: 'inherit', cwd: this.project.path });
+    async testJest() {
+        log.task(this.project.name, 'Running jest tests.');
+        return await runJestTests(this.project);
     }
-
-    getJestConfigLocation() {
-        const path = this.project.path;
-        if (fs.existsSync(`${path}/jest.config.mjs`)) {
-            return `${path}/jest.config.mjs`;
-        }
-        if (fs.existsSync(`${path}/jest.config.cjs`)) {
-            return `${path}/jest.config.cjs`;
-        }
-        if (fs.existsSync(`${path}/jest.config.js`)) {
-            return `${path}/jest.config.js`;
-        }
-        return `${path}/node_modules/@arpadroid/module/src/jest/jest.config.mjs`;
-    }
-
-    // #endregion Test Jest
-
-    ////////////////////////////
-    // #region Test Storybook
-    ///////////////////////////
 
     async testStorybook(config = this.config) {
-        const port = config?.port ?? PORT;
-        // If there is a query then filter the stories to run only the ones that match the query.
-        if (QUERY) {
-            const query = new RegExp(QUERY, 'i');
-            this.stories = this.stories.filter((/** @type {string} */ story) => query.test(story));
+        const proj = this.project;
+        const port = await getStorybookPort(proj);
+        log.task(proj.name, 'Running storybook tests.');
+        let started = false;
+        try {
+            await runStorybookCI(proj, { ...proj.buildConfig, storybook_port: port });
+            started = true;
+            return await runStorybookTests(proj, port);
+        } finally {
+            if (started) {
+                try {
+                    await stopHTTPServer({ port: Number(port) });
+                } catch (error) {
+                    log.error('Failed to stop Storybook http-server:', error);
+                }
+            }
         }
-        log.task(this.project.name, 'Running storybook tests.');
-        return runStorybookTests(this.project, port);
     }
-
-    // #endregion Test Storybook
 }
 
 export default ProjectTest;

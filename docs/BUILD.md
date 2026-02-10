@@ -31,7 +31,7 @@ We invoke the build via npm scripts in `package.json` :
 ```json
 "scripts": {
     "build": "arpadroid-build --minify",
-    "build:dev": "arpadroid-build --storybook=6006 --watch"
+    "build:dev": "arpadroid-build --storybook --watch"
 }
 ```
 

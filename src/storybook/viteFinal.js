@@ -8,11 +8,7 @@ const config = {
         target: 'esnext'
     },
     esbuild: {
-        target: 'esnext',
-        supported: {
-            // 'class-fields': true,
-            // 'class-static-fields': true
-        }
+        target: 'esnext'
     },
     resolve: {
         alias: [],
@@ -27,10 +23,10 @@ const config = {
         }
     },
     optimizeDeps: {
+        include: ['storybook', 'storybook/internal/preview/runtime'],
         esbuildOptions: {
             target: 'esnext'
-        },
-        exclude: ['storybook', '@storybook/web-components', 'storybook/internal/preview/runtime']
+        }
     },
     plugins: [],
     define: {}

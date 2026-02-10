@@ -1,25 +1,20 @@
-/**
- * @typedef {import("./rollup/builds/rollup-builds.types.js").BuildConfigType} BuildConfigType
- */
+import { install } from './install/install.helper.js';
 
-import { installStorybook } from './project/helpers/projectStorybook.helper.js';
-
-
-/** @type {BuildConfigType} */
+/** @type {import("./types.js").BuildConfigType} */
 const config = {
     buildType: 'library',
     buildTypes: true,
     buildStyles: true,
     style_patterns: ['storybook'],
+    storybook_port: 6000,
     buildJS: true,
-
     logo: `           ┓    • ┓        ┓  ┓  
   ┏┓┏┓┏┓┏┓┏┫┏┓┏┓┓┏┫  ┏┳┓┏┓┏┫┓┏┃┏┓
   ┗┻┛ ┣┛┗┻┗┻┛ ┗┛┗┗┻  ┛┗┗┗┛┗┻┗┻┗┗ 
 ------┛----------------------------`,
     hooks: {
         onBuildEnd: async (project, config) => {
-            await installStorybook(project, config);
+            return await install(project, config);
         }
     }
 };

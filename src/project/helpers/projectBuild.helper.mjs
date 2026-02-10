@@ -7,12 +7,14 @@
 
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
-import { existsSync, readFileSync } from 'fs';
-import { cwd } from 'process';
+import { existsSync, globSync, lstatSync, readFileSync, rmSync } from 'fs';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { log, logStyle } from '@arpadroid/logger';
 import Project from '../project.mjs';
 import { getProject } from '../projectStore.mjs';
+import { basename, join } from 'path';
+import { getJestTests, hasJestTests } from './projectJest.helper.js';
+import { getStories, hasStories } from './projectStorybook.helper.js';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv;
@@ -42,11 +44,39 @@ export const DEPENDENCY_SORT = [
 export const MINIFY = Boolean(argv.minify);
 export const SLIM = Boolean(argv.slim);
 export const STORYBOOK = argv.storybook;
+export const STORYBOOK_PORT = Number(
+    argv.storybook_port || process.env.STORYBOOK_PORT || argv.storybook || 6006
+);
 export const WATCH = Boolean(argv.watch);
 export const BROWSERS = argv.browsers;
+const cwd = process.cwd();
 ////////////////////////////////
 // #region Build  Config
 ////////////////////////////////
+
+/**
+ * Checks if the given project has any Jest / Storybook test files.
+ * @param {Project} project
+ * @returns {boolean}
+ */
+export function hasTests(project) {
+    return hasJestTests(project) && hasStories(project);
+}
+
+/**
+ * Returns an object containing arrays of Jest test files and Storybook story files for the given project.
+ * @param {Project} project
+ * @returns {{ jest: string[], stories: string[], totalTests: number }}
+ */
+export function getTests(project) {
+    const jest = getJestTests(project);
+    const stories = getStories(project);
+    return {
+        jest,
+        stories,
+        totalTests: jest.length + stories.length
+    };
+}
 
 /**
  * Returns the default build configuration.
@@ -67,7 +97,13 @@ export function getDefaultBuildConfig(project) {
         style_patterns: argv['style-patterns'],
         verbose: Boolean(argv.verbose),
         storybook_port: STORYBOOK,
-        watch: WATCH
+        watch: WATCH,
+        storybook: {
+            stories: 'src/**/*.stories.{ts,tsx,js,jsx}'
+        },
+        jest: {
+            testMatch: [`<rootDir>/src/**/*.test.js`]
+        }
     };
     return mergeObjects(config, project.config);
 }
@@ -122,7 +158,7 @@ export async function getBuildConfig(project, clientConfig = {}, args = argv) {
  * @param {string} path
  * @returns {Promise<Record<string, unknown>>}
  */
-export async function getPackageJson(path = cwd()) {
+export async function getPackageJson(path = cwd) {
     return existsSync(`${path}/package.json`) && JSON.parse(readFileSync(`${path}/package.json`, 'utf8'));
 }
 
@@ -281,3 +317,65 @@ export async function buildDependencies(project, config) {
 }
 
 // #endregion Dependency Management
+
+//////////////////////////////
+// #region Cleanup
+///////////////////////////////
+
+/**
+ * Cleans up generated files and directories for the project.
+ * @param {Project} project
+ * @returns {Promise<boolean>}
+ */
+export async function cleanupFiles(project) {
+    /**
+     * We keep the list of files here, for security.
+     */
+    const files = [
+        'dist',
+        'node_modules',
+        'package-lock.json',
+        '.tmp',
+        'coverage',
+        'storybook-static',
+        'debug-storybook.log'
+    ];
+
+    files.forEach(async _file => {
+        const file = join(project?.path || cwd, _file);
+        if (!file || !cwd || cwd === '' || !existsSync(file)) return;
+        const fileName = basename(file);
+        const isDir = !fileName.includes('.');
+        if (isDir) {
+            log.task(project.name, `Removing directory: ${file}`);
+        } else {
+            log.task(project.name, `Removing file: ${file}`);
+        }
+
+        await rmSync(file, { recursive: true, force: true });
+    });
+    return true;
+}
+
+// #endregion Cleanup
+
+/**
+ * Runs a build hook if defined.
+ * @param {Project} project
+ * @param {import('../../rollup/builds/rollup-builds.types.js').BuildHookType} hookName
+ * @param {BuildConfigType} config
+ */
+export async function runHook(project, hookName, config) {
+    const hook = config?.hooks?.[hookName];
+    if (typeof hook === 'function') {
+        try {
+            /** @type {Promise<unknown> | unknown} */
+            const rv = hook(project, config);
+            if (rv instanceof Promise) {
+                await rv;
+            }
+        } catch (err) {
+            log.error(`Error running hook ${hookName} for project ${project.name}:`, err);
+        }
+    }
+}
