@@ -377,10 +377,10 @@ export async function runStorybookTests(project, port) {
 /**
  * Checks if Storybook can be installed for the project based on its configuration and parent project.
  * @param {Project} moduleProject
- * @param {BuildConfigType} config
  * @returns {Promise<false|{parent?: Project, config?: BuildConfigType}>} A promise that resolves to the parent project if Storybook can be installed, false otherwise.
  */
-export async function initializeInstall(moduleProject, config) {
+export async function initializeInstall(moduleProject) {
+    const config = moduleProject?.buildConfig || {};
     const { slim } = config;
     if (!slim) return false;
     const parent = await moduleProject.getParentProject();
@@ -393,11 +393,10 @@ export async function initializeInstall(moduleProject, config) {
 /**
  * Checks if Storybook configuration files exist in the project, otherwise creates them by copying from the appConfig directory.
  * @param {Project} moduleProject
- * @param {BuildConfigType} config
  * @returns {Promise<void>} A promise that resolves when the function is complete.
  */
-export async function installStorybook(moduleProject, config) {
-    const { parent } = (await initializeInstall(moduleProject, config)) || {};
+export async function installStorybook(moduleProject) {
+    const { parent } = (await initializeInstall(moduleProject)) || {};
     if (!parent) return;
     const configPath = join(parent?.path || cwd, '.storybook');
     const appConfigPath = join(moduleProject.path || cwd, 'src', 'install', 'appConfig');

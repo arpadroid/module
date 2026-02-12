@@ -3,6 +3,7 @@
  * @typedef {import('./projectBuilder.types.js').DependencyProjectPointerType} DependencyProjectPointerType
  * @typedef {import('../../rollup/builds/rollup-builds.mjs').ProjectCliArgsType} ProjectCliArgsType
  * @typedef {import("../../rollup/builds/rollup-builds.mjs").BuildConfigType} BuildConfigType
+ * @typedef {import('../../rollup/builds/rollup-builds.types.js').BuildHookNameType} BuildHookNameType
  */
 
 import { hideBin } from 'yargs/helpers';
@@ -22,10 +23,11 @@ const argv = yargs(hideBin(process.argv)).argv;
 export const NO_TYPES = Boolean(argv.noTypes);
 export const STYLE_SORT = ['ui', 'lists', 'navigation', 'messages', 'form'];
 export const DEPENDENCY_SORT = [
+    'tools-node',
     'tools-iso',
     'signals',
-    'style-bun',
     'logger',
+    'style-bun',
     'module',
     'tools',
     'i18n',
@@ -362,15 +364,16 @@ export async function cleanupFiles(project) {
 /**
  * Runs a build hook if defined.
  * @param {Project} project
- * @param {import('../../rollup/builds/rollup-builds.types.js').BuildHookType} hookName
- * @param {BuildConfigType} config
+ * @param {BuildHookNameType} hookName
+ * @param {Record<string, unknown>} [payload]
  */
-export async function runHook(project, hookName, config) {
+export async function runHook(project, hookName, payload = {}) {
+    const config = project.buildConfig || {};
     const hook = config?.hooks?.[hookName];
     if (typeof hook === 'function') {
         try {
             /** @type {Promise<unknown> | unknown} */
-            const rv = hook(project, config);
+            const rv = hook(project, payload);
             if (rv instanceof Promise) {
                 await rv;
             }

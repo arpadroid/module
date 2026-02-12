@@ -1,6 +1,5 @@
 import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup';
 import type Project from '../../project/project.mjs';
-// import { RollupPlugin } from './rollup-builds.mjs';
 import { Plugin } from 'rollup';
 import { Preview } from '@storybook/web-components-vite';
 
@@ -17,6 +16,7 @@ import terser from '@rollup/plugin-terser';
 import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import typescript from 'rollup-plugin-typescript2';
+
 import { ThemesBundlerConfigType } from '@arpadroid/style-bun';
 import { Options } from 'storybook/internal/types';
 
@@ -35,20 +35,33 @@ export type StorybookConfigType = {
     previewBody?: (body: string | undefined, options: Options, project: Project) => string;
 };
 
+export type BuildHookReturnType = boolean | void | Promise<unknown>;
+
+export type BuildHookType = (project: Project, payload?: Record<string, unknown>) => BuildHookReturnType;
+
+export type BuildHookNameType = 'onBuildStart' | 'onBuildEnd' | 'test';
+
+export type BuildHooksType = {
+    onBuildStart?: BuildHookType;
+    onBuildEnd?: BuildHookType;
+    test?: BuildHookType;
+};
+
 export type BuildConfigType = {
     aliases?: Alias[];
     buildDeps?: boolean;
     buildI18n?: boolean;
-    buildType?: 'uiComponent' | 'library';
     buildJS?: boolean;
     buildStyles?: boolean;
+    buildType?: 'uiComponent' | 'library';
     buildTypes?: boolean;
-    skipTypesBuild?: string[];
-    deferTypesBuild?: string[];
     configPath?: string;
+    copyTestAssets?: boolean;
+    deferTypesBuild?: string[];
     deps?: string[];
     external?: string[];
     file?: string;
+    hooks?: BuildHooksType;
     isDependency?: boolean;
     jest?: JestConfigType;
     logHeading?: boolean;
@@ -57,23 +70,19 @@ export type BuildConfigType = {
     parent?: string;
     path?: string;
     plugins?: Plugin[];
-    copyTestAssets?: boolean;
     processBuilds?: (builds: RollupOptions[]) => void;
     requireDeps?: boolean;
+    skipTypesBuild?: string[];
     slim?: boolean;
-    storybook?: StorybookConfigType;
     storybook_port?: number;
+    storybook?: StorybookConfigType;
     style_patterns?: string | string[];
-    watch?: boolean;
-    verbose?: boolean;
-    themesPath?: string;
-    themes?: ThemesBundlerConfigType[];
     test_browsers?: string;
+    themes?: ThemesBundlerConfigType[];
+    themesPath?: string;
+    verbose?: boolean;
+    watch?: boolean;
     watchCallback?: (payload: unknown) => void;
-    hooks?: {
-        onBuildStart?: (project: Project, config: BuildConfigType) => void;
-        onBuildEnd?: (project: Project, config: BuildConfigType) => void;
-    };
 };
 
 export type BuildInterface = {
@@ -106,5 +115,3 @@ export type BuildInterface = {
     };
     output?: OutputOptions | OutputOptions[] | undefined;
 };
-
-export type BuildHookType = 'onBuildStart' | 'onBuildEnd';

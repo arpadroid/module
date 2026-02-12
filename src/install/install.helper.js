@@ -8,9 +8,8 @@ import { installStorybook } from '../project/helpers/projectStorybook.helper.js'
 
 /**
  * @param {Project} project
- * @param {BuildConfigType} config
  */
-export async function install(project, config) {
-    await installJest(project, config);
-    await installStorybook(project, config);
+export async function install(project) {
+    await installJest(project);
+    await installStorybook(project);
 }

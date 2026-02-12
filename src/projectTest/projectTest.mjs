@@ -3,17 +3,18 @@
 /**
  * @typedef {import('../project/project.mjs').default} Project
  * @typedef {import('../project/project.types.js').ProjectTestConfigType} ProjectTestConfigType
+ * @typedef {import('../project/project.types.js').ProjectTestResponseType} ProjectTestResponseType
  */
 import { execSync } from 'child_process';
-import { globSync } from 'glob';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { log, logStyle } from '@arpadroid/logger';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { stopHTTPServer } from '@arpadroid/tools-node';
-import { getStorybookPort, runStorybookCI, runStorybookTests } from '../project/helpers/projectStorybook.helper.js';
+import { runStorybookCI, runStorybookTests } from '../project/helpers/projectStorybook.helper.js';
+import { getStorybookPort } from '../project/helpers/projectStorybook.helper.js';
 import { runJestTests } from '../project/helpers/projectJest.helper.js';
-import { getTests } from '../project/helpers/projectBuild.helper.mjs';
+import { getTests, runHook } from '../project/helpers/projectBuild.helper.mjs';
 
 /** @type {ProjectTestConfigType} */
 const argv = yargs(hideBin(process.argv)).argv;
@@ -29,8 +30,6 @@ class ProjectTest {
     //////////////////////////////
     // #region Initialization
     /////////////////////////////
-
-    testResponse = { success: true, message: '', payloads: [] };
 
     /**
      * Creates a new ProjectTest instance.
@@ -88,40 +87,106 @@ class ProjectTest {
 
     /**
      * Runs the tests.
-     * @param {ProjectTestConfigType} [_config]
+     * @param {ProjectTestConfigType} [testConfig]
+     * @param {Project} [project]
+     */
+    logHeading(testConfig = {}, project = this.project) {
+        const { logo } = project.buildConfig || {};
+        const { silent = false } = testConfig;
+        if (silent) return;
+        log.arpadroid(logo);
+        const subjectLog = logStyle.subject(`@arpadroid ${project?.name}`);
+        console.log(logStyle.heading(`Testing: ${subjectLog}`));
+    }
+
+    /**
+     * Returns the default test response object.
+     * @returns {ProjectTestResponseType}
+     */
+    getDefaultTestResponse() {
+        const count = { total: 0, failed: 0, passed: 0, skipped: 0 };
+        return {
+            success: true,
+            count: { ...count },
+            payloads: {
+                hook: { payload: undefined, count: { ...count } },
+                jest: { payload: undefined, count: { ...count } },
+                storybook: { payload: undefined, count: { ...count } }
+            }
+        };
+    }
+
+    /**
+     * Runs the tests.
+     * @param {ProjectTestConfigType} [testConfig]
+     * @param {Project} [proj]
      * @returns {Promise<boolean | unknown>}
      */
-    async runTest(_config = {}) {
+    async runTest(testConfig = {}, proj = this.project) {
+        const {
+            jest: hasJest = JEST,
+            storybook: hasStorybook = STORYBOOK,
+            slim: isSlim = SLIM,
+            silent = false
+        } = testConfig;
         /** @type {ProjectTestConfigType} */
-        const config = mergeObjects(this.config, _config);
-        const buildConfig = await this.project.getBuildConfig();
-        log.arpadroid(buildConfig?.logo);
-        const subjectLog = logStyle.subject(`@arpadroid ${this.project?.name}`);
-        console.log(logStyle.heading(`Testing: ${subjectLog}`));
+        const config = mergeObjects(this.config, testConfig);
+        const buildConfig = (await proj.getBuildConfig()) || {};
 
-        this.testInfo = getTests(this.project);
-        const { totalTests, stories, jest } = this.testInfo;
+        this.logHeading(testConfig, proj);
 
-        if (!totalTests) {
-            log.info('Nothing to test');
+        this.testInfo = getTests(proj);
+        const { totalTests, stories, jest: jestTests } = this.testInfo;
+
+        /** @type {ProjectTestResponseType} */
+        const response = this.getDefaultTestResponse();
+
+        const { hooks } = buildConfig;
+        const hasHook = typeof hooks?.test === 'function';
+        if (!totalTests && !hasHook) {
+            !silent && log.info('Nothing to test');
             return true;
         }
-        if (!SLIM) {
-            await execSync('npm run build -- --logHeading=false', {
-                shell: '/bin/sh',
-                stdio: 'inherit',
-                cwd: this.project.path,
-                env: { ...process.env }
+
+        !isSlim && (await this.runTestBuild(testConfig));
+
+        if (hasHook) {
+            const hookRv = await runHook(proj, 'test', {
+                testConfig: this.config,
+                testInfo: this.testInfo
             });
+            if (response.payloads.hook) {
+                response.payloads.hook.payload = hookRv ?? {};
+            }
         }
-        if (JEST && jest.length) {
-            await this.testJest();
+
+        if (hasJest && jestTests.length) {
+            const jestResult = await this.testJest(testConfig);
+            // @ts-ignore
+            response.payloads.jest.payload = jestResult;
         }
-        if (STORYBOOK && stories.length) {
+
+        if (hasStorybook && stories.length) {
             await this.testStorybook(config);
         }
-        log.success(`Testing completed, have a nice day! 😀`);
-        return this.testResponse;
+
+        !silent && log.success(`Testing completed, have a nice day! 😀`);
+        return response;
+    }
+
+    /**
+     * Runs the test build if needed. This can be used to build the project before running tests, which is useful for projects that need to be built before testing (e.g. Storybook). The `slim` option can be used to skip the build step if the project is already built and ready for testing.
+     * @param {ProjectTestConfigType} [testConfig]
+     * @return {Promise<Buffer | string | boolean>} The result of the build command, or true if the build was skipped.
+     */
+    async runTestBuild(testConfig = {}) {
+        const rv = await execSync('npm run build -- --logHeading=false', {
+            shell: '/bin/sh',
+            stdio: 'inherit',
+            cwd: this.project.path,
+            env: { ...process.env }
+        });
+        return rv;
     }
 
     // endregion Tests
@@ -134,11 +199,12 @@ class ProjectTest {
 
     /**
      * Runs the jest tests.
+     * @param {ProjectTestConfigType} [testConfig]
      * @returns {Promise<Buffer | string | boolean>}
      */
-    async testJest() {
+    async testJest(testConfig = {}) {
         log.task(this.project.name, 'Running jest tests.');
-        return await runJestTests(this.project);
+        return await runJestTests(this.project, testConfig);
     }
 
     async testStorybook(config = this.config) {

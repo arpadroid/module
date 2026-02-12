@@ -17,6 +17,34 @@ export type ProjectCliArgsType = Record<string, any> & {
     noTypes?: boolean;
 };
 
+
+export type ProjectTestCountType = {
+    total?: number;
+    passed?: number;
+    failed?: number;
+    skipped?: number;
+}
+
+export type ProjectTestSuiteResponseType = {
+    success?: boolean;
+    payload: Record<string, any> | undefined | boolean;
+    count?: ProjectTestCountType;
+} | undefined;
+
+export type ProjectTestPayloadsType = {
+    jest?: ProjectTestSuiteResponseType;
+    storybook?: ProjectTestSuiteResponseType;
+    hook?: ProjectTestSuiteResponseType;
+    [key?: string]: ProjectTestSuiteResponseType | undefined;
+};
+
+
+export type ProjectTestResponseType = {
+    payloads: ProjectTestPayloadsType;
+    count: ProjectTestCountType;
+    success: boolean;
+};
+
 export type ProjectTestConfigType = Record<string, any> & {
     ci?: boolean;
     watch?: boolean;
@@ -26,6 +54,8 @@ export type ProjectTestConfigType = Record<string, any> & {
     storybook?: boolean;
     port?: number;
     query?: string;
+    silent?: boolean;
+    verbose?: boolean;
 };
 
 export type DeferredOperationType = {

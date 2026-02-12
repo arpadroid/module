@@ -49,6 +49,22 @@ export function getJestTests(project) {
     return tests;
 }
 
+/**
+ * Returns an array of test match patterns for the Jest config.
+ * @param {Project} project
+ * @returns {Promise<string[]>}
+ */
+export async function getTestMatch(project) {
+    let testMatch = project.buildConfig?.jest?.testMatch;
+    if (testMatch instanceof Promise) testMatch = await testMatch;
+
+    const patterns = /** @type {string[]} */ (testMatch || [`<rootDir>/src/**/*.test.js`]);
+    return patterns.map(pattern => {
+        pattern = pattern.replace(project.path || cwd, '<rootDir>');
+        return pattern;
+    });
+}
+
 /** Returns the number of Jest test files for the given project.
  * @param {Project} project
  * @returns {number}
@@ -76,29 +92,28 @@ export function getJestConfigPath(project) {
     const modulePath = project.getModulePath() || '';
     const files = [join(path, 'jest.config.mjs'), join(modulePath, 'src', 'jest', 'jest-global.config.mjs')];
     const location = files.find(loc => fs.existsSync(loc));
-    !location &&
-        log.error(
-            project.name,
-            'No Jest configuration file found. Using default configuration from the module.'
-        );
+    !location && log.info('No Jest configuration file found. Using default configuration from the module.');
     return location || '';
 }
 
 /**
  * Returns the command to run Jest tests for the given project and configuration.
  * @param {Project} project
+ * @param {ProjectTestConfigType} [testConfig]
  * @returns {string}
  */
-export function getJestCommand(project) {
+export function getJestCommand(project, testConfig = {}) {
     const binary = getJestScript(project);
     const jestConfigPath = getJestConfigPath(project);
+    const { silent = false } = testConfig;
     /** @type {Record<string, string | unknown>} */
     const args = {
         coverage: COVERAGE,
         rootDir: project.path,
         config: jestConfigPath,
         testNamePattern: QUERY,
-        watch: WATCH
+        watch: WATCH,
+        silent
     };
     const argString = Object.keys(args)
         .filter(key => args[key])
@@ -126,19 +141,20 @@ export async function getJestSetupFiles(project) {
 /**
  * Runs Jest tests for the given project and configuration.
  * @param {Project} project
+ * @param {ProjectTestConfigType} [testConfig]
  * @returns {Promise<Buffer | string>}
  */
-export async function runJestTests(project) {
-    const cmd = getJestCommand(project);
+export async function runJestTests(project, testConfig = {}) {
+    const cmd = getJestCommand(project, testConfig);
     return execSync(cmd, { shell: '/bin/sh', stdio: 'inherit', cwd: project.path });
 }
 /**
  * Checks if Storybook can be installed for the project based on its configuration and parent project.
  * @param {Project} moduleProject
- * @param {BuildConfigType} config
  * @returns {Promise<false|{parent?: Project, config?: BuildConfigType}>} A promise that resolves to the parent project if Storybook can be installed, false otherwise.
  */
-export async function initializeInstall(moduleProject, config) {
+export async function initializeInstall(moduleProject) {
+    const config = moduleProject?.buildConfig || {};
     const { slim } = config;
     if (!slim) return false;
     const parent = await moduleProject.getParentProject();
@@ -150,10 +166,9 @@ export async function initializeInstall(moduleProject, config) {
 
 /**
  * @param {Project} moduleProject
- * @param {BuildConfigType} config
  */
-export async function installJest(moduleProject, config) {
-    const { parent } = (await initializeInstall(moduleProject, config)) || {};
+export async function installJest(moduleProject) {
+    const { parent } = (await initializeInstall(moduleProject)) || {};
     if (!parent) return;
     await parent.promise;
     const configPath = join(parent?.path || '', 'jest.config.mjs');

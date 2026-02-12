@@ -13,8 +13,8 @@ const config = {
   ┗┻┛ ┣┛┗┻┗┻┛ ┗┛┗┗┻  ┛┗┗┗┛┗┻┗┻┗┗ 
 ------┛----------------------------`,
     hooks: {
-        onBuildEnd: async (project, config) => {
-            return await install(project, config);
+        onBuildEnd: async (project) => {
+            return await install(project);
         }
     }
 };
