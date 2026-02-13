@@ -12,14 +12,10 @@ describe('Bad Project Instance', () => {
         project = new Project('non-existent', {});
     });
 
-    test('getStorybookConfigPath logs error when no config found', async () => {
+    test('getStorybookConfigPath returns the default configuration', async () => {
         await project?.promise.catch(async () => {
             const configPath = getStorybookConfigPath(project);
-            expect(configPath).toBe('undefined/.storybook');
-            expect(errSpy).toHaveBeenCalledWith(
-                expect.stringContaining(`Storybook configuration not found for project "${project.name}"`),
-                undefined
-            );
+            expect(configPath).toBe(project.getModulePath() + '/.storybook');
         });
     });
 

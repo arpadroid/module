@@ -1,11 +1,12 @@
 {
     "compilerOptions": {
-        "baseUrl": ".",
         "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": ".",
         "checkJs": true,
         "composite": true,
         "declaration": true,
-        "declarationMap": true,
+        "declarationMap": false,
         "emitDeclarationOnly": false,
         "esModuleInterop": true,
         "incremental": true,
@@ -17,9 +18,9 @@
         "strict": true,
         "strictPropertyInitialization": false,
         "target": "ESNext",
+        "tsBuildInfoFile": "./.tmp/.tsbuildinfo",
         "types": ["node"],
         "useDefineForClassFields": false,
-        "allowSyntheticDefaultImports": true,
         "typeRoots": [
             "../../../node_modules/@types",
             "../../../node_modules/@arpadroid/module/node_modules/@types"
@@ -47,10 +48,9 @@
         }
         /**
          * @warning: props rootDir and outdir must be overriden in the project's tsconfig.json in order to take effect.
-            "rootDir": "./src",
-            "outDir": "./.tmp/.types"
+         " rootDir": "./src",
+         " outDir": "./.tmp/.types"
          */
-        // "tsBuildInfoFile": "./.tsbuildinfo",
     },
     "include": ["src/index.js", "src/**/*", "src/mockData/**/*.json"],
     "exclude": ["node_modules", "dist", "**/*.test.ts"]

@@ -45,6 +45,8 @@
         "build:project": "node ./scripts/build-project.js",
         "test": "node ./scripts/test-project.mjs --storybook --jest",
         "test:jest": "node ./scripts/test-project.mjs --jest",
+        "t": "npm run test -- --slim",
+        "t:w": "npm run test -- --slim --watch",
         "install:project": "node ./scripts/install-projects.mjs",
         "postinstall": "npx playwright install",
         "build": "node ./scripts/build-project.mjs --minify",

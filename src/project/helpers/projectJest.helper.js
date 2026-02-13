@@ -18,7 +18,6 @@ const argv = yargs(hideBin(process.argv)).argv;
 const QUERY = argv.query ?? process.env.query ?? '';
 const WATCH = Boolean(argv.watch ?? process.env.watch);
 const COVERAGE = Boolean(argv.coverage ?? process.env.coverage);
-
 /**
  * Returns path to the Jest script for the given project.
  * @param {Project} project
@@ -90,7 +89,9 @@ export function hasJestTests(project) {
 export function getJestConfigPath(project) {
     const path = project.path || '';
     const modulePath = project.getModulePath() || '';
-    const files = [join(path, 'jest.config.mjs'), join(modulePath, 'src', 'jest', 'jest-global.config.mjs')];
+    const userConfig = join(path, 'jest.config.mjs');
+    const moduleConfig = join(modulePath, 'src', 'jest', 'jest-global.config.mjs');
+    const files = [userConfig, moduleConfig];
     const location = files.find(loc => fs.existsSync(loc));
     !location && log.info('No Jest configuration file found. Using default configuration from the module.');
     return location || '';
@@ -120,8 +121,7 @@ export function getJestCommand(project, testConfig = {}) {
         .map(key => `--${key}${typeof args[key] === 'boolean' ? '' : `=${args[key]}`}`)
         .join(' ');
 
-    let cmd = `node --experimental-vm-modules ${binary} ${argString}`;
-    return cmd;
+    return `node --no-warnings --experimental-vm-modules ${binary} ${argString}`;
 }
 
 /**
@@ -158,7 +158,6 @@ export async function initializeInstall(moduleProject) {
     const { slim } = config;
     if (!slim) return false;
     const parent = await moduleProject.getParentProject();
-    if (parent.name === 'module') return false;
     await parent.promise;
     const parentConfig = await parent.getBuildConfig();
     return { parent, config: parentConfig };
@@ -168,11 +167,11 @@ export async function initializeInstall(moduleProject) {
  * @param {Project} moduleProject
  */
 export async function installJest(moduleProject) {
-    const { parent } = (await initializeInstall(moduleProject)) || {};
-    if (!parent) return;
-    await parent.promise;
-    const configPath = join(parent?.path || '', 'jest.config.mjs');
-    if (!existsSync(configPath) && hasJestTests(parent)) {
+    const payload = (await initializeInstall(moduleProject)) || {};
+    const project = payload.parent || moduleProject;
+    await project.promise;
+    const configPath = join(project?.path || '', 'jest.config.mjs');
+    if (!existsSync(configPath) && hasJestTests(project)) {
         const src = join(moduleProject.path || '', 'src', 'install', 'appConfig', 'jest.config.mjs');
         log.task(moduleProject.name, 'No Jest configuration found. Copying default configuration.');
         copyFileSync(src, configPath);

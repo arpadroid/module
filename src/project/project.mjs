@@ -7,8 +7,9 @@
  * @typedef {import('./project.types.js').CompileTypesType} CompileTypesType
  * @typedef {import('./project.types.js').ProjectCliArgsType} ProjectCliArgsType
  */
+import { fileURLToPath } from 'url';
 
-import path, { basename } from 'path';
+import path, { basename, resolve } from 'path';
 import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 import { rollup, watch as rollupWatch } from 'rollup';
@@ -25,6 +26,8 @@ import { bundleStyles } from './helpers/projectStyles.helper.js';
 import ProjectTest from '../projectTest/projectTest.mjs';
 import PROJECT_STORE from './projectStore.mjs';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const cwd = process.cwd();
 /** @type {ProjectCliArgsType} */
 
@@ -139,14 +142,15 @@ class Project {
 
     /**
      * Returns the module path.
-     * @param {string} [name]
      * @returns {string | undefined}
      */
-    getModulePath(name = this.name) {
-        const parent = this.buildConfig?.parent || name;
-        const project = PROJECT_STORE[parent] || this;
-        if (project.name === 'module') return project.path;
-        return `${project.path}/node_modules/@arpadroid/module`;
+    getModulePath() {
+        return resolve(__dirname, '..', '..');
+    }
+
+    async getConfig() {
+        await this.promise;
+        return await this.getBuildConfig();
     }
 
     /**
