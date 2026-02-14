@@ -38,6 +38,7 @@ const config = {
                     dir: './src',
                     browser: {
                         enabled: true,
+                        headless: true,
                         provider: playwright({}),
                         // @ts-ignore
                         instances: getBrowsersConfig(project)

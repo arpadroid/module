@@ -1,4 +1,11 @@
-import { basename } from 'node:path';
+import { basename, join } from 'node:path';
+import { getAlias } from './main/mainResolutions.js';
+
+const modulesRoot = join(import.meta.dirname, '../..', 'node_modules');
+const pluginsRoot = join(modulesRoot, '@storybook');
+const vitestRoot = join(pluginsRoot, 'addon-vitest', 'dist');
+const storybookPath = join(modulesRoot, 'storybook', 'dist');
+const vitestPath = join(modulesRoot, 'vitest', 'dist');
 
 const cwd = process.cwd();
 /** @type {import('vite').UserConfig} */
@@ -11,8 +18,7 @@ const config = {
         target: 'esnext'
     },
     resolve: {
-        alias: [],
-        conditions: ['import', 'module', 'browser', 'default']
+        alias: []
     },
     server: {
         fs: {
@@ -23,10 +29,11 @@ const config = {
         }
     },
     optimizeDeps: {
-        include: ['storybook', 'storybook/internal/preview/runtime'],
+        include: ['storybook/internal/preview/runtime'],
         esbuildOptions: {
             target: 'esnext'
-        }
+        },
+        exclude: ['storybook']
     },
     plugins: [],
     define: {}
