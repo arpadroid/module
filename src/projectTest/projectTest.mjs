@@ -1,5 +1,3 @@
-/* eslint-disable security/detect-non-literal-regexp */
-/* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('../project/project.mjs').default} Project
  * @typedef {import('../project/project.types.js').ProjectTestConfigType} ProjectTestConfigType
@@ -170,16 +168,16 @@ class ProjectTest {
             await this.testStorybook(config);
         }
 
-        !silent && log.success(`Testing completed, have a nice day! 😀`);
+        !silent && log.success('Testing completed, have a nice day! 😀');
         return response;
     }
 
     /**
      * Runs the test build if needed. This can be used to build the project before running tests, which is useful for projects that need to be built before testing (e.g. Storybook). The `slim` option can be used to skip the build step if the project is already built and ready for testing.
-     * @param {ProjectTestConfigType} [testConfig]
-     * @return {Promise<Buffer | string | boolean>} The result of the build command, or true if the build was skipped.
+     * @param {ProjectTestConfigType} [_testConfig]
+     * @returns {Promise<Buffer | string | boolean>} The result of the build command, or true if the build was skipped.
      */
-    async runTestBuild(testConfig = {}) {
+    async runTestBuild(_testConfig = {}) {
         const rv = await execSync('npm run build -- --logHeading=false', {
             shell: '/bin/sh',
             stdio: 'inherit',
@@ -207,7 +205,12 @@ class ProjectTest {
         return await runJestTests(this.project, testConfig);
     }
 
-    async testStorybook(config = this.config) {
+    /**
+     * Runs the Storybook tests. This will start the Storybook server, run the tests, and then stop the server. The `storybook` option can be used to skip this step if Storybook tests should not be run.
+     * @param {ProjectTestConfigType} [_testConfig]
+     * @returns {Promise<boolean | Error>}
+     */
+    async testStorybook(_testConfig = this.config) {
         const proj = this.project;
         const port = await getStorybookPort(proj);
         log.task(proj.name, 'Running storybook tests.');

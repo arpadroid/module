@@ -8,7 +8,7 @@
 
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
-import { existsSync, globSync, lstatSync, readFileSync, rmSync } from 'fs';
+import { existsSync, readFileSync, rmSync } from 'fs';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { log, logStyle } from '@arpadroid/logger';
 import Project from '../project.mjs';
@@ -18,7 +18,7 @@ import { getJestTests, hasJestTests } from './projectJest.helper.js';
 import { getStories, hasStories } from './projectStorybook.helper.js';
 
 /** @type {ProjectCliArgsType} */
-const argv = yargs(hideBin(process.argv)).argv;
+export const argv = yargs(hideBin(process.argv)).argv;
 
 export const NO_TYPES = Boolean(argv.noTypes);
 export const STYLE_SORT = ['ui', 'lists', 'navigation', 'messages', 'form'];
@@ -51,6 +51,7 @@ export const STORYBOOK_PORT = Number(
 );
 export const WATCH = Boolean(argv.watch);
 export const BROWSERS = argv.browsers;
+export const CI = Boolean(argv.ci);
 const cwd = process.cwd();
 ////////////////////////////////
 // #region Build  Config

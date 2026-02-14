@@ -57,14 +57,15 @@ export async function getTestMatch(project) {
     let testMatch = project.buildConfig?.jest?.testMatch;
     if (testMatch instanceof Promise) testMatch = await testMatch;
 
-    const patterns = /** @type {string[]} */ (testMatch || [`<rootDir>/src/**/*.test.js`]);
+    const patterns = /** @type {string[]} */ (testMatch || ['<rootDir>/src/**/*.test.js']);
     return patterns.map(pattern => {
         pattern = pattern.replace(project.path || cwd, '<rootDir>');
         return pattern;
     });
 }
 
-/** Returns the number of Jest test files for the given project.
+/**
+ * Returns the number of Jest test files for the given project.
  * @param {Project} project
  * @returns {number}
  */
@@ -118,7 +119,10 @@ export function getJestCommand(project, testConfig = {}) {
     };
     const argString = Object.keys(args)
         .filter(key => args[key])
-        .map(key => `--${key}${typeof args[key] === 'boolean' ? '' : `=${args[key]}`}`)
+        .map(key => {
+            const value = typeof args[key] === 'boolean' ? '' : `=${args[key]}`;
+            return `--${key}${value}`;
+        })
         .join(' ');
 
     return `node --no-warnings --experimental-vm-modules ${binary} ${argString}`;
@@ -164,7 +168,9 @@ export async function initializeInstall(moduleProject) {
 }
 
 /**
+ * Installs Jest for the given project if it has Jest tests and no existing Jest configuration file.
  * @param {Project} moduleProject
+ * @returns {Promise<boolean>}
  */
 export async function installJest(moduleProject) {
     const payload = (await initializeInstall(moduleProject)) || {};

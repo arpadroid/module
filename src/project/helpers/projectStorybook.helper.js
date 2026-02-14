@@ -48,39 +48,6 @@ export function getStoryPatterns(project = getProject()) {
 }
 
 /**
- * Converts absolute story patterns to relative patterns based on the project path.
- * @param {Project | undefined} project
- * @returns {string[]} An array of relative glob patterns for Storybook stories.
- */
-export function getConfigStoryPatterns(project = getProject()) {
-    if (!project) {
-        log.error('getConfigStoryPatterns: Project not found', project);
-        return [];
-    }
-    const path = project.path || '';
-    const patterns = getStoryPatterns(project);
-    const rv = patterns.map(pattern => {
-        if (pattern.startsWith(path)) {
-            pattern = pattern.replace(path + '/', '');
-        }
-        if (pattern.startsWith('./')) {
-            pattern = pattern.substring(2);
-        }
-        if (pattern.startsWith(cwd)) {
-            pattern = pattern.replace(cwd + '/', '');
-        }
-        if (pattern.startsWith('/')) {
-            pattern = pattern.substring(1);
-        }
-        return '../' + pattern;
-    });
-    if (!rv.length) {
-        return ['../src/**/*.stories.{ts,tsx,js,jsx}'];
-    }
-    return rv;
-}
-
-/**
  * Returns an array of paths to Storybook story files for the given project.
  * @param {Project} project
  * @returns {string[]}

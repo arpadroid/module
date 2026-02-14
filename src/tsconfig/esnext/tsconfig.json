@@ -18,7 +18,7 @@
         "strict": true,
         "strictPropertyInitialization": false,
         "target": "ESNext",
-        "tsBuildInfoFile": "./.tmp/.tsbuildinfo",
+        // "tsBuildInfoFile": "./.tmp/.tsbuildinfo",
         "types": ["node"],
         "useDefineForClassFields": false,
         "typeRoots": [

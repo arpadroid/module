@@ -9,6 +9,7 @@ export const addonVitestPath = join(moduleRoot, 'node_modules', '@storybook', 'a
 export const modulesRoot = join(moduleRoot, 'node_modules');
 export const storybookPath = join(modulesRoot, 'storybook', 'dist');
 export const vitestPath = join(modulesRoot, 'vitest', 'dist');
+export const addonDocsPath = join(modulesRoot, '@storybook', 'addon-docs', 'dist');
 
 /** @type {ResolutionTypes} */
 const resolutions = {
@@ -25,6 +26,7 @@ const resolutions = {
     '@storybook/builder-vite': join(modulesRoot, '@storybook', 'builder-vite'),
     'vitest/internal/browser': join(vitestPath, 'browser.js'),
     'vitest/runners': join(vitestPath, 'runners.js'),
+    'vitest/dist/chunks': join(vitestPath, 'dist', 'chunks'),
     chai: join(modulesRoot, 'chai'),
     'expect-type': join(modulesRoot, 'expect-type'),
     'magic-string': join(modulesRoot, 'magic-string'),
@@ -36,19 +38,12 @@ const resolutions = {
         find: /^vitest$/,
         replacement: join(modulesRoot, 'vitest', 'dist')
     },
-    '@vitest/browser/client': join(modulesRoot, '@vitest', 'browser', 'dist', 'client.js'),
-    'storybook/test': join(storybookPath, 'test', 'index.js')
-    // '@storybook/addon-vitest/internal/plugin': join(addonVitestPath, 'vitest-plugin', 'plugin.js'),
-    // '@storybook/addon-vitest': addonVitestPath,
-    // '/node_modules/@arpadroid/module/.storybook/preview.js': 'virtual:preview-config',
-    // 'vitest/config': join(vitestPath, 'config.js'),
-    // 'vitest/node': join(vitestPath, 'node.js'),
-    // 'vitest/browser': join(modulesRoot, '@vitest', 'browser', 'dist', 'index.js'),
-    // '@storybook/addon-docs': join(modulesRoot, '@storybook', 'addon-docs', 'dist'),
-    // '@storybook/addon-docs/blocks': join(modulesRoot, '@storybook', 'addon-docs', 'dist', 'blocks.js'),
-    // '@storybook/addon-links': join(modulesRoot, '@storybook', 'addon-links', 'dist', 'index.js'),
-    // '@storybook/addon-a11y': join(modulesRoot, '@storybook', 'addon-a11y', 'dist', 'index.js'),
-    // storybook: join(modulesRoot, 'storybook', 'dist', 'index.js'),
+    '@vitest/browser-client': join(modulesRoot, '@vitest', 'browser', 'dist', 'client.js'),
+    'storybook/test': join(storybookPath, 'test', 'index.js'),
+    '@vitest/browser-playwright': join(modulesRoot, '@vitest', 'browser-playwright', 'dist'),
+    '@storybook/addon-docs': addonDocsPath,
+    '@storybook/addon-docs/blocks': join(addonDocsPath, 'blocks.js'),
+    '@mdx-js/react': join(addonDocsPath, 'mdx-react-shim.js')
 };
 
 /**

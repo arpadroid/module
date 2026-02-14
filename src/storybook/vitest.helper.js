@@ -6,7 +6,7 @@
  * @typedef {import('../project/project.mjs').default} Project
  */
 
-import { BROWSERS } from '../project/helpers/projectBuild.helper.mjs';
+import { argv } from '../project/helpers/projectBuild.helper.mjs';
 
 /**
  * Normalizes the browsers configuration by splitting a string of browser names into an array of strings.
@@ -24,13 +24,26 @@ export function normalizeBrowsers(browsers) {
 }
 
 /**
+ * Gets the list of browsers to be used in CI testing.
+ * @param {Project} project
+ * @returns {string[]}
+ */
+export function getCIBrowsers(project) {
+    const browsers = normalizeBrowsers(
+        argv.ci_browsers || process.env.CI_BROWSERS || project.config?.test_browsers || 'chromium firefox'
+    );
+    return browsers;
+}
+
+/**
  * Returns the browsers configuration for testing.
  * @param {Project} project
  * @returns {BrowserConfigOptions[]}
  */
 export function getBrowsersConfig(project) {
-    const browsers = normalizeBrowsers(
-        BROWSERS || process.env.BROWSERS || project.config?.test_browsers || 'chromium firefox webkit'
-    );
+    /**
+     * Browser coverage only allows chromium, so we limit to that if we run the tests in the browser.
+     */
+    const browsers = argv.project === 'storybook' ? getCIBrowsers(project) : ['chromium'];
     return browsers.map(browser => ({ browser, headless: true }));
 }
