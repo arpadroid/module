@@ -12,7 +12,14 @@ describe('@arpadroid/module Project Instance', () => {
     /** @type {Project | undefined}*/
     let project;
     beforeAll(() => {
+        jest.spyOn(console, 'log').mockImplementation(() => {});
+        jest.spyOn(console, 'error').mockImplementation(() => {});
         project = new Project('module');
+    });
+
+    afterAll(() => {
+        jest.restoreAllMocks();
+        jest.restoreAllMocks();
     });
 
     test('getPath returns correct project path', () => {

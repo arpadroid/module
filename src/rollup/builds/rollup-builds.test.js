@@ -30,6 +30,15 @@ describe('rollup-builds', () => {
         process.env = { ...originalEnv };
     });
 
+    beforeAll(() => {
+        jest.spyOn(console, 'log').mockImplementation(() => {});
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
+
     describe('isSlim', () => {
         it('should return correct boolean based on env', () => {
             expect(isSlim()).toBe(false);
@@ -56,7 +65,6 @@ describe('rollup-builds', () => {
             expect(preProcessDependencies('ui,tools,i18n')).toEqual(['ui', 'tools', 'i18n']);
             expect(preProcessDependencies('ui , tools , i18n')).toEqual(['ui', 'tools', 'i18n']);
             expect(preProcessDependencies('ui')).toEqual(['ui']);
-
         });
     });
 
