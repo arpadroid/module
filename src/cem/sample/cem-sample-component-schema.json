@@ -7,6 +7,8 @@
             "path": "fixtures/-default/package/my-element.js",
             "declarations": [
                 {
+                    "tagName": "my-element",
+                    "customElement": true,
                     "kind": "class",
                     "description": "",
                     "name": "MyElement",
@@ -79,9 +81,7 @@
                     "superclass": {
                         "name": "LitElement",
                         "package": "lit-element"
-                    },
-                    "tagName": "my-element",
-                    "customElement": true
+                    }
                 },
                 {
                     "kind": "variable",

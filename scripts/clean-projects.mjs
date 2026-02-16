@@ -8,7 +8,7 @@ if (!project) {
     process.exit(1);
 }
 const deps = await getAllDependencies(project);
-/** @type {import('../src/project/helpers/projectBuilder.types').DependencyProjectPointerType[]} */
+/** @type {import('../src/project/helpers/projectBuilder.types').DependencyPointerType[]} */
 const projects = [{ name: project.name, instance: project, path: project.path }, ...deps];
 
 console.log('projects', projects);

@@ -291,7 +291,7 @@ class Project {
         process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
         await this.runBuild(config);
         await buildTypes(this, config);
-        // await buildCustomElementsManifest(this, config);
+        await buildCustomElementsManifest(this, config);
         await this.runDeferredOperations();
         STORYBOOK && runStorybook(this, config);
         this.buildEndTime = Date.now();

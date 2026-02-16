@@ -1,31 +1,17 @@
-//import { myAwesomePlugin } from 'awesome-plugin';
+/**
+ * @typedef {import('@custom-elements-manifest/analyzer').Config} AnalyzerConfig
+ */
 
 import { join } from 'path';
-import { getProject } from '../project/projectStore.mjs';
 
-const CWD = process.cwd();
-const project = getProject();
-
-if (!project) {
-    throw new Error(
-        'No project instance found. Make sure to run this script from the root of an Arpadroid project with a valid configuration.'
-    );
-}
-
-await project.promise;
-
-const base = project.path || CWD;
-
-/** @type {import('@custom-elements-manifest/analyzer').Config} */
+/** @type {AnalyzerConfig} */
 export default {
-    globs: [join(base, 'src', '**', '*.js')],
-    // exclude: ['src/foo.js'],
-    outdir: join(base, 'dist'),
+    globs: [join('src', '**', '*.js')],
+    outdir: 'dist',
     dev: false,
     watch: false,
     dependencies: true,
-    packagejson: false, // Output CEM path to `package.json`, defaults to true
-    litelement: false,
+    packagejson: true, // Output CEM path to `package.json`, defaults to true
     catalyst: false,
     fast: false,
     stencil: false,
@@ -37,8 +23,6 @@ export default {
     resolutionOptions: {
         extensions: ['.js', '.ts'],
         mainFields: ['module', 'main'],
-        conditionNames: ['import', 'require'],
-        alias: {}
-        // ... other oxc-resolver options
+        conditionNames: ['import', 'require']
     }
 };

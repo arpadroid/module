@@ -1,7 +1,7 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('../../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
- * @typedef {import('../build/projectBuilder.types.js').DependencyProjectPointerType} DependencyProjectPointerType
+ * @typedef {import('../build/projectBuilder.types.js').DependencyPointerType} DependencyPointerType
  */
 
 import { ThemesBundler } from '@arpadroid/style-bun';
@@ -53,7 +53,7 @@ export async function hasStyles(project) {
 /**
  * Retrieves the style packages for the project and its dependencies.
  * @param {Project} project
- * @returns {Promise<DependencyProjectPointerType[]>}
+ * @returns {Promise<DependencyPointerType[]>}
  */
 export async function getStyleDependencies(project) {
     return [
