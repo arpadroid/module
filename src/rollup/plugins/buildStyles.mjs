@@ -2,7 +2,7 @@
  * @typedef {import('../../project/project.mjs').default} Project
  */
 
-import { compileStyles } from '../../project/helpers/projectStyles.helper.js';
+import { compileStyles } from '../../project/helpers/styles/projectStyles.helper.js';
 
 /**
  * Creates a stylesheet out of any CSS files in the project.

@@ -1,17 +1,17 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
- * @typedef {import('../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
- * @typedef {import('./projectBuilder.types.js').DependencyProjectPointerType} DependencyProjectPointerType
+ * @typedef {import('../../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
+ * @typedef {import('../build/projectBuilder.types.js').DependencyProjectPointerType} DependencyProjectPointerType
  */
 
 import { ThemesBundler } from '@arpadroid/style-bun';
 import { log } from '@arpadroid/logger';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
-import { getAllDependencies, STYLE_SORT } from './projectBuild.helper.mjs';
-import Project from '../project.mjs';
+import { getAllDependencies, STYLE_SORT } from '../build/projectBuild.helper.mjs';
+import Project from '../../project.mjs';
 import { join } from 'path';
 import chalk from 'chalk';
-import PROJECT_STORE, { getProjectInstance } from '../projectStore.mjs';
+import PROJECT_STORE, { getProjectInstance } from '../../projectStore.mjs';
 
 //////////////////////////
 // #region Styles Helpers

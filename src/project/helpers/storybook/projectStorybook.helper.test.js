@@ -1,7 +1,7 @@
 import { spyOn } from 'jest-mock';
 
-import Project from '../project.mjs';
-import { TEST_PROJECT_PATH } from '../tests/projectTest.util.mjs';
+import Project from '../../project.mjs';
+import { TEST_PROJECT_PATH } from '../../tests/projectTest.util.mjs';
 import { getStorybookCmd, getStorybookConfigPath, runStorybook } from './projectStorybook.helper.js';
 
 describe('Project Storybook Helper', () => {

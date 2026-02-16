@@ -26,7 +26,8 @@
         "arpadroid-build": "./scripts/build-project.mjs",
         "arpadroid-test": "./scripts/test-project.mjs",
         "arpadroid-install": "./scripts/install-project.mjs",
-        "arpadroid-clean": "./scripts/clean-project.mjs"
+        "arpadroid-clean": "./scripts/clean-project.mjs",
+        "arpadroid-clean-projects": "node ./scripts/clean-projects.mjs"
     },
     "types": "./dist/@types/types.compiled.d.ts",
     "type": "module",
@@ -139,6 +140,7 @@
         "eslint-plugin-unicorn": "^62.0.0",
         "eslint-plugin-xss": "^0.1.12",
         "glob": "^13.0.0",
+        "@custom-elements-manifest/analyzer": "^0.11.0",
         "globals": "^17.3.0",
         "http-proxy-middleware": "^3.0.5",
         "http-server": "^14.1.1",

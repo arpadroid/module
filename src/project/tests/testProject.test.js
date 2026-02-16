@@ -4,9 +4,9 @@ import { join } from 'path';
 import Project from '../project.mjs';
 import { TEST_PROJECT_PATH } from './projectTest.util.mjs';
 import { existsSync, readFileSync } from 'fs';
-import { getFileConfig, getPackageJson } from '../helpers/projectBuild.helper.mjs';
-import { getBuildConfig, getDependencies } from '../helpers/projectBuild.helper.mjs';
-import { getThemes, getThemesPath, hasStyles } from '../helpers/projectStyles.helper.js';
+import { getFileConfig, getPackageJson } from '../helpers/build/projectBuild.helper.mjs';
+import { getBuildConfig, getDependencies } from '../helpers/build/projectBuild.helper.mjs';
+import { getThemes, getThemesPath, hasStyles } from '../helpers/styles/projectStyles.helper.js';
 
 describe('Test Project Instance', () => {
     let originalCwd = '';

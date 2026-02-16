@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { getJestSetupFiles, getTestMatch } from '../project/helpers/projectJest.helper.js';
+import { getJestSetupFiles, getTestMatch } from '../project/helpers/jest/projectJest.helper.js';
 import { getProject } from '../project/projectStore.mjs';
 
 const project = getProject();

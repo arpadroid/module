@@ -36,7 +36,7 @@ import typescript from 'rollup-plugin-typescript2';
 
 import Project from '../../project/project.mjs';
 import { getProjectInstance } from '../../project/projectStore.mjs';
-import { hasStyles } from '../../project/helpers/projectStyles.helper.js';
+import { hasStyles } from '../../project/helpers/styles/projectStyles.helper.js';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv || {};

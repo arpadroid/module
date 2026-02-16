@@ -1,9 +1,9 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('./projectBuilder.types.js').DependencyProjectPointerType} DependencyProjectPointerType
- * @typedef {import('../../rollup/builds/rollup-builds.mjs').ProjectCliArgsType} ProjectCliArgsType
- * @typedef {import("../../rollup/builds/rollup-builds.mjs").BuildConfigType} BuildConfigType
- * @typedef {import('../../rollup/builds/rollup-builds.types.js').BuildHookNameType} BuildHookNameType
+ * @typedef {import('../../../rollup/builds/rollup-builds.mjs').ProjectCliArgsType} ProjectCliArgsType
+ * @typedef {import("../../../rollup/builds/rollup-builds.mjs").BuildConfigType} BuildConfigType
+ * @typedef {import('../../../rollup/builds/rollup-builds.types.js').BuildHookNameType} BuildHookNameType
  */
 
 import { hideBin } from 'yargs/helpers';
@@ -11,11 +11,11 @@ import yargs from 'yargs';
 import { existsSync, readFileSync, rmSync } from 'fs';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { log, logStyle } from '@arpadroid/logger';
-import Project from '../project.mjs';
-import { getProject } from '../projectStore.mjs';
+import Project from '../../project.mjs';
+import { getProject } from '../../projectStore.mjs';
 import { basename, join } from 'path';
-import { getJestTests, hasJestTests } from './projectJest.helper.js';
-import { getStories, hasStories } from './projectStorybook.helper.js';
+import { getJestTests, hasJestTests } from '../jest/projectJest.helper.js';
+import { getStories, hasStories } from '../storybook/projectStorybook.helper.js';
 
 /** @type {ProjectCliArgsType} */
 export const argv = yargs(hideBin(process.argv)).argv;
@@ -101,11 +101,12 @@ export function getDefaultBuildConfig(project) {
         verbose: Boolean(argv.verbose),
         storybook_port: STORYBOOK,
         watch: WATCH,
+        buildManifest: false,
         storybook: {
             stories: 'src/**/*.stories.{ts,tsx,js,jsx}'
         },
         jest: {
-            testMatch: [`<rootDir>/src/**/*.test.js`]
+            testMatch: ['<rootDir>/src/**/*.test.js']
         }
     };
     return mergeObjects(config, project.config);
@@ -245,18 +246,21 @@ export async function getDependenciesRecursive(project, visited, depth = 0, maxD
     if (depth >= maxDepth) return [];
     /** @type {DependencyProjectPointerType[]} */
     const results = [];
+    const deps = getDependencies(project);
 
-    for (const dep of getDependencies(project, { sort: [] })) {
+    for (const dep of deps) {
         if (visited.has(dep.name)) continue;
         visited.add(dep.name);
-
         const proj = getProject(dep.name, { path: dep.path });
         results.push(dep);
         dep.project = proj;
-        await proj?.promise;
+    }
+    for (const dep of deps) {
+        const { project: proj } = dep;
         const dps = !proj ? [] : await getDependenciesRecursive(proj, visited, depth + 1, maxDepth);
         results.push(...(dps || []));
     }
+
     return results;
 }
 

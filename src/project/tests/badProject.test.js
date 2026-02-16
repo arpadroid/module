@@ -1,5 +1,5 @@
-import { getFileConfig } from '../helpers/projectBuild.helper.mjs';
-import { getStorybookConfigPath } from '../helpers/projectStorybook.helper.js';
+import { getFileConfig } from '../helpers/build/projectBuild.helper.mjs';
+import { getStorybookConfigPath } from '../helpers/storybook/projectStorybook.helper.js';
 import Project from '../project.mjs';
 import { spyOn } from 'jest-mock';
 describe('Bad Project Instance', () => {

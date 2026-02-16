@@ -1,7 +1,7 @@
 /**
- * @typedef {import("../../types.js").BuildConfigType} BuildConfigType
- * @typedef {import("../project.mjs").default} Project
- * @typedef {import('../../rollup/builds/rollup-builds.mjs').CompileTypesType} CompileTypesType
+ * @typedef {import("../../../types.js").BuildConfigType} BuildConfigType
+ * @typedef {import("../../project.mjs").default} Project
+ * @typedef {import('../../../rollup/builds/rollup-builds.mjs').CompileTypesType} CompileTypesType
  * @typedef {import('rollup').RollupOptions} RollupOptions
  */
 /* eslint-disable security/detect-non-literal-fs-filename */
@@ -9,7 +9,7 @@ import { spawn } from 'child_process';
 import fs, { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { glob } from 'glob';
-import { NO_TYPES } from './projectBuild.helper.mjs';
+import { NO_TYPES } from './../build/projectBuild.helper.mjs';
 import { log } from '@arpadroid/logger';
 
 /**

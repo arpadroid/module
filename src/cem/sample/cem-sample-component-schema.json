@@ -1,0 +1,116 @@
+{
+    "schemaVersion": "1.0.0",
+    "readme": "",
+    "modules": [
+        {
+            "kind": "javascript-module",
+            "path": "fixtures/-default/package/my-element.js",
+            "declarations": [
+                {
+                    "kind": "class",
+                    "description": "",
+                    "name": "MyElement",
+                    "cssProperties": [
+                        {
+                            "description": "Controls the color of foo",
+                            "name": "--text-color"
+                        },
+                        {
+                            "description": "Controls the color of bar",
+                            "name": "--background-color"
+                        }
+                    ],
+                    "cssParts": [
+                        {
+                            "description": "Styles the color of bar",
+                            "name": "bar"
+                        }
+                    ],
+                    "slots": [
+                        {
+                            "description": "You can put some elements here",
+                            "name": "container"
+                        }
+                    ],
+                    "members": [
+                        {
+                            "kind": "field",
+                            "name": "foo",
+                            "type": {
+                                "text": "string"
+                            },
+                            "default": "'foo'",
+                            "reflects": true,
+                            "attribute": "foo"
+                        },
+                        {
+                            "kind": "field",
+                            "name": "disabled",
+                            "type": {
+                                "text": "boolean"
+                            },
+                            "description": "disabled state",
+                            "default": "true"
+                        },
+                        {
+                            "kind": "method",
+                            "name": "fire"
+                        }
+                    ],
+                    "events": [
+                        {
+                            "name": "foo-changed",
+                            "type": {
+                                "text": "FooEvent"
+                            },
+                            "description": "foo-event - description"
+                        }
+                    ],
+                    "attributes": [
+                        {
+                            "name": "foo",
+                            "type": {
+                                "text": "string"
+                            },
+                            "default": "'foo'",
+                            "fieldName": "foo"
+                        }
+                    ],
+                    "superclass": {
+                        "name": "LitElement",
+                        "package": "lit-element"
+                    },
+                    "tagName": "my-element",
+                    "customElement": true
+                },
+                {
+                    "kind": "variable",
+                    "name": "someVariable",
+                    "type": {
+                        "text": "boolean"
+                    },
+                    "default": "true",
+                    "description": "This will show up in the custom-elements.json too"
+                }
+            ],
+            "exports": [
+                {
+                    "kind": "js",
+                    "name": "someVariable",
+                    "declaration": {
+                        "name": "someVariable",
+                        "module": "fixtures/-default/package/my-element.js"
+                    }
+                },
+                {
+                    "kind": "custom-element-definition",
+                    "name": "my-element",
+                    "declaration": {
+                        "name": "MyElement",
+                        "module": "fixtures/-default/package/my-element.js"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -15,13 +15,14 @@ import { spawnSync } from 'child_process';
 import { rollup, watch as rollupWatch } from 'rollup';
 import { log, logStyle } from '@arpadroid/logger';
 
-import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK } from './helpers/projectBuild.helper.mjs';
-import { buildDependencies, getPackageJson, getDependencies } from './helpers/projectBuild.helper.mjs';
-import { getBuildConfig, cleanupFiles, runHook } from './helpers/projectBuild.helper.mjs';
+import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK } from './helpers/build/projectBuild.helper.mjs';
+import { buildDependencies, getPackageJson, getDependencies } from './helpers/build/projectBuild.helper.mjs';
+import { getBuildConfig, cleanupFiles, runHook } from './helpers/build/projectBuild.helper.mjs';
 
-import { runStorybook } from './helpers/projectStorybook.helper.js';
-import { buildTypes } from './helpers/projectTypes.helper.mjs';
-import { bundleStyles } from './helpers/projectStyles.helper.js';
+import { runStorybook } from './helpers/storybook/projectStorybook.helper.js';
+import { buildTypes } from './helpers/types/projectTypes.helper.mjs';
+import { buildCustomElementsManifest } from './helpers/manifest/projectManifest.helper.mjs';
+import { bundleStyles } from './helpers/styles/projectStyles.helper.js';
 
 import ProjectTest from '../projectTest/projectTest.mjs';
 import PROJECT_STORE from './projectStore.mjs';
@@ -235,6 +236,7 @@ class Project {
     /**
      * Cleans all project build files and caches.
      * @param {{ reInstall?: boolean, reBuild?: boolean }} [opt]
+     * @returns {Promise<boolean>}
      */
     async clean(opt = {}) {
         const { reInstall = true, reBuild = false } = opt;
@@ -289,6 +291,7 @@ class Project {
         process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
         await this.runBuild(config);
         await buildTypes(this, config);
+        // await buildCustomElementsManifest(this, config);
         await this.runDeferredOperations();
         STORYBOOK && runStorybook(this, config);
         this.buildEndTime = Date.now();

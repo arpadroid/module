@@ -55,6 +55,7 @@ export type BuildConfigType = {
     buildStyles?: boolean;
     buildType?: 'uiComponent' | 'library';
     buildTypes?: boolean;
+    buildManifest?: boolean;
     configPath?: string;
     copyTestAssets?: boolean;
     deferTypesBuild?: string[];

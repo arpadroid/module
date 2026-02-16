@@ -6,8 +6,8 @@ import { join, resolve } from 'path';
 import { playwright } from '@vitest/browser-playwright';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { getProject } from '../project/projectStore.mjs';
-import { getStorybookCmd, getStorybookPort } from '../project/helpers/projectStorybook.helper.js';
-import { getStorybookConfigPath } from '../project/helpers/projectStorybook.helper.js';
+import { getStorybookCmd, getStorybookPort } from '../project/helpers/storybook/projectStorybook.helper.js';
+import { getStorybookConfigPath } from '../project/helpers/storybook/projectStorybook.helper.js';
 import { getBrowsersConfig } from './vitest.helper.js';
 
 const project = /** @type {import('../project/project.mjs').default} */ (getProject());

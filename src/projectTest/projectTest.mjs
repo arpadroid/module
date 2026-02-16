@@ -9,10 +9,10 @@ import yargs from 'yargs';
 import { log, logStyle } from '@arpadroid/logger';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { stopHTTPServer } from '@arpadroid/tools-node';
-import { runStorybookCI, runStorybookTests } from '../project/helpers/projectStorybook.helper.js';
-import { getStorybookPort } from '../project/helpers/projectStorybook.helper.js';
-import { runJestTests } from '../project/helpers/projectJest.helper.js';
-import { getTests, runHook } from '../project/helpers/projectBuild.helper.mjs';
+import { runStorybookCI, runStorybookTests } from '../project/helpers/storybook/projectStorybook.helper.js';
+import { getStorybookPort } from '../project/helpers/storybook/projectStorybook.helper.js';
+import { runJestTests } from '../project/helpers/jest/projectJest.helper.js';
+import { getTests, runHook } from '../project/helpers/build/projectBuild.helper.mjs';
 
 /** @type {ProjectTestConfigType} */
 const argv = yargs(hideBin(process.argv)).argv;

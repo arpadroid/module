@@ -1,8 +1,8 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
- * @typedef {import('../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
- * @typedef {import('../project.mjs').default} Project
- * @typedef {import('../../rollup/builds/rollup-builds.types.js').TestMatchType} TestMatchType
+ * @typedef {import('../../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
+ * @typedef {import('../../project.mjs').default} Project
+ * @typedef {import('../../../rollup/builds/rollup-builds.types.js').TestMatchType} TestMatchType
  */
 import { spawn, execSync } from 'child_process';
 import { existsSync, cpSync, globSync } from 'fs';
@@ -11,7 +11,7 @@ import { isHTTPServerRunning, runServer, stopHTTPServer } from '@arpadroid/tools
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { join, resolve } from 'path';
-import { getProject } from '../projectStore.mjs';
+import { getProject } from '../../projectStore.mjs';
 
 const cwd = process.cwd();
 const argv = /** @type {{watch?: boolean, storybook?: number}} */ (yargs(hideBin(process.argv)).argv || {});
@@ -53,7 +53,7 @@ export function getStoryPatterns(project = getProject()) {
  * @returns {string[]}
  */
 export function getStories(project) {
-    let patterns = getStoryPatterns(project);
+    const patterns = getStoryPatterns(project);
     /** @type {string[]} */
     const stories = [];
     Array.isArray(patterns) &&
@@ -308,7 +308,7 @@ export async function runStorybookCI(project, options = {}, spawnConfig = {}) {
  */
 export async function runStorybookTests(project, port) {
     const STORYBOOK_CONFIG_DIR = getStorybookConfigPath(project);
-    let cmd = getStorybookTestCmd(project);
+    const cmd = getStorybookTestCmd(project);
 
     const child = spawn(cmd, [], {
         shell: '/bin/sh',
@@ -324,7 +324,7 @@ export async function runStorybookTests(project, port) {
         }
     });
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         child.on('close', code => {
             if (code === 0) resolve(true);
             else resolve(new Error('Storybook Vitest tests failed'));

@@ -6,7 +6,7 @@
  * @typedef {import('../project/project.mjs').default} Project
  */
 
-import { argv } from '../project/helpers/projectBuild.helper.mjs';
+import { argv } from '../project/helpers/build/projectBuild.helper.mjs';
 
 /**
  * Normalizes the browsers configuration by splitting a string of browser names into an array of strings.

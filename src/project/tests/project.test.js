@@ -4,7 +4,7 @@ import Project from '../project.mjs';
 import { basename } from 'path';
 import { existsSync } from 'fs';
 import { spyOn } from 'jest-mock';
-import { getAllDependencies, getDependencies } from '../helpers/projectBuild.helper.mjs';
+import { getAllDependencies, getDependencies } from '../helpers/build/projectBuild.helper.mjs';
 
 const cwd = process.cwd();
 

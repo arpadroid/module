@@ -1,4 +1,4 @@
-import Project from '../project.mjs';
+import Project from '../../project.mjs';
 
 export type DependencyProjectPointerType = {
     name: string;

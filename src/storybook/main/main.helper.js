@@ -8,7 +8,7 @@ import Project from '../../project/project.mjs';
 import { existsSync, readFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { getProject } from '../../project/projectStore.mjs';
-import { getStoryPatterns } from '../../project/helpers/projectStorybook.helper.js';
+import { getStoryPatterns } from '../../project/helpers/storybook/projectStorybook.helper.js';
 import { log } from '@arpadroid/logger';
 import { getAliasResolutions } from './mainResolutions.js';
 

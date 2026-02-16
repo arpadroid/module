@@ -1,8 +1,8 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 /**
- * @typedef {import('../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
- * @typedef {import('../project.mjs').default} Project
- * @typedef {import('../project.types.js').ProjectTestConfigType} ProjectTestConfigType
+ * @typedef {import('../../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
+ * @typedef {import('../../project.mjs').default} Project
+ * @typedef {import('../../project.types.js').ProjectTestConfigType} ProjectTestConfigType
  */
 
 import fs, { copyFileSync, existsSync, globSync } from 'fs';
