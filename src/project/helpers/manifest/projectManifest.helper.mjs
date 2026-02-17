@@ -62,7 +62,8 @@ export async function runAnalyzer(project, opt = {}) {
     const args = prepareArgs(mergeObjects(defaultArgs, opt));
     const result = spawnSync('node', [bin, 'analyze', ...args], {
         cwd: project.path || CWD,
-        encoding: 'utf8'
+        stdio: 'inherit',
+        maxBuffer: 10 * 1024 * 1024
     });
 
     if (result.error) {
