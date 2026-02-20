@@ -27,7 +27,8 @@
         "arpadroid-test": "./scripts/test-project.mjs",
         "arpadroid-install": "./scripts/install-project.mjs",
         "arpadroid-clean": "./scripts/clean-project.mjs",
-        "arpadroid-clean-projects": "node ./scripts/clean-projects.mjs"
+        "arpadroid-initialize": "./scripts/initialize.mjs",
+        "arpadroid-manifest": "./scripts/build-manifest.mjs"
     },
     "types": "./dist/@types/types.compiled.d.ts",
     "type": "module",
@@ -104,13 +105,13 @@
         "@rollup/plugin-node-resolve": "^16.0.0",
         "@rollup/plugin-replace": "^6.0.3",
         "@rollup/plugin-terser": "^0.4.4",
-        "@storybook/addon-a11y": "^10.2.8",
-        "@storybook/addon-docs": "^10.2.8",
-        "@storybook/addon-links": "^10.2.8",
-        "@storybook/addon-themes": "^10.2.8",
-        "@storybook/addon-vitest": "^10.2.8",
-        "@storybook/cli": "^10.2.8",
-        "@storybook/web-components-vite": "^10.2.8",
+        "@storybook/addon-a11y": "^10.2.10",
+        "@storybook/addon-docs": "^10.2.10",
+        "@storybook/addon-links": "^10.2.10",
+        "@storybook/addon-themes": "^10.2.10",
+        "@storybook/addon-vitest": "^10.2.10",
+        "@storybook/cli": "^10.2.10",
+        "@storybook/web-components-vite": "^10.2.10",
         "@types/express": "^5.0.6",
         "@types/jest": "^30.0.0",
         "@types/node": "^25.2.2",
@@ -166,10 +167,15 @@
         "rollup-plugin-typescript2": "^0.36.0",
         "rollup-plugin-visualizer": "^6.0.5",
         "rollup-plugin-watch": "^1.0.4",
-        "storybook": "^10.2.8",
+        "storybook": "^10.2.10",
         "typescript": "^5.8.2",
         "vite": "^7.3.1",
         "vitest": "^4.0.18",
         "yargs": "^18.0.0"
+    }
+    ,
+    "overrides": {
+        "minimatch": "10.2.1",
+        "ajv": "8.18.0"
     }
 }

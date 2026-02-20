@@ -102,6 +102,9 @@ export function getDefaultBuildConfig(project) {
         storybook_port: STORYBOOK,
         watch: WATCH,
         buildManifest: false,
+        manifest: {
+            useTypesChecker: true
+        },
         storybook: {
             stories: 'src/**/*.stories.{ts,tsx,js,jsx}'
         },
@@ -246,6 +249,7 @@ export async function getDependenciesRecursive(project, visited, depth = 0, maxD
     if (depth >= maxDepth) return [];
     /** @type {DependencyPointerType[]} */
     const results = [];
+    await project.promise;
     const deps = getDependencies(project);
 
     for (const dep of deps) {

@@ -5,7 +5,7 @@
  * @typedef {import('../../project.mjs').default} Project
  * @typedef {import('./projectManifest.helper.types.js').CemSchemaType} CemSchemaType
  */
-import { existsSync } from 'fs';
+import { cpSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
 import { glob } from 'glob';
 import { log } from '@arpadroid/logger';
@@ -13,7 +13,93 @@ import { getAllDependencies } from '../build/projectBuild.helper.mjs';
 import { prepareArgs, safeReadJson } from '@arpadroid/tools-node';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { spawnSync } from 'child_process';
+import { argv } from '@arpadroid/tools-node';
+import { getProject } from '../../projectStore.mjs';
+
+export const USE_TYPES_CHECKER = argv.typesChecker;
 const CWD = process.cwd();
+/**
+ * Determines whether to use the types checker based on command line arguments and project configuration.
+ * @param {Project | undefined} project
+ * @returns {Promise<boolean>}
+ */
+export async function shouldUseTypesChecker(project = getProject()) {
+    if (!project) return false;
+    const { manifest } = (await project?.getConfig()) || {};
+    if (typeof USE_TYPES_CHECKER === 'undefined') {
+        return manifest?.useTypesChecker || false;
+    }
+    return USE_TYPES_CHECKER;
+}
+
+/////////////////////
+// #region Manifest
+/////////////////////
+
+/**
+ * Determines if the manifest should be built for the given project and config.
+ * @param {Project | undefined} project
+ * @returns {boolean}
+ */
+export function canBuildManifest(project) {
+    const { buildManifest, buildType } = project?.buildConfig || {};
+    return Boolean(buildType === 'uiComponent' && buildManifest);
+}
+
+/**
+ * Build and persist the Custom Elements Manifest for the given project.
+ * @param {Project} project
+ * @param {BuildConfigType} [_config]
+ * @param {{ bypassCheck?: boolean, destinations?: string[] }} [options]
+ * @returns {Promise<boolean>}
+ */
+export async function buildCustomElementsManifest(
+    project,
+    _config = project.buildConfig || {},
+    options = {}
+) {
+    const { bypassCheck = false } = options;
+    if (!canBuildManifest(project) && !bypassCheck) return true;
+    log.task(project.name, 'Building Custom Elements manifest (CEM).');
+    await runAnalyzer(project);
+
+    // Verify the analyzer created the manifest file; fail the build if not.
+    const manifestFile = getManifestFile(project);
+    if (!manifestFile) {
+        throw new Error(`Custom Elements Manifest not produced for project ${project.name}`);
+    } else {
+        cpSync(manifestFile, join(project.path || CWD, 'custom-elements.json'));
+    }
+
+    return true;
+}
+
+/**
+ * Returns the manifest file for a project, if it exists. Logs an error and returns undefined if the file cannot be read or parsed.
+ * @param {Project | undefined} project
+ * @returns {string | undefined}
+ */
+export function getManifestFile(project) {
+    const manifestPath = resolve(join(project?.path || CWD, 'dist', 'custom-elements.json'));
+    if (!existsSync(manifestPath)) {
+        log.warning(`No manifest file found for project ${project?.name} at expected path ${manifestPath}`);
+        return undefined;
+    }
+    return manifestPath;
+}
+
+/**
+ * Returns the parsed manifest content for a project, if the manifest file exists and can be read. Logs errors and returns undefined if the file cannot be read or parsed.
+ * @param {Project | undefined} project
+ * @returns {CemSchemaType | undefined}
+ */
+export function getManifestContent(project) {
+    const manifestFile = getManifestFile(project);
+    if (!manifestFile) return undefined;
+    return safeReadJson(manifestFile);
+}
+
+// #endregion Manifest
 
 /////////////////////
 // #region Analyzer
@@ -80,67 +166,6 @@ export async function runAnalyzer(project, opt = {}) {
 }
 
 // #endregion Analyzer
-
-/////////////////////
-// #region Manifest
-/////////////////////
-
-/**
- * Determines if the manifest should be built for the given project and config.
- * @param {Project | undefined} project
- * @returns {boolean}
- */
-export function canBuildManifest(project) {
-    const { buildManifest, buildType } = project?.buildConfig || {};
-    return Boolean(buildType === 'uiComponent' && buildManifest);
-}
-
-/**
- * Returns the manifest file for a project, if it exists. Logs an error and returns undefined if the file cannot be read or parsed.
- * @param {Project | undefined} project
- * @returns {string | undefined}
- */
-export function getManifestFile(project) {
-    const manifestPath = resolve(join(project?.path || CWD, 'dist', 'custom-elements.json'));
-    if (!existsSync(manifestPath)) {
-        log.warning(`No manifest file found for project ${project?.name} at expected path ${manifestPath}`);
-        return undefined;
-    }
-    return manifestPath;
-}
-
-/**
- * Build and persist the Custom Elements Manifest for the given project.
- * @param {Project} project
- * @param {BuildConfigType} [_config]
- * @returns {Promise<boolean>}
- */
-export async function buildCustomElementsManifest(project, _config = project.buildConfig || {}) {
-    if (!canBuildManifest(project)) return true;
-    log.task(project.name, 'Building Custom Elements manifest (CEM).');
-    await runAnalyzer(project);
-
-    // Verify the analyzer created the manifest file; fail the build if not.
-    const manifestFile = getManifestFile(project);
-    if (!manifestFile) {
-        throw new Error(`Custom Elements Manifest not produced for project ${project.name}`);
-    }
-
-    return true;
-}
-
-/**
- * Returns the parsed manifest content for a project, if the manifest file exists and can be read. Logs errors and returns undefined if the file cannot be read or parsed.
- * @param {Project | undefined} project
- * @returns {CemSchemaType | undefined}
- */
-export function getManifestContent(project) {
-    const manifestFile = getManifestFile(project);
-    if (!manifestFile) return undefined;
-    return safeReadJson(manifestFile);
-}
-
-// #endregion Manifest
 
 ///////////////////////////
 // #region Fragments

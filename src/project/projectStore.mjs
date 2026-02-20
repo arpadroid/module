@@ -32,11 +32,11 @@ export function getProjectName() {
  * Returns a project instance given a project name.
  * @param {string} [name]
  * @param {BuildConfigType} [config]
- * @param {{ create?: boolean }} [options]
+ * @param {{ create?: boolean, throwError?: boolean }} [options]
  * @returns {Project | undefined}
  */
 export function getProject(name = getProjectName(), config = {}, options = {}) {
-    const { create = true } = options;
+    const { create = true, throwError = false } = options;
     if (!name) {
         console.log('No project name could be determined.');
         process.exit(1);
@@ -44,6 +44,12 @@ export function getProject(name = getProjectName(), config = {}, options = {}) {
     if (PROJECT_STORE[name]) return PROJECT_STORE[name];
     if (!create) return undefined;
     const project = new Project(name, config);
+    if (!project && throwError) {
+        console.error(
+            'No project instance found. Make sure to run this script from the root of an Arpadroid project with a valid configuration.'
+        );
+        process.exit(1);
+    }
     PROJECT_STORE[name] = project;
     return project;
 }

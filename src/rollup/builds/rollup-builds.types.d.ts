@@ -47,6 +47,10 @@ export type BuildHooksType = {
     test?: BuildHookType;
 };
 
+export type BuildManifestType = {
+    useTypesChecker?: boolean;
+};
+
 export type BuildConfigType = {
     aliases?: Alias[];
     buildDeps?: boolean;
@@ -67,6 +71,7 @@ export type BuildConfigType = {
     jest?: JestConfigType;
     logHeading?: boolean;
     logo?: string;
+    manifest?: BuildManifestType;
     minify?: boolean;
     parent?: string;
     path?: string;

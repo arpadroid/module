@@ -2,4 +2,4 @@
 
 import { getProject } from '../src/project/projectStore.mjs';
 
-getProject().clean();
+getProject(undefined, undefined, { throwError: true }).clean();

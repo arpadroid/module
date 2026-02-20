@@ -1,4 +1,4 @@
-/* eslint-disable security/detect-non-literal-fs-filename */
+/* eslint-disable security/detect-non-literal-fs-filename, sonarjs/no-ignored-exceptions */
 
 /**
  * @typedef {import('./arpadroid-cem.utils.types.js').NodeType} NodeType
@@ -9,6 +9,7 @@
  */
 import { existsSync, readFileSync } from 'fs';
 import { basename, dirname, extname, join } from 'path';
+import { parseConfigTypeWithChecker } from './arpadroid-cem.types-checker.utils.js';
 
 ////////////////////////////////
 // #region Utils
@@ -248,12 +249,13 @@ function extractAttributesFromTypesFile(ts, sourceText, typeName) {
 
 /**
  * Convenience: given a module file path, locate sibling types file and return attributes.
- * @param {any} ts - TypeScript API
- * @param {string} moduleFilePath - path to the source module file (e.g. .../button.js)
- * @param {string|undefined|null} typeName - optional explicit ConfigType name
- * @returns {AttributeDescriptorType[]} attribute descriptors
+ * @param {any} ts
+ * @param {string} moduleFilePath
+ * @param {string|undefined|null} typeName
+ * @param {boolean} [useChecker]
+ * @returns {AttributeDescriptorType[]} Attribute descriptors.
  */
-export function attributesFromModule(ts, moduleFilePath, typeName) {
+export function attributesFromModule(ts, moduleFilePath, typeName, useChecker = false) {
     // inline findTypesFile (single-use) to reduce exported surface
     if (!moduleFilePath) return [];
     const dir = dirname(moduleFilePath);
@@ -271,7 +273,17 @@ export function attributesFromModule(ts, moduleFilePath, typeName) {
             .map(item => item[0]?.toUpperCase() + item.slice(1))
             .join('') + 'ConfigType';
 
-    const attrs = extractAttributesFromTypesFile(ts, sourceText, tn);
+    let attrs = [];
+    if (useChecker) {
+        try {
+            const props = parseConfigTypeWithChecker(ts, typesPath, sourceText, tn);
+            if (props && props.length) return mapPropsToAttributes(props);
+        } catch (_err) {
+            /* fallback to text-based parsing below */
+        }
+    }
+
+    attrs = extractAttributesFromTypesFile(ts, sourceText, tn);
     // if no attrs found for the inferred name, try any exported *ConfigType
     if ((!attrs || !attrs.length) && sourceText) {
         return extractAttributesFromTypesFile(ts, sourceText, undefined);
@@ -283,11 +295,12 @@ export function attributesFromModule(ts, moduleFilePath, typeName) {
  * Handle attributes by parsing a sibling .types.d.ts file for a ConfigType and upserting them into the manifest.
  * @param {AnalyzePhaseParams} payload
  * @param {NodeType | null} parsed
+ * @param {boolean} [useChecker] - When true, attempt TypeChecker-based extraction.
  */
-export function handleAttributes(payload, parsed = parseCustomElement(payload)) {
+export function handleAttributes(payload, parsed = parseCustomElement(payload), useChecker = false) {
     const { ts, node, moduleDoc } = payload;
     const moduleFilePath = node?.getSourceFile()?.fileName;
-    const attrs = attributesFromModule(ts, moduleFilePath, parsed?.className);
+    const attrs = attributesFromModule(ts, moduleFilePath, parsed?.className, useChecker);
     if (attrs && attrs.length) {
         /** @type {NodeType[]} */
         const decls = moduleDoc.declarations || [];
