@@ -89,28 +89,30 @@ export function getTests(project) {
 export function getDefaultBuildConfig(project) {
     /** @type {BuildConfigType} */
     const config = {
-        buildJS: true,
-        buildStyles: true,
-        buildI18n: true,
         buildDeps: true,
-        buildTypes: false,
-        logHeading: true,
-        slim: SLIM,
-        minify: MINIFY,
-        style_patterns: argv['style-patterns'],
-        verbose: Boolean(argv.verbose),
-        storybook_port: STORYBOOK,
-        watch: WATCH,
+        buildI18n: true,
+        buildJS: true,
         buildManifest: false,
+        buildStyles: true,
+        buildTypes: false,
+        jest: {
+            testMatch: ['<rootDir>/src/**/*.test.js']
+        },
+        logHeading: true,
         manifest: {
             useTypesChecker: true
         },
+        minify: MINIFY,
+        skipLibCheck: true,
+        slim: SLIM,
+        storybook_port: STORYBOOK,
+        style_patterns: argv['style-patterns'],
         storybook: {
             stories: 'src/**/*.stories.{ts,tsx,js,jsx}'
         },
-        jest: {
-            testMatch: ['<rootDir>/src/**/*.test.js']
-        }
+        turbo: true,
+        verbose: Boolean(argv.verbose),
+        watch: WATCH
     };
     return mergeObjects(config, project.config);
 }
@@ -352,19 +354,18 @@ export async function cleanupFiles(project) {
         'debug-storybook.log'
     ];
 
+    /** @type {string[]} */
+    const filesRemoved = [];
+
     files.forEach(async _file => {
         const file = join(project?.path || cwd, _file);
         if (!file || !cwd || cwd === '' || !existsSync(file)) return;
-        const fileName = basename(file);
-        const isDir = !fileName.includes('.');
-        if (isDir) {
-            log.task(project.name, `Removing directory: ${file}`);
-        } else {
-            log.task(project.name, `Removing file: ${file}`);
-        }
-
+        filesRemoved.push(file.replace(project.path || cwd, '.') + '  ✔️');
         await rmSync(file, { recursive: true, force: true });
     });
+
+    filesRemoved.length && log.list(filesRemoved, { bullet: '🗑️ ' });
+
     return true;
 }
 

@@ -4,13 +4,31 @@
  * @typedef {import('../../../rollup/builds/rollup-builds.mjs').CompileTypesType} CompileTypesType
  * @typedef {import('rollup').RollupOptions} RollupOptions
  */
-/* eslint-disable security/detect-non-literal-fs-filename */
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import fs, { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { glob } from 'glob';
 import { NO_TYPES } from './../build/projectBuild.helper.mjs';
 import { log } from '@arpadroid/logger';
+import { prepareArgs, findLocation } from '@arpadroid/tools-node';
+import { argv } from '@arpadroid/tools-node';
+const LIB_CHECK = argv.libCheck;
+const CWD = process.cwd();
+
+/**
+ * Returns the path to the TypeScript binary for the given project.
+ * @param {Project} project
+ * @returns {string}
+ */
+export function getTsBinary(project) {
+    const binaryTail = join('node_modules', '.bin', 'tsc');
+    const binary = findLocation([
+        join(project.getModulePath() || CWD, binaryTail),
+        join(project.path || CWD, binaryTail)
+    ]);
+    if (!binary) throw new Error(`TypeScript compiler not found for project ${project.name}`);
+    return binary;
+}
 
 /**
  * Copies all types.d.ts files to the dist/@types directory maintaining the directory structure.
@@ -55,30 +73,74 @@ export async function compileTypes(project, config = {}) {
  * @returns {Promise<boolean>}
  */
 export async function compileTypeDeclarations(project, config) {
-    const { watch } = config;
-    const watchString = watch ? '--watch --preserveWatchOutput &' : '';
-    // Try to find TypeScript binary in local node_modules
-    const locations = [
-        project.getModulePath() + '/node_modules/.bin/tsc',
-        `${project.path}/node_modules/.bin/tsc`
-    ];
-    const tscPath = locations.find(loc => existsSync(loc));
-    if (!tscPath) {
-        throw new Error(`TypeScript compiler not found for project ${project.name}`);
-    }
+    const { watch, skipLibCheck, turbo } = config || {};
 
-    const cmd = `cd ${project.path} && ${tscPath} -b --declaration --emitDeclarationOnly ${watchString}`;
-    return new Promise((resolve, reject) => {
-        const child = spawn(cmd, {
-            shell: true,
-            stdio: watch ? 'ignore' : 'inherit' // ← Suppress output only in watch mode
-        });
-        child.on('close', code => {
-            code === 0
-                ? resolve(true)
-                : reject(new Error(`Failed to compile types for ${project.name}. Exit code: ${code}`));
-        });
+    const args = {
+        project: 'tsconfig.json',
+        declaration: true,
+        emitDeclarationOnly: true,
+        skipLibCheck: LIB_CHECK ? false : skipLibCheck,
+        watch,
+        preserveWatchOutput: watch
+    };
+
+    const binary = getTsBinary(project);
+
+    const child = spawn(binary, prepareArgs(args), {
+        cwd: project.path,
+        stdio: 'ignore',
+        detached: true
     });
+
+    return new Promise((resolve, reject) => {
+        child.on('error', response => {
+            const errMsg = `Failed to start type checking process for project ${project.name}:`;
+            reject(response);
+            log.error(errMsg, response);
+        });
+
+        child.on('exit', (code, signal) => {
+            if (code === 0) {
+                resolve(true);
+            } else {
+                const errMsg = `Type declaration compilation failed for project ${project.name} with code ${code} and signal ${signal}.`;
+                reject(new Error(errMsg));
+            }
+        });
+
+        if (turbo) {
+            child.unref();
+            resolve(true);
+        }
+    });
+}
+
+/**
+ * Checks the types for the project.
+ * @param {Project} project
+ * @param {{ verbose?: boolean }} opt
+ * @returns {Promise<boolean>}
+ */
+export async function checkTypes(project, opt = {}) {
+    const { verbose = true } = opt;
+    verbose && log.task(project.name, 'Checking types...\n');
+    await project.getBuildConfig();
+    const args = {
+        project: project.path + '/tsconfig.json',
+        noEmit: true
+    };
+    const binary = getTsBinary(project);
+    const result = spawnSync(binary, prepareArgs(args), {
+        cwd: project.path,
+        stdio: 'inherit'
+    });
+
+    if (result.status !== 0) {
+        log.error(`Type check failed for ${project.name}`, result);
+    } else if (verbose) {
+        log.success(`Types check passed with no errors for @arpadroid/${project.name}, well done! :) \n`);
+    }
+    return Promise.resolve(result.status === 0);
 }
 
 /**

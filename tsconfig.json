@@ -12,15 +12,15 @@
         "resolveJsonModule": true,
         "strict": true,
         "target": "ESNext",
-        "types": ["jest", "node"],
+        "types": ["jest", "node", "rollup-plugin-peer-deps-external"],
         "typeRoots": ["./node_modules/@types"],
         "useDefineForClassFields": false,
         "strictPropertyInitialization": false,
         "rootDir": "./src",
         "outDir": "./.tmp/.types",
         "jsx": "react",
-        "skipLibCheck": true
+        "skipLibCheck": false
     },
     "include": ["src/**/*"],
-    "exclude": ["./node_modules", "dist", "./dist/@types", "./src/install/appConfig/jest.config.mjs"]
+    "exclude": ["node_modules", "dist", "./dist/@types", "./src/install/appConfig/jest.config.mjs"]
 }

@@ -1,3 +1,3 @@
-import * as schema from 'custom-elements-manifest/schema';
+import * as Schema from 'custom-elements-manifest'
 
-export type CemSchemaType = schema.Manifest;
+export type CemSchemaType = typeof Schema;

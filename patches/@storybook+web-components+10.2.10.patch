@@ -1,0 +1,13 @@
+diff --git a/node_modules/@storybook/web-components/dist/index.d.ts b/node_modules/@storybook/web-components/dist/index.d.ts
+index 0000000..0000000 100644
+--- a/node_modules/@storybook/web-components/dist/index.d.ts
++++ b/node_modules/@storybook/web-components/dist/index.d.ts
+@@ -502,7 +502,7 @@ interface WebComponentsMeta
+  * provided in meta become optional in stories, while missing required args must be provided at the
+  * story level.
+  */
+-interface WebComponentsMeta<T extends WebComponentsTypes, MetaInput extends ComponentAnnotations<T>> extends Meta$1<T, MetaInput> {
++interface WebComponentsMeta<T extends WebComponentsTypes, MetaInput extends ComponentAnnotations<T, any>> extends Meta$1<T, MetaInput> {
+     /**
+      * Creates a story with a custom render function that takes no args.
+      *

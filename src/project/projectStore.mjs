@@ -6,6 +6,7 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { mergeObjects } from '@arpadroid/tools-iso';
 
 const argv = /** @type {Record<string, any>} */ (yargs(hideBin(process.argv)).argv);
 const cwd = process.cwd();
@@ -52,6 +53,22 @@ export function getProject(name = getProjectName(), config = {}, options = {}) {
     }
     PROJECT_STORE[name] = project;
     return project;
+}
+
+/**
+ * Returns a project instance given a project name.
+ * @param {{ create?: boolean, throwError?: boolean }} [options]
+ * @returns {Project | undefined}
+ */
+export function getProjectCI(options = {}) {
+    return getProject(
+        undefined,
+        undefined,
+        mergeObjects(options, {
+            create: true,
+            throwError: true
+        })
+    );
 }
 
 /**

@@ -6,6 +6,7 @@
  * @typedef {import('rollup').InputOption} InputOption
  * @typedef {import('./project.types.js').CompileTypesType} CompileTypesType
  * @typedef {import('./project.types.js').ProjectCliArgsType} ProjectCliArgsType
+ * @typedef {import('../rollup/builds/rollup-builds.types.js').AliasType} AliasType
  */
 import { fileURLToPath } from 'url';
 
@@ -164,7 +165,6 @@ class Project {
         if (useCache && this.buildConfig) {
             return this.buildConfig;
         }
-        // await this.promise;
         this.buildConfig = await getBuildConfig(this, clientConfig);
         return this.buildConfig;
     }
@@ -242,8 +242,7 @@ class Project {
         const { reInstall = true, reBuild = false } = opt;
         const config = await this.getBuildConfig();
         log.arpadroid(config?.logo);
-        const subjectLog = logStyle.subject(`@arpadroid ${this.name}`);
-        console.log(logStyle.heading(`Cleaning-up project build files and caches: ${subjectLog} \n`));
+        log.task(this.name, 'Cleaning up build files and caches...');
         await this?.promise;
         await cleanupFiles(this);
         if (reInstall || reBuild) {
@@ -252,7 +251,7 @@ class Project {
         if (reBuild) {
             await this.build();
         }
-        log.success('Clean-up complete, have a nice day ;)');
+        log.success('Clean-up complete.');
         return true;
     }
 
@@ -267,7 +266,7 @@ class Project {
     }
 
     async install() {
-        log.task(this.name, 'Installing project.');
+        log.task(this.name, 'Installing project...');
         return spawnSync(this.getInstallCmd(), { shell: true, stdio: 'inherit' });
     }
 
@@ -403,7 +402,7 @@ class Project {
     /**
      * Preprocesses rollup configs with resolved paths and aliases.
      * @param {RollupOptions[]} configs
-     * @param {{ find: string | RegExp, replacement: string }[]} [aliases]
+     * @param {AliasType[] | string[]} [aliases]
      */
     async preprocessRollupConfigs(configs, aliases = []) {
         for (const conf of configs) {

@@ -1,8 +1,7 @@
 import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup';
 import type Project from '../../project/project.mjs';
-import { Plugin } from 'rollup';
+import { ThemesBundlerConfigType } from '@arpadroid/style-bun';
 import { Preview } from '@storybook/web-components-vite';
-
 import { bundleStats } from 'rollup-plugin-bundle-stats';
 import gzipPlugin from 'rollup-plugin-gzip';
 import { dts } from 'rollup-plugin-dts';
@@ -10,49 +9,19 @@ import multiEntry from '@rollup/plugin-multi-entry';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import json from '@rollup/plugin-json';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
-import rollupAlias, { Alias } from '@rollup/plugin-alias';
+import rollupAlias from '@rollup/plugin-alias';
 import rollupWatch from 'rollup-plugin-watch';
 import terser from '@rollup/plugin-terser';
 import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import typescript from 'rollup-plugin-typescript2';
-
-import { ThemesBundlerConfigType } from '@arpadroid/style-bun';
 import { Options } from 'storybook/internal/types';
 
 type TestMatchContentType = string | string[];
 type TestMatchType = TestMatchContentType | (() => Promise<TestMatchContentType>);
 
-export type JestConfigType = {
-    testMatch?: TestMatchType;
-    environment?: 'jsdom' | 'node';
-};
-
-export type StorybookConfigType = {
-    stories?: TestMatchType;
-    preview?: Preview;
-    previewHead?: (head: string | undefined, options: Options, project: Project) => string;
-    previewBody?: (body: string | undefined, options: Options, project: Project) => string;
-};
-
-export type BuildHookReturnType = boolean | void | Promise<unknown>;
-
-export type BuildHookType = (project: Project, payload?: Record<string, unknown>) => BuildHookReturnType;
-
-export type BuildHookNameType = 'onBuildStart' | 'onBuildEnd' | 'test';
-
-export type BuildHooksType = {
-    onBuildStart?: BuildHookType;
-    onBuildEnd?: BuildHookType;
-    test?: BuildHookType;
-};
-
-export type BuildManifestType = {
-    useTypesChecker?: boolean;
-};
-
 export type BuildConfigType = {
-    aliases?: Alias[];
+    aliases?: string[] | AliasType[];
     buildDeps?: boolean;
     buildI18n?: boolean;
     buildJS?: boolean;
@@ -80,15 +49,50 @@ export type BuildConfigType = {
     requireDeps?: boolean;
     skipTypesBuild?: string[];
     slim?: boolean;
+    skipLibCheck?: boolean;
     storybook_port?: number;
     storybook?: StorybookConfigType;
     style_patterns?: string | string[];
     test_browsers?: string;
+    turbo?: boolean;
     themes?: ThemesBundlerConfigType[];
     themesPath?: string;
     verbose?: boolean;
     watch?: boolean;
     watchCallback?: (payload: unknown) => void;
+};
+
+export type AliasType = {
+    find: string | RegExp;
+    replacement: string;
+};
+
+export type BuildHookReturnType = boolean | void | Promise<unknown>;
+
+export type BuildHookType = (project: Project, payload?: Record<string, unknown>) => BuildHookReturnType;
+
+export type BuildHookNameType = 'onBuildStart' | 'onBuildEnd' | 'test';
+
+export type BuildHooksType = {
+    onBuildStart?: BuildHookType;
+    onBuildEnd?: BuildHookType;
+    test?: BuildHookType;
+};
+
+export type BuildManifestType = {
+    useTypesChecker?: boolean;
+};
+
+export type JestConfigType = {
+    testMatch?: TestMatchType;
+    environment?: 'jsdom' | 'node';
+};
+
+export type StorybookConfigType = {
+    stories?: TestMatchType;
+    preview?: Preview;
+    previewHead?: (head: string | undefined, options: Options, project: Project) => string;
+    previewBody?: (body: string | undefined, options: Options, project: Project) => string;
 };
 
 export type BuildInterface = {

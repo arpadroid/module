@@ -6,19 +6,19 @@ declare module 'rollup-plugin-peer-deps-external' {
 
 declare module '@rollup/plugin-terser' {
     import { Plugin } from 'rollup';
-    function terser(config): Plugin;
+    function terser(config?: Record<string, unknown>): Plugin;
     export default terser;
 }
 
 declare module 'rollup-plugin-watch' {
     import { Plugin } from 'rollup';
-    function watch(config): Plugin;
+    function watch(config?: Record<string, unknown>): Plugin;
     export default watch;
 }
 
 declare module 'rollup-plugin-copy' {
     import { Plugin } from 'rollup';
-    function copy(config): Plugin;
+    function copy(config?: Record<string, unknown>): Plugin;
     export default copy;
 }
 
@@ -30,7 +30,7 @@ declare module '@rollup/plugin-multi-entry' {
 
 declare module 'rollup-plugin-typescript2' {
     import { Plugin } from 'rollup';
-    function typescript(config): Plugin;
+    function typescript(config?: Record<string, unknown>): Plugin;
     export default typescript;
 }
 
@@ -48,12 +48,12 @@ declare module 'rollup-plugin-polyfill-node' {
 
 declare module 'rollupCopy' {
     import { Plugin } from 'rollup';
-    function copy(config): Plugin;
+    function copy(config?: Record<string, unknown>): Plugin;
     export default copy;
 }
 
 declare module '@rollup/plugin-alias' {
     import { Plugin } from 'rollup';
-    function alias(config): Plugin;
+    function alias(config?: Record<string, unknown>): Plugin;
     export default alias;
 }

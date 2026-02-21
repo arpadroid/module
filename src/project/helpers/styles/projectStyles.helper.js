@@ -4,7 +4,6 @@
  * @typedef {import('../build/projectBuilder.types.js').DependencyPointerType} DependencyPointerType
  */
 
-import { ThemesBundler } from '@arpadroid/style-bun';
 import { log } from '@arpadroid/logger';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { getAllDependencies, STYLE_SORT } from '../build/projectBuild.helper.mjs';
@@ -90,17 +89,16 @@ export function getStylePatterns(project, config) {
  * Bundles the project styles.
  * @param {Project} project
  * @param {BuildConfigType} config
- * @returns {Promise<ThemesBundler | boolean>}
+ * @returns {Promise<any | boolean>}
  */
 export async function bundleStyles(project, config) {
+    // @ts-ignore
+    const { default: ThemesBundler } = await import('@arpadroid/style-bun/themesBundler');
     const { buildStyles, slim, minify } = config;
-
-    if (!buildStyles) {
-        return true;
-    }
+    if (!buildStyles) return true;
+    
     const style_patterns = getStylePatterns(project, config);
     !slim && log.task(project.name, 'Bundling CSS.');
-
     const bundler = new ThemesBundler({
         exportPath: join(project.path || '', 'dist', 'themes'),
         minify,

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export type CompileTypesType = {
     filePattern?: string;
     inputDir?: string;
@@ -35,7 +34,7 @@ export type ProjectTestPayloadsType = {
     jest?: ProjectTestSuiteResponseType;
     storybook?: ProjectTestSuiteResponseType;
     hook?: ProjectTestSuiteResponseType;
-    [key?: string]: ProjectTestSuiteResponseType | undefined;
+    [key: string]: ProjectTestSuiteResponseType | undefined;
 };
 
 

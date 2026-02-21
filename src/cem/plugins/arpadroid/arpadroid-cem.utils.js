@@ -302,8 +302,7 @@ export function handleAttributes(payload, parsed = parseCustomElement(payload), 
     const moduleFilePath = node?.getSourceFile()?.fileName;
     const attrs = attributesFromModule(ts, moduleFilePath, parsed?.className, useChecker);
     if (attrs && attrs.length) {
-        /** @type {NodeType[]} */
-        const decls = moduleDoc.declarations || [];
+        const decls = /** @type {NodeType[]} */ (moduleDoc.declarations || []);
         const decl =
             decls.find(dec => dec.name === parsed?.className) ||
             decls.find(dec => dec.tagName === parsed?.tagName);

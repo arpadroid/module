@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { log } from '@arpadroid/logger';
 import { buildCustomElementsManifest } from '../src/project/helpers/manifest/projectManifest.helper.mjs';
-import { getProject } from '../src/project/projectStore.mjs';
+import { getProjectCI } from '../src/project/projectStore.mjs';
 
-const project = getProject(undefined, undefined, { throwError: true });
+const project = getProjectCI();
 await project.promise;
 
 await buildCustomElementsManifest(project, undefined, {
