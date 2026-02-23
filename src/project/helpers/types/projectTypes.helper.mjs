@@ -5,7 +5,7 @@
  * @typedef {import('rollup').RollupOptions} RollupOptions
  */
 import { spawn, spawnSync } from 'child_process';
-import fs, { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import fs, { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { glob } from 'glob';
 import { NO_TYPES } from './../build/projectBuild.helper.mjs';
@@ -14,6 +14,35 @@ import { prepareArgs, findLocation } from '@arpadroid/tools-node';
 import { argv } from '@arpadroid/tools-node';
 const LIB_CHECK = argv.libCheck;
 const CWD = process.cwd();
+
+///////////////////////////
+// #region Accessors
+///////////////////////////
+
+/**
+ * Returns true if the project has Typescript build files, false otherwise.
+ * @param {Project} project
+ * @returns {boolean}
+ */
+export function hasBuildFiles(project) {
+    return (
+        existsSync(`${project.path}/.tmp/.types/index.d.ts`) ||
+        existsSync(`${project.path}/.tmp/.types/index.d.mts`)
+    );
+}
+
+/**
+ * Determines if the types build should be skipped for the project.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @returns {Promise<boolean>}
+ */
+export async function shouldSkipTypesBuild(project, config) {
+    const parent = await project.getParentProject();
+    return Boolean(
+        NO_TYPES || config.buildTypes !== true || parent?.buildConfig?.skipTypesBuild?.includes(project.name)
+    );
+}
 
 /**
  * Returns the path to the TypeScript binary for the given project.
@@ -29,6 +58,139 @@ export function getTsBinary(project) {
     if (!binary) throw new Error(`TypeScript compiler not found for project ${project.name}`);
     return binary;
 }
+
+/**
+ * Determines if a quick build can be performed based on the provided configuration.
+ * A quick build requires turbo mode AND existing build artifacts that are newer than all source files.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @returns {boolean}
+ */
+export function canRunQuickBuild(project, config) {
+    return config.turbo === true;
+}
+
+// #endregion
+
+//////////////////////////////////////
+// #region TS Commands
+///////////////////////////////////////
+
+/**
+ * Handles the types build's child process for the project.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @param {{ verbose?: boolean; args?: Record<string, unknown>; turbo?: boolean }} opt
+ * @returns {Promise<boolean>}
+ */
+export function handleBuildProcess(project, config, opt) {
+    const { watch } = config;
+    const { verbose = false, args = {}, turbo = false } = opt;
+
+    return new Promise((resolve, reject) => {
+        const child = spawn(getTsBinary(project), prepareArgs(args), {
+            cwd: project.path || CWD,
+            stdio: watch ? 'ignore' : 'inherit'
+        });
+        child.on('error', err => {
+            log.error(`Failed to spawn tsc for @arpadroid/${project.name}:`, err);
+            reject(err);
+        });
+        if (watch || turbo) {
+            child.unref();
+            resolve(true);
+            return;
+        }
+        child.on('close', code => {
+            if (code === 0) {
+                resolve(true);
+                verbose && log.success(`Types built successfully for @arpadroid/${project.name}!`);
+            } else {
+                log.error(`Failed to build types for @arpadroid/${project.name}. Exit code: ${code}`);
+                reject(new Error(`tsc exited with code ${code} for @arpadroid/${project.name}`));
+            }
+        });
+    });
+}
+
+/**
+ * Compiles the types for the project.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @param {{ force?: boolean, verbose?: boolean }} opt
+ * @returns {Promise<boolean>}
+ */
+export async function runTsBuild(project, config, opt = {}) {
+    const { watch } = config;
+    const { force = true, verbose = false } = opt;
+    return handleBuildProcess(project, config, {
+        ...opt,
+        args: {
+            build: true,
+            force,
+            watch,
+            preserveWatchOutput: watch
+        }
+    });
+}
+
+/**
+ * Compiles the types for the project.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @param {{ verbose?: boolean }} opt
+ * @returns {Promise<boolean>}
+ */
+export async function runFastTsBuild(project, config, opt = {}) {
+    const { watch, skipLibCheck } = config || {};
+    return handleBuildProcess(project, config, {
+        ...opt,
+        turbo: true,
+        args: {
+            declaration: true,
+            emitDeclarationOnly: true,
+            preserveWatchOutput: watch,
+            project: 'tsconfig.json',
+            skipLibCheck: true,
+            // skipLibCheck: LIB_CHECK ? false : skipLibCheck,
+            watch
+        }
+    });
+}
+
+/**
+ * Checks the types for the project.
+ * @param {Project} project
+ * @param {{ verbose?: boolean }} opt
+ * @returns {Promise<boolean>}
+ */
+export async function checkTypes(project, opt = {}) {
+    const { verbose = true } = opt;
+    verbose && log.task(project.name, 'Checking types...\n');
+    await project.getBuildConfig();
+    const args = {
+        project: project.path + '/tsconfig.json',
+        noEmit: true
+    };
+    const binary = getTsBinary(project);
+    const result = spawnSync(binary, prepareArgs(args), {
+        cwd: project.path,
+        stdio: 'inherit'
+    });
+
+    if (result.status !== 0) {
+        log.error(`Type check failed for ${project.name}`, result);
+    } else if (verbose) {
+        log.success(`Types check passed with no errors for @arpadroid/${project.name}, well done! :) \n`);
+    }
+    return Promise.resolve(result.status === 0);
+}
+
+// #endregion TS Commands
+
+////////////////////////////
+// #region Compilation
+////////////////////////////
 
 /**
  * Copies all types.d.ts files to the dist/@types directory maintaining the directory structure.
@@ -70,78 +232,22 @@ export async function compileTypes(project, config = {}) {
  * Compiles the types for the project.
  * @param {Project} project
  * @param {BuildConfigType} config
+ * @param {{ force?: boolean, verbose?: boolean }} opt
  * @returns {Promise<boolean>}
  */
-export async function compileTypeDeclarations(project, config) {
-    const { watch, skipLibCheck, turbo } = config || {};
-
-    const args = {
-        project: 'tsconfig.json',
-        declaration: true,
-        emitDeclarationOnly: true,
-        skipLibCheck: LIB_CHECK ? false : skipLibCheck,
-        watch,
-        preserveWatchOutput: watch
-    };
-
-    const binary = getTsBinary(project);
-
-    const child = spawn(binary, prepareArgs(args), {
-        cwd: project.path,
-        stdio: 'ignore',
-        detached: true
-    });
-
-    return new Promise((resolve, reject) => {
-        child.on('error', response => {
-            const errMsg = `Failed to start type checking process for project ${project.name}:`;
-            reject(response);
-            log.error(errMsg, response);
-        });
-
-        child.on('exit', (code, signal) => {
-            if (code === 0) {
-                resolve(true);
-            } else {
-                const errMsg = `Type declaration compilation failed for project ${project.name} with code ${code} and signal ${signal}.`;
-                reject(new Error(errMsg));
-            }
-        });
-
-        if (turbo) {
-            child.unref();
-            resolve(true);
-        }
-    });
-}
-
-/**
- * Checks the types for the project.
- * @param {Project} project
- * @param {{ verbose?: boolean }} opt
- * @returns {Promise<boolean>}
- */
-export async function checkTypes(project, opt = {}) {
-    const { verbose = true } = opt;
-    verbose && log.task(project.name, 'Checking types...\n');
-    await project.getBuildConfig();
-    const args = {
-        project: project.path + '/tsconfig.json',
-        noEmit: true
-    };
-    const binary = getTsBinary(project);
-    const result = spawnSync(binary, prepareArgs(args), {
-        cwd: project.path,
-        stdio: 'inherit'
-    });
-
-    if (result.status !== 0) {
-        log.error(`Type check failed for ${project.name}`, result);
-    } else if (verbose) {
-        log.success(`Types check passed with no errors for @arpadroid/${project.name}, well done! :) \n`);
+export async function compileTypeDeclarations(project, config, opt = {}) {
+    const { force = !hasBuildFiles(project) } = opt;
+    if (!force && canRunQuickBuild(project, config)) {
+        return runFastTsBuild(project, config, opt);
     }
-    return Promise.resolve(result.status === 0);
+    return runTsBuild(project, config, { force });
 }
+
+// #endregion Compilation
+
+/////////////////////
+// #region Build
+/////////////////////
 
 /**
  * Creates an types.d.ts file in the dist directory and writes the content to it.
@@ -169,19 +275,6 @@ export async function distTypes(project) {
         mkdirSync(typesPath, { recursive: true });
     }
     cpSync(`${project.path}/.tmp/.types`, typesPath, { recursive: true });
-}
-
-/**
- * Determines if the types build should be skipped for the project.
- * @param {Project} project
- * @param {BuildConfigType} config
- * @returns {Promise<boolean>}
- */
-export async function shouldSkipTypesBuild(project, config) {
-    const parent = await project.getParentProject();
-    return Boolean(
-        NO_TYPES || config.buildTypes !== true || parent?.buildConfig?.skipTypesBuild?.includes(project.name)
-    );
 }
 
 /**
@@ -221,3 +314,5 @@ export async function buildTypes(project, config) {
 
     return Promise.resolve(true);
 }
+
+// #endregion Build

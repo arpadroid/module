@@ -23,4 +23,6 @@ for (const { project: proj } of projects) {
     await proj.clean();
 }
 
+await project.build();
+
 log.success('Initialization successful!');

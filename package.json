@@ -7,12 +7,12 @@
             "types": "./dist/@types/types.compiled.d.ts",
             "import": "./src/index.js"
         },
+        "./types": {
+            "types": "./src/types/imports.d.ts"
+        },
         "./storybook/test": {
             "types": "./src/storybook/exports/test.d.ts",
             "import": "./src/storybook/exports/test.js"
-        },
-        "./types/declarations": {
-            "types": "./src/types/declarations.d.ts"
         },
         "./storybook/addons": "./src/storybook/index.mjs",
         "./storybook/main": "./src/storybook/main/main.ui.js",
@@ -31,7 +31,6 @@
     "bin": {
         "arpadroid-build": "./scripts/build-project.mjs",
         "arpadroid-test": "./scripts/test-project.mjs",
-        "arpadroid-install": "./scripts/install-project.mjs",
         "arpadroid-clean": "./scripts/clean-project.mjs",
         "arpadroid-initialize": "./scripts/initialize.mjs",
         "arpadroid-manifest": "./scripts/build-manifest.mjs",

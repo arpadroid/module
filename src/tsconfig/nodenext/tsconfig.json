@@ -17,7 +17,7 @@
         "typeRoots": ["./node_modules/@types", "./node_modules/@arpadroid/module/node_modules/@types"],
         "useDefineForClassFields": false,
         "strictPropertyInitialization": false,
-        
+        "preserveSymlinks": true
     },
     "include": ["src/index.js", "src/**/*"],
     "exclude": ["node_modules", "dist", "**/*.test.ts"]

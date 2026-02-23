@@ -224,16 +224,22 @@ export function sortDependencies(packages, sort = DEPENDENCY_SORT) {
  * Returns arpadroid peer dependencies sorted by build priority.
  * @param {Project} project
  * @param {string[] | { sort?: string[] }} [sortOrOptions]
+ * @param {{ includeConfigDeps?: boolean;}} [opt]
  * @returns {DependencyPointerType[]}
  */
-export function getDependencies(project, sortOrOptions = DEPENDENCY_SORT) {
+export function getDependencies(project, sortOrOptions = DEPENDENCY_SORT, opt = {}) {
     const sort = Array.isArray(sortOrOptions) ? sortOrOptions : (sortOrOptions.sort ?? DEPENDENCY_SORT);
     const packages = getDependencyPackages(project);
     const existingNames = new Set(packages.map(pkg => pkg.name));
 
-    for (const name of project.buildConfig?.deps ?? []) {
-        if (!existingNames.has(name)) {
-            packages.push({ name, path: `${project.path}/node_modules/@arpadroid/${name}` });
+    const { deps } = project.buildConfig || {};
+    const { includeConfigDeps = true } = opt;
+
+    if (includeConfigDeps) {
+        for (const name of deps ?? []) {
+            if (!existingNames.has(name)) {
+                packages.push({ name, path: `${project.path}/node_modules/@arpadroid/${name}` });
+            }
         }
     }
     return sortDependencies(packages, sort);
@@ -242,17 +248,18 @@ export function getDependencies(project, sortOrOptions = DEPENDENCY_SORT) {
 /**
  * Resolves dependencies recursively with cycle detection.
  * @param {Project} project
+ * @param {{ maxDepth?: number; includeConfigDeps?: boolean; sort?: string[] }} [opt]
  * @param {Set<string>} visited
  * @param {number} depth
- * @param {number} maxDepth
  * @returns {Promise<DependencyPointerType[]>}
  */
-export async function getDependenciesRecursive(project, visited, depth = 0, maxDepth = 10) {
+export async function getDependenciesRecursive(project, opt, visited = new Set(), depth = 0) {
+    const { maxDepth = 10, sort = DEPENDENCY_SORT } = opt ?? {};
     if (depth >= maxDepth) return [];
     /** @type {DependencyPointerType[]} */
     const results = [];
     await project.promise;
-    const deps = getDependencies(project);
+    const deps = getDependencies(project, sort);
 
     for (const dep of deps) {
         if (visited.has(dep.name)) continue;
@@ -263,7 +270,7 @@ export async function getDependenciesRecursive(project, visited, depth = 0, maxD
     }
     for (const dep of deps) {
         const { project: proj } = dep;
-        const dps = !proj ? [] : await getDependenciesRecursive(proj, visited, depth + 1, maxDepth);
+        const dps = !proj ? [] : await getDependenciesRecursive(proj, opt, visited, depth + 1);
         results.push(...(dps || []));
     }
 
@@ -273,12 +280,12 @@ export async function getDependenciesRecursive(project, visited, depth = 0, maxD
 /**
  * Recursively resolves all arpadroid dependencies including transitive dependencies.
  * @param {Project} project
- * @param {{ sort?: string[], maxDepth?: number }} [options]
+ * @param {{ sort?: string[], maxDepth?: number; includeConfigDeps?: boolean; }} [options]
  * @returns {Promise<DependencyPointerType[]>}
  */
 export async function getAllDependencies(project, options = {}) {
-    const { sort = DEPENDENCY_SORT, maxDepth = 10 } = options;
-    const deps = await getDependenciesRecursive(project, new Set(), 0, maxDepth);
+    const { sort = DEPENDENCY_SORT, maxDepth = 10, includeConfigDeps = false } = options;
+    const deps = await getDependenciesRecursive(project, { maxDepth, includeConfigDeps: false });
     return sortDependencies(deps, sort).filter(dep => project.name !== dep.name);
 }
 
