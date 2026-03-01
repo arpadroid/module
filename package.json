@@ -59,7 +59,8 @@
         "postinstall": "patch-package && npx playwright install",
         "build": "node ./scripts/build-project.mjs --minify",
         "clean": "node ./scripts/clean-project.mjs",
-        "check:types": "node ./scripts/check-types.mjs"
+        "check:types": "node ./scripts/check-types.mjs",
+        "initialize": "node ./scripts/initialize.mjs"
     },
     "repository": {
         "type": "git",

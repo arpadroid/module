@@ -10,7 +10,7 @@
  */
 import { fileURLToPath } from 'url';
 
-import path, { basename, resolve } from 'path';
+import path, { basename, join, resolve } from 'path';
 import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 import { rollup, watch as rollupWatch } from 'rollup';
@@ -526,21 +526,15 @@ class Project {
      */
     async bundleI18n({ buildI18n, slim }) {
         if (buildI18n !== true || slim) return true;
-        const locations = [
-            `${this.path}/node_modules/@arpadroid/i18n/scripts/compile.mjs`,
-            `${this.path}/node_modules/@arpadroid/module/node_modules/@arpadroid/i18n/scripts/compile.mjs`
-        ];
+        const scriptPath = join('node_modules', '@arpadroid', 'i18n', 'scripts', 'compile.mjs');
+        const locations = [join(this.getModulePath() || '', scriptPath), join(this.path || '', scriptPath)];
         const loc = locations.find(async loc => await existsSync(loc));
         if (loc) {
-            const compiler = await import(loc)
-                .then(async response => {
-                    this.i18nFiles = await compiler.compileI18n(this);
-                    return Promise.resolve(response);
-                })
-                .catch(err => {
-                    // log.error(`Failed to load i18n compiler for project ${this.name}`, err);
-                    return Promise.resolve(err);
-                });
+            const compiler = await import(loc).catch(err => {
+                log.error(`Failed to load i18n compiler for project ${this.name}`, err);
+                return Promise.resolve(err);
+            });
+            this.i18nFiles = await compiler.compileI18n(this);
         }
         return true;
     }

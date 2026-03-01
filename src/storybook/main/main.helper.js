@@ -179,7 +179,6 @@ export async function previewHead(head = '', options, project = getProject()) {
                 disabled
                 onerror="this.remove()"
             />
-            <script src="/arpadroid-polyfills.js" onerror="this.remove()"></script>
             <script type="module" src="/arpadroid-${project.name}.js" onerror="this.remove()"></script> `;
     return `${head || ''}${content}`;
 }

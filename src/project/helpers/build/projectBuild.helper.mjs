@@ -13,7 +13,7 @@ import { mergeObjects } from '@arpadroid/tools-iso';
 import { log, logStyle } from '@arpadroid/logger';
 import Project from '../../project.mjs';
 import { getProject } from '../../projectStore.mjs';
-import { basename, join } from 'path';
+import { join } from 'path';
 import { getJestTests, hasJestTests } from '../jest/projectJest.helper.js';
 import { getStories, hasStories } from '../storybook/projectStorybook.helper.js';
 
@@ -39,6 +39,7 @@ export const DEPENDENCY_SORT = [
     'navigation',
     'messages',
     'forms',
+    'list-manager',
     'gallery',
     'application'
 ];
