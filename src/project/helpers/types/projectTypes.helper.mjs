@@ -11,8 +11,6 @@ import { glob } from 'glob';
 import { NO_TYPES } from './../build/projectBuild.helper.mjs';
 import { log } from '@arpadroid/logger';
 import { prepareArgs, findLocation } from '@arpadroid/tools-node';
-import { argv } from '@arpadroid/tools-node';
-const LIB_CHECK = argv.libCheck;
 const CWD = process.cwd();
 
 ///////////////////////////
@@ -152,7 +150,6 @@ export async function runFastTsBuild(project, config, opt = {}) {
             preserveWatchOutput: watch,
             project: 'tsconfig.json',
             skipLibCheck: true,
-            // skipLibCheck: LIB_CHECK ? false : skipLibCheck,
             watch
         }
     });
@@ -237,9 +234,12 @@ export async function compileTypes(project, config = {}) {
  */
 export async function compileTypeDeclarations(project, config, opt = {}) {
     const { force = !hasBuildFiles(project) } = opt;
-    if (!force && canRunQuickBuild(project, config)) {
-        return runFastTsBuild(project, config, opt);
-    }
+    /**
+     * @todo - Disabling fast build for now until things are stable.
+     */
+    // if (!force && canRunQuickBuild(project, config)) {
+    //     return runFastTsBuild(project, config, opt);
+    // }
     return runTsBuild(project, config, { force });
 }
 
