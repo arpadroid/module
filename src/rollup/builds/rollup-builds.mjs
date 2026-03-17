@@ -34,6 +34,7 @@ import typescript from 'rollup-plugin-typescript2';
 
 import Project from '../../project/project.mjs';
 import { getProjectInstance } from '../../project/projectStore.mjs';
+import { sendJsRefresh } from '../../storybook/vite/plugins/refreshPlugin.js';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv || {};
@@ -247,6 +248,23 @@ export function getCopyTargets(project, config = {}) {
 }
 
 /**
+ * Returns a plugin that logs the build end status.
+ * @param {Project} project
+ * @param {BuildConfigType} config
+ * @returns {RollupPlugin}
+ */
+export function buildEndPlugin(project, { storybook_port } = {}) {
+    return {
+        name: 'build-end',
+        buildEnd(error) {
+            setTimeout(() => {
+                !error && sendJsRefresh(project.name, storybook_port);
+            }, 200);
+        }
+    };
+}
+
+/**
  * Returns the fat build rollup plugins configuration.
  * @param {Project} project
  * @param {BuildConfigType} config
@@ -270,7 +288,8 @@ export function getFatPlugins(project, config) {
         visualizer({
             emitFile: true,
             filename: 'stats.html'
-        })
+        }),
+        buildEndPlugin(project, config)
     ];
     return plugins.filter(Boolean);
 }

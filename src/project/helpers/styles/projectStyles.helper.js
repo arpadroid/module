@@ -17,7 +17,7 @@ import { log } from '@arpadroid/logger';
 import PROJECT_STORE, { getProject } from '../../projectStore.mjs';
 import Project from '../../project.mjs';
 import { getAllDependencies, STORYBOOK_PORT } from '../build/projectBuild.helper.mjs';
-import { sendCssRefresh } from '../../../storybook/main/cssRefreshPlugin.js';
+import { sendCssRefresh } from '../../../storybook/vite/plugins/refreshPlugin.js';
 
 //////////////////////////
 // #region Get
@@ -137,11 +137,12 @@ export async function deployTheme(project, themeName, options = {}) {
  */
 export async function onThemeBundled(dep, payload, theme) {
     const buildConfig = dep.buildConfig || {};
-    const { parent, storybook_port = STORYBOOK_PORT } = buildConfig;
+    const { parent } = buildConfig;
     const { themeName = theme.themeName } = payload;
     const project = (parent && getProject(parent)) || dep;
     themeName && (await deployTheme(project, themeName));
-    await sendCssRefresh(themeName, storybook_port);
+    const { storybook_port = STORYBOOK_PORT } = project.buildConfig || {};
+    sendCssRefresh(project.name, themeName, storybook_port);
     return true;
 }
 

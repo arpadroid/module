@@ -5,7 +5,7 @@
  * @typedef {import('../../../rollup/builds/rollup-builds.types.js').TestMatchType} TestMatchType
  */
 import { spawn, execSync } from 'child_process';
-import { existsSync, cpSync, globSync } from 'fs';
+import { existsSync, cpSync, globSync, rmSync } from 'fs';
 import { log } from '@arpadroid/logger';
 import { isHTTPServerRunning, runServer, stopHTTPServer } from '@arpadroid/tools-node';
 import yargs from 'yargs';
@@ -259,6 +259,7 @@ export async function runStorybook(project, { slim, storybook_port, verbose }, s
 export function buildStorybook(project, { verbose } = {}) {
     try {
         log.task(project.name, 'Building Storybook...');
+        rmSync(join(project.path || cwd, 'storybook-static'), { recursive: true, force: true });
         execSync(getStorybookBuildCmd(project), {
             shell: '/bin/sh',
             stdio: verbose ? 'inherit' : 'ignore',
@@ -296,6 +297,11 @@ export async function runStorybookServer(project, port, cmdConfig = {}) {
  */
 export async function runStorybookCI(project, options = {}, spawnConfig = {}) {
     const { verbose, storybook_port = 6666 } = options;
+    const isServerRunning = await isHTTPServerRunning(storybook_port, 'localhost');
+    if (isServerRunning) {
+        log.task(project.name, `Stopping existing Storybook on port ${storybook_port}...`);
+        await stopHTTPServer({ port: storybook_port });
+    }
     buildStorybook(project, { verbose });
     return await runStorybookServer(project, storybook_port, spawnConfig);
 }

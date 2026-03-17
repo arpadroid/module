@@ -46,4 +46,17 @@ import.meta.hot?.on('arpadroid:css-refresh', payload => {
     });
 });
 
+/**
+ * Reloads the preview iframe when the built JS bundle changes so the latest module script is executed.
+ */
+import.meta.hot?.on('arpadroid:js-refresh', payload => {
+    const update = /** @type {{ projectName?: string } | undefined} */ (payload);
+    const projectName = update?.projectName;
+    /** @type {HTMLScriptElement | null} */
+    const script = document.querySelector(`script[type="module"][src^="/arpadroid-${projectName || ''}"]`);
+    if (!projectName || script) {
+        window.location.reload();
+    }
+});
+
 export default { ...config };
