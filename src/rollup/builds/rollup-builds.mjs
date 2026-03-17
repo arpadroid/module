@@ -11,32 +11,29 @@ import { mergeObjects } from '@arpadroid/tools-iso';
 import { logError } from '@arpadroid/logger';
 
 import fs, { existsSync } from 'fs';
-import path from 'path';
+import path, { join } from 'path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 /**
  * Rollup plugins.
  */
-import nodePolyfills from 'rollup-plugin-polyfill-node';
 import { bundleStats } from 'rollup-plugin-bundle-stats';
-import gzipPlugin from 'rollup-plugin-gzip';
 import { dts } from 'rollup-plugin-dts';
-import multiEntry from '@rollup/plugin-multi-entry';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
+import { visualizer } from 'rollup-plugin-visualizer';
+import copy from 'rollup-plugin-copy';
+import gzipPlugin from 'rollup-plugin-gzip';
 import json from '@rollup/plugin-json';
-// @ts-ignore
+import multiEntry from '@rollup/plugin-multi-entry';
+import nodePolyfills from 'rollup-plugin-polyfill-node';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import rollupAlias from '@rollup/plugin-alias';
 import rollupWatch from 'rollup-plugin-watch';
 import terser from '@rollup/plugin-terser';
-import copy from 'rollup-plugin-copy';
-import { visualizer } from 'rollup-plugin-visualizer';
-import buildStyles from '../plugins/buildStyles.mjs';
 import typescript from 'rollup-plugin-typescript2';
 
 import Project from '../../project/project.mjs';
 import { getProjectInstance } from '../../project/projectStore.mjs';
-import { hasStyles } from '../../project/helpers/styles/projectStyles.helper.js';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).argv || {};
@@ -128,7 +125,7 @@ export function getTypesBuild() {
     /** @type {RollupOptions} */
     return {
         input: './src/types.d.ts',
-        output: { file: path.join('dist', '@types/types.d.ts'), format: 'es' },
+        output: { file: join('dist', '@types', 'types.d.ts'), format: 'es' },
         plugins: [dts({ respectExternal: isSlim() })]
     };
 }
@@ -141,15 +138,15 @@ export function getTypesBuild() {
  */
 export function getInput(project, config = {}) {
     const { deps, slim } = config;
-    const entry = path.join('src', 'index.js');
+    const entry = join('src', 'index.js');
     if (!deps?.length || (slim && !config.requireDeps)) {
         return entry;
     }
     const rv = [entry];
     deps.forEach(async dep => {
-        const base = path.join(project.path || '', 'node_modules', '@arpadroid');
-        const distPath = path.join(base, dep, 'dist', `arpadroid-${dep}.js`);
-        const nodePath = path.join(base, dep, 'src', 'index.js');
+        const base = join(project.path || '', 'node_modules', '@arpadroid');
+        const distPath = join(base, dep, 'dist', `arpadroid-${dep}.js`);
+        const nodePath = join(base, dep, 'src', 'index.js');
         const locations = [nodePath, distPath];
         const location = locations.find(loc => fs.existsSync(loc))?.replace(project.path + path.sep, '');
         if (location) {
@@ -164,7 +161,7 @@ export function getInput(project, config = {}) {
 /**
  * Returns the aliases for the project dependencies.
  * @param {string} [projectName]
- * @param {string[]} projects
+ * @param {string[] | import('./rollup-builds.types.js').AliasType[]} projects
  * @returns {RollupPlugin | undefined}
  */
 export function getAliases(projectName, projects = []) {
@@ -197,45 +194,7 @@ export function getAliases(projectName, projects = []) {
             return dep;
         })
     ].filter(item => typeof item !== 'undefined');
-    // @ts-ignore
     return aliases?.length ? rollupAlias({ entries: aliases }) : undefined;
-}
-
-/**
- * Returns a simple watch plugin for style directories.
- * Uses Rollup's built-in addWatchFile API.
- * @param {Project[]} deps - Dependency projects to watch.
- * @returns {RollupPlugin | null}
- */
-function getStyleWatchPlugin(deps) {
-    const themePaths = deps
-        .filter(proj => hasStyles(proj))
-        .map(proj => path.join(proj?.path || '', 'src', 'themes'))
-        .filter(proj => fs.existsSync(proj));
-
-    if (!themePaths.length) return null;
-
-    return {
-        name: 'watch-styles',
-        buildStart() {
-            for (const dir of themePaths) {
-                this.addWatchFile(dir);
-            }
-        }
-    };
-}
-
-/**
- * Returns the watchers for the project dependencies.
- * @param {string[]} _envDeps
- * @param {Project} project
- * @param {BuildConfigType} config
- * @returns {RollupPlugin | null}
- */
-export function getStyleWatchers(_envDeps = [], project, { watch = WATCH } = {}) {
-    if (!watch) return null;
-    const deps = project.dependencyProjects || [];
-    return getStyleWatchPlugin(deps);
 }
 
 //////////////////////////////
@@ -251,7 +210,6 @@ export function getStyleWatchers(_envDeps = [], project, { watch = WATCH } = {})
 export function getSlimPlugins(project, config = {}) {
     const { parent, aliases = [], deps } = config;
     const plugins = [peerDepsExternal(), nodeResolve({ browser: true, preferBuiltins: false })];
-    // @ts-ignore
     const _aliases = getAliases(parent, aliases);
     _aliases && plugins.push(_aliases);
     if (deps && deps.length > 0 && config.requireDeps) {
@@ -302,11 +260,9 @@ export function getFatPlugins(project, config) {
         terser({
             keep_classnames: false
         }),
-        getStyleWatchers(deps, project, config),
         // @ts-ignore - multiEntry does accept options, types may be mismatched
         deps && deps?.length > 0 && multiEntry({ entryFileName: `arpadroid-${project.name}.js` }),
         bundleStats(),
-        // @ts-ignore
         getAliases(project.name, aliases),
         copy({
             targets: getCopyTargets(project, config)
@@ -337,7 +293,6 @@ export function getPlugins(project, config) {
             }),
         json(),
         ...(slim ? getSlimPlugins(project, config) : getFatPlugins(project, config)),
-        buildStyles(project, config),
         gzipPlugin(),
         ...plugins
     ].filter(plugin => plugin !== false);
@@ -398,37 +353,12 @@ export function getBuildDefaults(project, config) {
 }
 
 /**
- * Returns the polyfills build configuration.
- * @returns {RollupOptions}
- */
-export function getPolyfillsBuild() {
-    return {
-        input: 'node_modules/@arpadroid/module/src/polyfills/polyfills.js',
-        plugins: [nodeResolve({ browser: true, preferBuiltins: false }), terser({ keep_classnames: true })],
-        output: {
-            file: 'dist/arpadroid-polyfills.js',
-            format: 'esm'
-        }
-    };
-}
-
-/**
  * Rollup builds.
  * The different builds that can be created for different applications.
  * @type {Record<string, (project: Project, config: BuildConfigType) => RollupOptions>}
  */
 const rollupBuilds = {
     uiComponent(project, config = {}) {
-        if (!isSlim()) {
-            /**
-             * Processes the builds.
-             * Disabled for now as we do not need polyfills in every build.
-             * @param {RollupOptions[]} builds
-             */
-            // config.processBuilds = builds => {
-            //     builds.push(getPolyfillsBuild());
-            // };
-        }
         return { ...getBuildDefaults(project, config) };
     },
     library(project, config = {}) {

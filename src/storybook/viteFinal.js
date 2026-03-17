@@ -1,11 +1,4 @@
-import { basename, join } from 'node:path';
-import { getAlias } from './main/mainResolutions.js';
-
-const modulesRoot = join(import.meta.dirname, '../..', 'node_modules');
-const pluginsRoot = join(modulesRoot, '@storybook');
-const vitestRoot = join(pluginsRoot, 'addon-vitest', 'dist');
-const storybookPath = join(modulesRoot, 'storybook', 'dist');
-const vitestPath = join(modulesRoot, 'vitest', 'dist');
+import { basename } from 'node:path';
 
 const cwd = process.cwd();
 /** @type {import('vite').UserConfig} */

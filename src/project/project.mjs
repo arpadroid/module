@@ -23,10 +23,11 @@ import { getBuildConfig, cleanupFiles, runHook } from './helpers/build/projectBu
 import { runStorybook } from './helpers/storybook/projectStorybook.helper.js';
 import { buildTypes } from './helpers/types/projectTypes.helper.mjs';
 import { buildCustomElementsManifest } from './helpers/manifest/projectManifest.helper.mjs';
-import { bundleStyles } from './helpers/styles/projectStyles.helper.js';
+import { bundleStyles, compileStyles } from './helpers/styles/projectStyles.helper.js';
 
 import ProjectTest from '../projectTest/projectTest.mjs';
 import PROJECT_STORE from './projectStore.mjs';
+import { bind } from '@arpadroid/tools-iso';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -62,7 +63,7 @@ class Project {
     }
 
     async initialize() {
-        this.handleCloseSignal = this.handleCloseSignal.bind(this);
+        bind(this, 'handleCloseSignal');
         process.on('SIGINT', this.handleCloseSignal);
         process.on('SIGTERM', this.handleCloseSignal);
         const promises = [this.initializePackageJson()];
@@ -285,7 +286,8 @@ class Project {
         runHook(this, 'onBuildStart', config);
         const { slim } = config;
         !slim && (await this.buildDependencies(config));
-        await bundleStyles(this, config);
+        this.themesBundler = await bundleStyles(this, config);
+        await compileStyles(this, config);
         await this.bundleI18n(config);
         process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
         await this.runBuild(config);
