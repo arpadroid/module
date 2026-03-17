@@ -19,7 +19,7 @@ const useTypesChecker = await shouldUseTypesChecker();
  */
 export function ArpadroidCemPlugin() {
     return {
-        name: 'arpadroid-cem-plugin', // @ts-ignore
+        name: 'arpadroid-cem-plugin',
         /**
          * Called when the plugin is initialized. You can perform setup tasks here.
          * @param {InitializeParams} _params
