@@ -8,6 +8,7 @@ import viteConfig from '../viteFinal.js';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { previewConfigPlugin, getStories, getAddons, injectAliases, previewBody } from './main.helper.js';
 import { getMainConfig, getPreviewConfigFile, getStaticDirs, previewHead } from './main.helper.js';
+import { cssRefreshPlugin } from './cssRefreshPlugin.js';
 
 /** @type {StorybookConfig} */
 const defaultConfig = {
@@ -29,6 +30,7 @@ const defaultConfig = {
     viteFinal: async (config = {}) => {
         const cfg = mergeObjects(config, viteConfig, { mergeArrays: true });
         cfg.plugins.push(previewConfigPlugin(getPreviewConfigFile()));
+        cfg.plugins.push(cssRefreshPlugin());
         injectAliases(cfg);
         return cfg;
     }

@@ -16,7 +16,8 @@ import { log } from '@arpadroid/logger';
 
 import PROJECT_STORE, { getProject } from '../../projectStore.mjs';
 import Project from '../../project.mjs';
-import { getAllDependencies } from '../build/projectBuild.helper.mjs';
+import { getAllDependencies, STORYBOOK_PORT } from '../build/projectBuild.helper.mjs';
+import { sendCssRefresh } from '../../../storybook/main/cssRefreshPlugin.js';
 
 //////////////////////////
 // #region Get
@@ -122,7 +123,7 @@ export async function deployTheme(project, themeName, options = {}) {
             await mkdirSync(destination, { recursive: true });
         }
         await writeFileSync(join(destination, fileName), css);
-        log.task(project.name, `Deployed theme ${chalk.magentaBright(themeName)} to dist folder.`);
+        log.task(project.name, `Deployed ${chalk.magentaBright(themeName)} theme.`);
     }
     return Promise.resolve();
 }
@@ -136,10 +137,11 @@ export async function deployTheme(project, themeName, options = {}) {
  */
 export async function onThemeBundled(dep, payload, theme) {
     const buildConfig = dep.buildConfig || {};
-    const { parent } = buildConfig;
+    const { parent, storybook_port = STORYBOOK_PORT } = buildConfig;
     const { themeName = theme.themeName } = payload;
     const project = (parent && getProject(parent)) || dep;
     themeName && (await deployTheme(project, themeName));
+    await sendCssRefresh(themeName, storybook_port);
     return true;
 }
 
