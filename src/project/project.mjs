@@ -1,4 +1,3 @@
-/* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('vitest/config').TestUserConfig['browser']} BrowserConfigOptions
  * @typedef {import('../rollup/builds/rollup-builds.types.js').BuildConfigType} BuildConfigType
@@ -7,6 +6,7 @@
  * @typedef {import('./project.types.js').CompileTypesType} CompileTypesType
  * @typedef {import('./project.types.js').ProjectCliArgsType} ProjectCliArgsType
  * @typedef {import('../rollup/builds/rollup-builds.types.js').AliasType} AliasType
+ * @typedef {import('./helpers/i18n/projectI18n.types.js').I18nFilePayloadType} I18nFilePayloadType
  */
 import { fileURLToPath } from 'url';
 
@@ -28,6 +28,7 @@ import { bundleStyles, compileStyles } from './helpers/styles/projectStyles.help
 import ProjectTest from '../projectTest/projectTest.mjs';
 import PROJECT_STORE from './projectStore.mjs';
 import { bind } from '@arpadroid/tools-iso';
+import { compileI18n } from './helpers/i18n/projectI18n.helper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,7 +53,7 @@ class Project {
         this.watchers = [];
         /** @type {import('rollup').RollupWatcher | undefined} */
         this.watcher = undefined;
-        /** @type {string[]} */
+        /** @type {I18nFilePayloadType[]} */
         this.i18nFiles = [];
         /** @type {{name: string, description: string, operation: () => Promise<unknown>}[]} */
         this.deferredOperations = [];
@@ -528,16 +529,7 @@ class Project {
      */
     async bundleI18n({ buildI18n, slim }) {
         if (buildI18n !== true || slim) return true;
-        const scriptPath = join('node_modules', '@arpadroid', 'i18n', 'scripts', 'compile.mjs');
-        const locations = [join(this.getModulePath() || '', scriptPath), join(this.path || '', scriptPath)];
-        const loc = locations.find(async loc => await existsSync(loc));
-        if (loc) {
-            const compiler = await import(loc).catch(err => {
-                log.error(`Failed to load i18n compiler for project ${this.name}`, err);
-                return Promise.resolve(err);
-            });
-            this.i18nFiles = await compiler.compileI18n(this);
-        }
+        this.i18nFiles = await compileI18n(this);
         return true;
     }
 

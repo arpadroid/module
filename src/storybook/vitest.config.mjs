@@ -2,7 +2,7 @@
  * @typedef {import('vitest/config').TestUserConfig['browser']} BrowserConfigOptions
  */
 import { defineConfig } from 'vitest/config';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import { playwright } from '@vitest/browser-playwright';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { getProject } from '../project/projectStore.mjs';
@@ -42,8 +42,7 @@ const config = {
                         provider: playwright({}),
                         // @ts-ignore
                         instances: getBrowsersConfig(project)
-                    },
-                    setupFiles: [resolve(configDir, 'vitest.setup.ts')]
+                    }
                 }
             }
         ]

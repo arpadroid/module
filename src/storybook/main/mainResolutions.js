@@ -21,6 +21,7 @@ const resolutions = {
         'vitest-plugin',
         'global-setup.js'
     ),
+    '@storybook/react-dom-shim': join(modulesRoot, '@storybook', 'react-dom-shim', 'dist', 'react-18.js'),
     '@storybook/addon-vitest/internal/setup-file': join(addonVitestPath, 'vitest-plugin', 'setup-file.js'),
     '@storybook/web-components-vite': join(modulesRoot, '@storybook', 'web-components-vite'),
     '@storybook/builder-vite': join(modulesRoot, '@storybook', 'builder-vite'),
@@ -43,7 +44,8 @@ const resolutions = {
     '@vitest/browser-playwright': join(modulesRoot, '@vitest', 'browser-playwright', 'dist'),
     '@storybook/addon-docs': addonDocsPath,
     '@storybook/addon-docs/blocks': join(addonDocsPath, 'blocks.js'),
-    '@mdx-js/react': join(addonDocsPath, 'mdx-react-shim.js')
+    '@mdx-js/react': join(modulesRoot, '@mdx-js', 'react', 'index.js'),
+    'storybook/preview-api': join(storybookPath, 'preview-api', 'index.js')
 };
 
 /**

@@ -259,7 +259,7 @@ export function buildEndPlugin(project, { storybook_port } = {}) {
         buildEnd(error) {
             setTimeout(() => {
                 !error && sendJsRefresh(project.name, storybook_port);
-            }, 200);
+            }, 1000);
         }
     };
 }

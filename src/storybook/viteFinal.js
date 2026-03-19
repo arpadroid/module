@@ -7,9 +7,6 @@ const config = {
     build: {
         target: 'esnext'
     },
-    esbuild: {
-        target: 'esnext'
-    },
     resolve: {
         alias: []
     },
@@ -23,9 +20,6 @@ const config = {
     },
     optimizeDeps: {
         include: ['storybook/internal/preview/runtime'],
-        esbuildOptions: {
-            target: 'esnext'
-        },
         exclude: ['storybook']
     },
     plugins: [],

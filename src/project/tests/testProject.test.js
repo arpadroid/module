@@ -120,9 +120,10 @@ describe('Test Project Instance', () => {
         expect(config.watch).toBe(true);
     });
 
-    it.skip('tests the project', async () => {
+    it('tests the project', async () => {
         const spy = spyOn(console, 'error');
         const logSpy = spyOn(console, 'log').mockImplementation(() => {});
+        jest.useRealTimers();
         const result = await project.test({
             jest: true,
             ci: true,
@@ -130,12 +131,13 @@ describe('Test Project Instance', () => {
         });
         expect(existsSync(`${TEST_PROJECT_PATH}/dist/@types`)).toBe(true);
         expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Error: Command failed'));
-        // Verify that the Storybook Vitest tests actually passed
         expect(result).not.toHaveProperty('success', false);
         expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('Storybook Vitest tests failed'));
+
         logSpy.mockRestore();
         spy.mockRestore();
-    }, 20000);
+        jest.useFakeTimers();
+    }, 25000);
 
     describe('Builds the project in watch mode and checks watcher exists, verifies build files and replacement alias functionality', () => {
         /** @type {(event: unknown) => void} */

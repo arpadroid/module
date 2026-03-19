@@ -4,7 +4,6 @@ import tsRules from './eslint-ts.rules.js';
 
 import ts from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
-import babelEslintParser from '@babel/eslint-parser';
 import eslintPluginFunctional from 'eslint-plugin-functional';
 import eslintPluginImport from 'eslint-plugin-import';
 import jsdoc from 'eslint-plugin-jsdoc';
@@ -24,13 +23,9 @@ const config = [
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',
-            parser: babelEslintParser,
             parserOptions: {
                 ecmaFeatures: {
                     jsx: true
-                },
-                babelOptions: {
-                    plugins: ['@babel/plugin-syntax-import-assertions']
                 }
             },
             globals: {
