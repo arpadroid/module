@@ -10,7 +10,7 @@
  */
 import { fileURLToPath } from 'url';
 
-import path, { basename, join, resolve } from 'path';
+import path, { basename, resolve } from 'path';
 import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 import { rollup, watch as rollupWatch } from 'rollup';

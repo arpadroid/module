@@ -255,11 +255,12 @@ export function getCopyTargets(project, config = {}) {
  */
 export function buildEndPlugin(project, { storybook_port } = {}) {
     return {
-        name: 'build-end',
-        buildEnd(error) {
-            setTimeout(() => {
-                !error && sendJsRefresh(project.name, storybook_port);
-            }, 1000);
+        name: 'close-end',
+        writeBundle(error) {
+            if (project.name === 'ui') {
+                return;
+            }
+            sendJsRefresh(project.name, storybook_port);
         }
     };
 }
