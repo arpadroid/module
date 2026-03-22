@@ -1,19 +1,6 @@
 /**
- * @typedef {import('@storybook/web-components-vite').StorybookConfig} StorybookConfig
  * @typedef {import('@storybook/web-components-vite').StoryFn} StoryFn
  */
-import { setStoryContextValue } from '../storybookTool.js';
-/**
- * A decorator that sets the usage panel for the story.
- * @returns {StoryFn}
- */
-export function usagePanelDecorator() {
-    return (story, config) => {
-        const _story = typeof story === 'function' ? story() : story;
-        setStoryContextValue(config.id, 'usage', _story);
-        return _story;
-    };
-}
 
 /**
  * Bootstraps the app.

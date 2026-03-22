@@ -6,7 +6,7 @@
  */
 import viteConfig from '../viteFinal.js';
 import { mergeObjects } from '@arpadroid/tools-iso';
-import { previewConfigPlugin, getStories, getAddons, injectAliases, previewBody } from './main.helper.js';
+import { previewConfigPlugin, customElementsPlugin, getStories, getAddons, injectAliases, previewBody } from './main.helper.js';
 import { getMainConfig, getPreviewConfigFile, getStaticDirs, previewHead } from './main.helper.js';
 import { refreshPlugin } from '../vite/plugins/refreshPlugin.js';
 
@@ -30,6 +30,7 @@ const defaultConfig = {
     viteFinal: async (config = {}) => {
         const cfg = mergeObjects(config, viteConfig, { mergeArrays: true });
         cfg.plugins.push(previewConfigPlugin(getPreviewConfigFile()));
+        cfg.plugins.push(customElementsPlugin());
         cfg.plugins.push(refreshPlugin());
         injectAliases(cfg);
         return cfg;

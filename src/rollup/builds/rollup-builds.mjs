@@ -37,7 +37,7 @@ import { getProjectInstance } from '../../project/projectStore.mjs';
 import { sendJsRefresh } from '../../storybook/vite/plugins/refreshPlugin.js';
 
 /** @type {ProjectCliArgsType} */
-const argv = yargs(hideBin(process.argv)).argv || {};
+const argv = yargs(hideBin(process.argv)).parseSync() || {};
 const cwd = process.cwd();
 const DEPS = process.env.deps ?? argv?.deps ?? '';
 const PROD = Boolean(process.env.production);
@@ -256,7 +256,7 @@ export function getCopyTargets(project, config = {}) {
 export function buildEndPlugin(project, { storybook_port } = {}) {
     return {
         name: 'close-end',
-        writeBundle(error) {
+        writeBundle(_error) {
             if (project.name === 'ui') {
                 return;
             }

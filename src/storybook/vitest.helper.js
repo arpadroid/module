@@ -29,9 +29,10 @@ export function normalizeBrowsers(browsers) {
  * @returns {string[]}
  */
 export function getCIBrowsers(project) {
-    const browsers = normalizeBrowsers(
+    const ciBrowsers = /** @type {string | string[]} */ (
         argv.ci_browsers || process.env.CI_BROWSERS || project.config?.test_browsers || 'chromium firefox'
     );
+    const browsers = normalizeBrowsers(ciBrowsers);
     return browsers;
 }
 

@@ -1,10 +1,8 @@
-import { join } from 'node:path';
 import { getJestSetupFiles, getTestMatch } from '../project/helpers/jest/projectJest.helper.js';
 import { getProject } from '../project/projectStore.mjs';
 
 const project = getProject();
 if (!project) throw new Error('Project not found');
-const modulesPath = join(project.getModulePath() || '', 'node_modules');
 
 /** @type {import('jest').Config} */
 export default {

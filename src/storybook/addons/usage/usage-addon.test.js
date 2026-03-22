@@ -2,16 +2,15 @@
  * @jest-environment jsdom
  */
 /* eslint-disable id-length */
-
 import {
     getStoryContext,
     setStoryContext,
     editStoryContext,
     getStoryContextValue,
     setStoryContextValue
-} from './storybookTool.js';
+} from './usage-addon.util.js';
 
-describe('storybookTool', () => {
+describe('Usage Addon', () => {
     beforeEach(() => {
         if (window.parent._storyContext) {
             window.parent._storyContext = {};

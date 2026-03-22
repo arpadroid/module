@@ -14,7 +14,7 @@ import { execSync } from 'child_process';
 const cwd = process.cwd();
 
 /** @type {ProjectTestConfigType} */
-const argv = yargs(hideBin(process.argv)).argv;
+const argv = yargs(hideBin(process.argv)).parseSync();
 const QUERY = argv.query ?? process.env.query ?? '';
 const WATCH = Boolean(argv.watch ?? process.env.watch);
 const COVERAGE = Boolean(argv.coverage ?? process.env.coverage);

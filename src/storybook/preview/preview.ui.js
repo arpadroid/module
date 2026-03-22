@@ -1,9 +1,12 @@
 /// <reference types="vite/client" />
-
 import { mergeObjects } from '@arpadroid/tools-iso';
-import { usagePanelDecorator } from './decorators.js';
 import flexLayoutDecorator from '../layouts/flexLayout.jsx';
-import previewConfig from 'virtual:preview-config';
+import previewConfig from 'virtual:preview-config'; // @ts-ignore
+import customElementsManifest from 'virtual:custom-elements-manifest';
+import { usagePanelDecorator } from '../addons/usage/usage-addon.util.js';
+import { processCustomElementsManifest, renderComponent, updateCSS, updateJS } from './preview.utils.js';
+
+processCustomElementsManifest(customElementsManifest);
 
 globalThis.litIssuedWarnings ??= new Set();
 // Suppress the warning about Lit being in dev mode, as Storybook is not intended for production use.
@@ -13,9 +16,10 @@ globalThis.litIssuedWarnings.add(
 
 /** @type {import('@storybook/web-components-vite').Preview} */
 const defaultConfig = {
+    render: renderComponent,
     decorators: [usagePanelDecorator(), flexLayoutDecorator()],
     parameters: {
-        layout: 'centered', //'centered' | 'fullscreen' | 'padded'
+        layout: 'centered',
         options: {},
         controls: {
             matchers: {
@@ -32,31 +36,14 @@ const config = mergeObjects(defaultConfig, previewConfig, { mergeArrays: true })
  * Refreshes the stylesheets in the Storybook preview when a theme update is received from the Vite plugin.
  */
 import.meta.hot?.on('arpadroid:css-refresh', payload => {
-    const update = /** @type {{ themeName?: string } | undefined} */ (payload);
-    const themeName = update?.themeName;
-    /** @type {NodeListOf<HTMLLinkElement>} */
-    const links = document.querySelectorAll('link[rel="stylesheet"]');
-
-    links.forEach(link => {
-        const url = new URL(link.href);
-        if (!themeName || url.pathname.includes(`/themes/${themeName}/`)) {
-            url.searchParams.set('_t', String(Date.now()));
-            link.href = url.toString();
-        }
-    });
+    updateCSS(payload);
 });
 
 /**
  * Reloads the preview iframe when the built JS bundle changes so the latest module script is executed.
  */
 import.meta.hot?.on('arpadroid:js-refresh', payload => {
-    const update = /** @type {{ projectName?: string } | undefined} */ (payload);
-    const projectName = update?.projectName;
-    /** @type {HTMLScriptElement | null} */
-    const script = document.querySelector(`script[type="module"][src^="/arpadroid-${projectName || ''}"]`);
-    if (!projectName || script) {
-        window.location.reload();
-    }
+    updateJS(payload);
 });
 
 export default { ...config };

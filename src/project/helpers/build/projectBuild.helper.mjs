@@ -18,7 +18,7 @@ import { getJestTests, hasJestTests } from '../jest/projectJest.helper.js';
 import { getStories, hasStories } from '../storybook/projectStorybook.helper.js';
 
 /** @type {ProjectCliArgsType} */
-export const argv = yargs(hideBin(process.argv)).argv;
+export const argv = yargs(hideBin(process.argv)).parseSync();
 
 export const NO_TYPES = Boolean(argv.noTypes);
 export const DEPENDENCY_SORT = [
@@ -284,7 +284,7 @@ export async function getDependenciesRecursive(project, opt, visited = new Set()
  * @returns {Promise<DependencyPointerType[]>}
  */
 export async function getAllDependencies(project, options = {}) {
-    const { sort = DEPENDENCY_SORT, maxDepth = 10, includeConfigDeps = false } = options;
+    const { sort = DEPENDENCY_SORT, maxDepth = 10 } = options;
     const deps = await getDependenciesRecursive(project, { maxDepth, includeConfigDeps: false });
     return sortDependencies(deps, sort).filter(dep => project.name !== dep.name);
 }

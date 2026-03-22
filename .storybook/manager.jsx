@@ -1,2 +1,2 @@
-import { usagePanelAddon } from '../src/storybook/addons.jsx';
+import { usagePanelAddon } from '../src/storybook/addons/addons.jsx';
 usagePanelAddon();

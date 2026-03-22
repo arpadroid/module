@@ -89,6 +89,31 @@ export function previewConfigPlugin(previewPath) {
 }
 
 /**
+ * Creates a Vite plugin that provides a virtual module for the custom elements manifest.
+ * If a custom-elements.json exists in the project root, it is served as a virtual module.
+ * @returns {import('vite').Plugin} Vite plugin.
+ */
+export function customElementsPlugin() {
+    const virtualModuleId = 'virtual:custom-elements-manifest';
+    const resolvedVirtualModuleId = '\0' + virtualModuleId;
+    const cemPath = join(cwd, 'custom-elements.json');
+    const hasCem = existsSync(cemPath);
+
+    return {
+        name: 'custom-elements-manifest',
+        resolveId(id) {
+            if (id === virtualModuleId) return resolvedVirtualModuleId;
+        },
+        load(id) {
+            if (id !== resolvedVirtualModuleId) return;
+            if (!hasCem) return 'export default undefined;';
+            const json = readFileSync(cemPath, 'utf-8');
+            return `export default ${json};`;
+        }
+    };
+}
+
+/**
  * Converts absolute story patterns to relative patterns based on the project path.
  * @param {Project | undefined} project
  * @returns {string[]} An array of relative glob patterns for Storybook stories.

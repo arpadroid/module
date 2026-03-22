@@ -15,7 +15,7 @@ import { runJestTests } from '../project/helpers/jest/projectJest.helper.js';
 import { getTests, runHook } from '../project/helpers/build/projectBuild.helper.mjs';
 
 /** @type {ProjectTestConfigType} */
-const argv = yargs(hideBin(process.argv)).argv;
+const argv = yargs(hideBin(process.argv)).parseSync();
 const CI = Boolean(argv.ci ?? process.env.ci);
 const QUERY = argv.query ?? process.env.query ?? '';
 const STORYBOOK = Boolean(argv.storybook ?? process.env.storybook);

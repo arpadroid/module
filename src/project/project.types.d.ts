@@ -5,7 +5,7 @@ export type CompileTypesType = {
     prependFiles?: string[];
 };
 
-export type ProjectCliArgsType = Record<string, any> & {
+export type ProjectCliArgsType = Record<string, unknown> & {
     watch?: boolean;
     slim?: boolean;
     deps?: string;
@@ -26,7 +26,7 @@ export type ProjectTestCountType = {
 
 export type ProjectTestSuiteResponseType = {
     success?: boolean;
-    payload: Record<string, any> | undefined | boolean;
+    payload: Record<string, unknown> | undefined | boolean;
     count?: ProjectTestCountType;
 } | undefined;
 
@@ -44,7 +44,7 @@ export type ProjectTestResponseType = {
     success: boolean;
 };
 
-export type ProjectTestConfigType = Record<string, any> & {
+export type ProjectTestConfigType = Record<string, unknown> & {
     ci?: boolean;
     watch?: boolean;
     jest?: boolean;
@@ -60,5 +60,5 @@ export type ProjectTestConfigType = Record<string, any> & {
 export type DeferredOperationType = {
     name?: string;
     description?: string;
-    operation: () => Promise<any>;
+    operation: () => Promise<unknown>;
 };

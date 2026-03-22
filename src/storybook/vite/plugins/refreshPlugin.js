@@ -53,7 +53,8 @@ export function refreshPlugin() {
  * Is a no-op when Storybook is not running or the notification cannot be delivered.
  * @param {string} projectName
  * @param {string} [themeName]
- * @param {number} [port=6006]
+ * @param {number} [port]
+ * @returns {Promise<boolean>}
  */
 export async function sendCssRefresh(projectName, themeName, port = 6006) {
     if (!(await isHTTPServerRunning(port))) return false;
@@ -75,7 +76,8 @@ export async function sendCssRefresh(projectName, themeName, port = 6006) {
  * Notifies the Storybook child process that the built project bundle changed.
  * The preview iframe will reload so the fresh module script is executed again.
  * @param {string} projectName
- * @param {number} [port=6006]
+ * @param {number} [port]
+ * @returns {Promise<boolean>}
  */
 export async function sendJsRefresh(projectName, port = 6006) {
     if (!(await isHTTPServerRunning(port))) return false;
