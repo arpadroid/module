@@ -20,7 +20,6 @@ const defaultConfig = {
     decorators: [usagePanelDecorator(), flexLayoutDecorator()],
     parameters: {
         layout: 'centered',
-        options: {},
         controls: {
             matchers: {
                 color: /(background|color)$/i,

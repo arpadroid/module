@@ -30,11 +30,21 @@ export function normalizeBrowsers(browsers) {
  */
 export function getCIBrowsers(project) {
     const ciBrowsers = /** @type {string | string[]} */ (
-        argv.ci_browsers || process.env.CI_BROWSERS || project.config?.test_browsers || 'chromium firefox'
+        argv.ci_browsers ||
+            process.env.CI_BROWSERS ||
+            project.config?.test_browsers ||
+            'chromium firefox webkit'
     );
     const browsers = normalizeBrowsers(ciBrowsers);
     return browsers;
 }
+
+/** @type {Record<string, string>} */
+const browserColors = {
+    chromium: 'yellow',
+    firefox: 'red',
+    webkit: 'blue'
+};
 
 /**
  * Returns the browsers configuration for testing.
@@ -46,5 +56,5 @@ export function getBrowsersConfig(project) {
      * Browser coverage only allows chromium, so we limit to that if we run the tests in the browser.
      */
     const browsers = argv.project === 'storybook' ? getCIBrowsers(project) : ['chromium'];
-    return browsers.map(browser => ({ browser, headless: true }));
+    return browsers.map(browser => ({ browser, headless: true, color: browserColors[browser] }));
 }

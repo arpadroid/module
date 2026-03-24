@@ -16,6 +16,33 @@ import { getProject } from '../../projectStore.mjs';
 const cwd = process.cwd();
 const argv = /** @type {{watch?: boolean, storybook?: number}} */ (yargs(hideBin(process.argv)).argv || {});
 
+/**
+ * Removes Snap-injected GTK/GIO environment variables that conflict with Playwright's WebKit.
+ * VS Code's Snap package injects library paths from /snap/ that cause WebKit's WPENetworkProcess
+ * to load an incompatible libpthread, resulting in "WebKit encountered an internal error".
+ * @param {Record<string, string | undefined>} env
+ * @returns {Record<string, string | undefined>}
+ */
+function cleanSnapEnv(env) {
+    const snapVars = [
+        'GIO_MODULE_DIR',
+        'GTK_PATH',
+        'GTK_EXE_PREFIX',
+        'LOCPATH',
+        'GSETTINGS_SCHEMA_DIR',
+        'GTK_IM_MODULE_FILE'
+    ];
+    const cleaned = { ...env };
+    for (const key of snapVars) {
+        const value = cleaned[key];
+        if (typeof value === 'string' && value.includes('/snap/')) {
+            const origKey = `${key}_VSCODE_SNAP_ORIG`;
+            cleaned[key] = cleaned[origKey] || undefined;
+        }
+    }
+    return cleaned;
+}
+
 /////////////////////////////////
 // #region Get
 /////////////////////////////////
@@ -252,7 +279,7 @@ export async function runStorybook(project, { slim, storybook_port, verbose }, s
 /**
  * Builds the storybook static site.
  * @param {Project} project
- * @param {{verbose?: boolean}} options
+ * @param {{verbose?: boolean, slim?: boolean}} options
  * @returns {boolean}
  * @throws {Error}
  */
@@ -295,8 +322,11 @@ export async function runStorybookServer(project, port, cmdConfig = {}) {
  * @param {Record<string, unknown>} spawnConfig
  * @returns {Promise<any>} Resolves with the pid of the http-server process.
  */
-export async function runStorybookCI(project, options = {}, spawnConfig = {}) {
-    const { verbose, storybook_port = 6666 } = options;
+export async function runStorybookCI(project, options, spawnConfig = {}) {
+    const { verbose, storybook_port = 6666, slim } = options;
+    if (slim) {
+        return Promise.resolve(false);
+    }
     const isServerRunning = await isHTTPServerRunning(storybook_port, 'localhost');
     if (isServerRunning) {
         log.task(project.name, `Stopping existing Storybook on port ${storybook_port}...`);
@@ -315,22 +345,23 @@ export async function runStorybookCI(project, options = {}, spawnConfig = {}) {
 export async function runStorybookTests(project, port) {
     const STORYBOOK_CONFIG_DIR = getStorybookConfigPath(project);
     const cmd = getStorybookTestCmd(project);
+    const env = cleanSnapEnv({
+        ...process.env,
+        PROJECT_PATH: project.path,
+        STORYBOOK_CONFIG_DIR,
+        STORYBOOK_TEST: 'true',
+        STORYBOOK_URL: `http://localhost:${port}`,
+        STORYBOOK_PORT: String(port)
+    });
 
     const child = spawn(cmd, [], {
         shell: '/bin/sh',
         stdio: 'inherit',
         cwd: project.path,
-        env: {
-            ...process.env,
-            PROJECT_PATH: project.path,
-            STORYBOOK_CONFIG_DIR,
-            STORYBOOK_TEST: 'true',
-            STORYBOOK_URL: `http://localhost:${port}`,
-            STORYBOOK_PORT: String(port)
-        }
+        env
     });
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         child.on('close', code => {
             if (code === 0) resolve(true);
             else resolve(new Error('Storybook Vitest tests failed'));
