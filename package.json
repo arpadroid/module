@@ -15,9 +15,9 @@
             "import": "./src/storybook/exports/test.js"
         },
         "./storybook/addons": "./src/storybook/index.mjs",
-        "./storybook/main": "./src/storybook/main/main.ui.js",
+        "./storybook/main": "./src/storybook/main/main.ui.tsx",
         "./storybook/preset": "./src/storybook/preset.js",
-        "./storybook/preview": "./src/storybook/preview/preview.ui.js",
+        "./storybook/preview": "./src/storybook/preview/preview.ui.tsx",
         "./storybook/middleware": "./.storybook/middleware.cjs",
         "./storybook/manager": "./.storybook/manager.jsx",
         "./storybook/decorators": "./src/storybook/preview/decorators.js",

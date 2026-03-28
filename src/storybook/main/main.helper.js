@@ -36,8 +36,9 @@ export function getStaticDirs() {
  * @returns {Promise<Record<string, unknown>>} The main configuration object.
  */
 export async function getMainConfig() {
-    const path = resolve(cwd, 'src', 'storybook', 'main.js');
-    if (existsSync(path)) {
+    const base = resolve(cwd, 'src', 'storybook', 'main');
+    const path = ['.tsx', '.ts', '.jsx', '.js'].map(ext => base + ext).find(existsSync);
+    if (path) {
         let module = await import(`file://${path}`);
         module = module.default || module || {};
         if (module instanceof Promise) {
@@ -53,13 +54,8 @@ export async function getMainConfig() {
  * @returns {string | undefined} The preview configuration object.
  */
 export function getPreviewConfigFile() {
-    /**
-     * @todo Support tsx preview files.
-     */
-    const path = resolve(cwd, 'src', 'storybook', 'preview.{js,tsx}');
-    if (path && existsSync(path)) {
-        return path;
-    }
+    const base = resolve(cwd, 'src', 'storybook', 'preview');
+    return ['.tsx', '.ts', '.jsx', '.js'].map(ext => base + ext).find(existsSync);
 }
 
 /**

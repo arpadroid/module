@@ -1,4 +1,5 @@
 #storybook-root {
+    padding: 1.5rem 2rem;
     &.storybook__layout--flexColumn {
         padding: 1rem;
         box-sizing: border-box;

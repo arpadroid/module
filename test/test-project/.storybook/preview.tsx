@@ -5,5 +5,4 @@
  * Add your Storybook preview configuration overrides here if needed.
  */
 import PreviewConfig from '@arpadroid/module/storybook/preview';
-/** @type { import('@storybook/web-components-vite').Preview } */
 export default { ...PreviewConfig };

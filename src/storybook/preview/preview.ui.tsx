@@ -1,7 +1,9 @@
 /// <reference types="vite/client" />
+/// <reference path="../virtual-modules.d.ts" />
+import type { Preview } from '@storybook/web-components-vite';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import flexLayoutDecorator from '../layouts/flexLayout.jsx';
-import previewConfig from 'virtual:preview-config'; // @ts-ignore
+import previewConfig from 'virtual:preview-config';
 import customElementsManifest from 'virtual:custom-elements-manifest';
 import { usagePanelDecorator } from '../addons/usage/usage-addon.util.js';
 import { processCustomElementsManifest, renderComponent, updateCSS, updateJS } from './preview.utils.js';
@@ -14,8 +16,7 @@ globalThis.litIssuedWarnings.add(
     'Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.'
 );
 
-/** @type {import('@storybook/web-components-vite').Preview} */
-const defaultConfig = {
+const defaultConfig: Preview = {
     render: renderComponent,
     decorators: [usagePanelDecorator(), flexLayoutDecorator()],
     parameters: {

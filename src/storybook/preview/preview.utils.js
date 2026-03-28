@@ -62,7 +62,7 @@ export function renderComponent(args, context) {
  */
 export async function processCustomElementsManifest(manifest) {
     /** @type {Array<{declarations?: ({members?: unknown})[] }>} */
-    const modules = manifest.modules;
+    const modules = manifest?.modules;
     modules?.forEach(mod => {
         mod.declarations?.forEach(decl => delete decl.members);
     });
