@@ -53,8 +53,11 @@ export async function getMainConfig() {
  * @returns {string | undefined} The preview configuration object.
  */
 export function getPreviewConfigFile() {
-    const path = resolve(cwd, 'src', 'storybook', 'preview.js');
-    if (existsSync(path)) {
+    /**
+     * @todo Support tsx preview files.
+     */
+    const path = resolve(cwd, 'src', 'storybook', 'preview.{js,tsx}');
+    if (path && existsSync(path)) {
         return path;
     }
 }

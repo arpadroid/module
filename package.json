@@ -21,6 +21,8 @@
         "./storybook/middleware": "./.storybook/middleware.cjs",
         "./storybook/manager": "./.storybook/manager.jsx",
         "./storybook/decorators": "./src/storybook/preview/decorators.js",
+        "./storybook/defaultUsage": "./src/storybook/addons/usage/components/defaultUsage.tsx",
+        "./storybook/usageWrapper": "./src/storybook/addons/usage/components/usageWrapper.tsx",
         "./tsconfig": "./tsconfig.json",
         "./vitest/config": "./src/storybook/vitest.config.mjs",
         "./jest/setup": "./src/jest/setupTests.mjs",

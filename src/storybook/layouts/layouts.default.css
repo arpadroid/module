@@ -25,3 +25,41 @@
         max-width: 600px;
     }
 }
+
+.testComponent {
+    fieldset {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    fieldset {
+        border: 2px solid var(--grey-300);
+        border-radius: 0.75rem;
+    }
+    h1,
+    h2,
+    h3 {
+        margin: 0;
+        padding: 0;
+    }
+
+    > fieldset > * {
+        border: 2px solid var(--color-primary);
+        padding: 1rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .testComponent__header {
+        border: 2px solid var(--red-orange);
+    }
+    .testComponent__body {
+        border: 2px solid var(--color-highlight);
+        padding: 1rem;
+    }
+    .testComponent__footer {
+        border: 2px solid var(--color-tertiary);
+        padding: 1rem;
+    }
+}

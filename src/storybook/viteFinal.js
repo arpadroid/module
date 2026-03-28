@@ -15,7 +15,13 @@ const config = {
             allow: [basename(cwd), cwd, '/var/www/arpadroid', cwd + '/.storybook']
         },
         watch: {
-            ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**/@types/**', '**/*.d.ts', '**/.tmp/**']
+            ignored: [
+                /node_modules\/(?!@arpadroid\/)/,
+                '**/.git/**',
+                '**/dist/**/@types/**',
+                '**/*.d.ts',
+                '**/.tmp/**'
+            ]
         }
     },
     optimizeDeps: {

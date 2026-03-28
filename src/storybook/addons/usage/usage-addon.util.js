@@ -117,34 +117,52 @@ export async function prettyPrint(code, options) {
 }
 
 /**
+ * Returns the usage context for the specified story, which contains the rendered element and story configuration.
+ * @param {StoryContext} story
+ * @returns {{ element: ArpaElementType; story: StoryContext } | unknown} The usage context or undefined if not found.
+ */
+export function getUsageContext(story) {
+    const usageContext = getStoryContextValue(story.id, 'usage');
+    if (!usageContext) {
+        console.warn(`Usage context not found for story with id ${story.id}`);
+    }
+    return usageContext;
+}
+
+/**
  * Returns the usage code for the specified story.
- * @param {API_LeafEntry & { args: Args }} story
+ * @param {ArpaElementType} element
+ * @param {Record<string, unknown>} [args]
  * @returns {string} The usage code or element associated with the story.
  */
-export function getCode(story) {
-    const element = /** @type {ArpaElementType} */ (getStoryContextValue(story.id, 'usage'));
+export function getCode(element, args = {}) {
     let code = element?.toString();
     if (typeof element?.tagName !== 'undefined') {
-        const attr = story.args || {};
+        // @ts-ignore
+        const attr = args || {};
         const { content = '' } = attr;
         delete attr.content;
         const tag = element.tagName?.toLowerCase();
-        code = html`<${tag} ${attrString(attr)}>
-            ${content}
-        </${tag}>`;
+        const attrStr =
+            typeof element.renderAttributes === 'function'
+                ? element.renderAttributes(attr)
+                : attrString(attr);
+
+        code = html`<${tag} ${attrStr}>${content}</${tag}>`;
     }
     return code || '';
 }
 
 /**
  * Returns the usage code for the specified story.
- * @param {API_LeafEntry & { args: Args }} story
+ * @param {ArpaElementType} element
+ * @param {StoryContext} story
  * @param {{pretty?: boolean}} [config]
  * @returns {Promise<string>} The usage code or element associated with the story.
  */
-export async function getUsageCode(story, config) {
+export async function getUsageCode(element, story, config) {
     const { pretty = true } = config || {};
-    const code = getCode(story);
+    const code = getCode(element, story.args);
     return !pretty ? code : await prettyPrint(code);
 }
 
@@ -155,7 +173,10 @@ export async function getUsageCode(story, config) {
 export function usagePanelDecorator() {
     return (story, config) => {
         const _story = typeof story === 'function' ? story() : story;
-        setStoryContextValue(config.id, 'usage', _story);
+        setStoryContextValue(config.id, 'usage', {
+            element: _story,
+            story: config
+        });
         return _story;
     };
 }
