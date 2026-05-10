@@ -1,4 +1,4 @@
-import { basename } from 'node:path';
+import { join } from 'path';
 
 const cwd = process.cwd();
 /** @type {import('vite').UserConfig} */
@@ -12,7 +12,7 @@ const config = {
     },
     server: {
         fs: {
-            allow: [basename(cwd), cwd, '/var/www/arpadroid', cwd + '/.storybook']
+            allow: [cwd, join('/var', 'www', 'arpadroid'), join(cwd, '.storybook')]
         },
         watch: {
             ignored: [

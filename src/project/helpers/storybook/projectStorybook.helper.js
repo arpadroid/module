@@ -6,6 +6,7 @@
  */
 import { spawn, execSync } from 'child_process';
 import { existsSync, cpSync, globSync, rmSync } from 'fs';
+import { watch as chokidarWatch } from 'chokidar';
 import { log } from '@arpadroid/logger';
 import { isHTTPServerRunning, runServer, stopHTTPServer } from '@arpadroid/tools-node';
 import yargs from 'yargs';
@@ -236,6 +237,53 @@ export async function getStorybookCICmd(project, port) {
     return cmd;
 }
 
+/**
+ * Watches storybook source directories and restarts the Storybook dev server when files change.
+ * Covers both the base @arpadroid/module addon sources and the current project's own storybook sources.
+ * The watcher is persistent — it survives across restarts and kills Storybook by port rather than
+ * by child process reference, avoiding shell signal-propagation issues with `shell: true` spawns.
+ * @param {Project} project
+ * @param {number} port
+ * @param {Record<string, unknown>} spawnConfig
+ */
+function watchStorybookSources(project, port, spawnConfig) {
+    const { path = '' } = project;
+
+    const moduleStorybookDir = join(project.getModulePath() || '', 'src', 'storybook');
+    const projectStorybookDir = join(path, 'src/storybook');
+    const watchPaths = /** @type {string[]} */ (
+        [
+            existsSync(moduleStorybookDir) && moduleStorybookDir,
+            existsSync(projectStorybookDir) && projectStorybookDir
+        ].filter(Boolean)
+    );
+
+    if (!watchPaths.length) return;
+
+    log.task(project.name, `Watching storybook sources for changes:\n  ${watchPaths.join('\n  ')}`);
+
+    let restarting = false;
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
+    let debounceTimer;
+
+    chokidarWatch(watchPaths, {
+        ignoreInitial: true,
+        awaitWriteFinish: { stabilityThreshold: 200 }
+    }).on('all', (event, filePath) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(async () => {
+            if (restarting) return;
+            restarting = true;
+            log.task(project.name, `Storybook source changed (${event}: ${filePath}), restarting...`);
+            await stopHTTPServer({ port });
+            const cmd = getStorybookCmd(project, port) + ' --no-open';
+            const child = spawn(cmd, { shell: true, stdio: 'inherit', cwd: project.path, ...spawnConfig });
+            child.on('error', err => log.error(`Storybook error: ${err}`));
+            restarting = false;
+        }, 400);
+    });
+}
+
 // #endregion Commands
 
 /////////////////////////////
@@ -249,7 +297,8 @@ export async function getStorybookCICmd(project, port) {
  * @param {Record<string, unknown>} spawnConfig
  * @returns {Promise<any>}
  */
-export async function runStorybook(project, { slim, storybook_port, verbose }, spawnConfig = {}) {
+export async function runStorybook(project, config, spawnConfig = {}) {
+    const { slim, storybook_port, verbose, storybook } = config;
     if (!storybook_port || slim) return Promise.resolve(false);
     const port = storybook_port || 6006;
     const isServerRunning = await isHTTPServerRunning(port, 'localhost');
@@ -273,6 +322,10 @@ export async function runStorybook(project, { slim, storybook_port, verbose }, s
             resolve(code === 0);
         });
         child.on('error', err => reject(err));
+
+        if (argv.watch && storybook?.managerCache === false) {
+            watchStorybookSources(project, port, spawnConfig);
+        }
     });
 }
 

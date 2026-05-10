@@ -108,6 +108,7 @@ export function getDefaultBuildConfig(project) {
         storybook_port: STORYBOOK,
         style_patterns: argv['style-patterns'],
         storybook: {
+            managerCache: true,
             stories: 'src/**/*.stories.{ts,tsx,js,jsx}'
         },
         turbo: true,
@@ -264,7 +265,7 @@ export async function getDependenciesRecursive(project, opt, visited = new Set()
     for (const dep of deps) {
         if (visited.has(dep.name)) continue;
         visited.add(dep.name);
-        const proj = getProject(dep.name, { path: dep.path });
+        const proj = getProject(dep.name, { path: dep.path, isDependency: true });
         results.push(dep);
         dep.project = proj;
     }

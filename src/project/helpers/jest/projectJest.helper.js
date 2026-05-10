@@ -24,7 +24,9 @@ const COVERAGE = Boolean(argv.coverage ?? process.env.coverage);
  * @returns {string}
  */
 export function getJestScript(project) {
-    return `${project.getModulePath()}/node_modules/jest/bin/jest.js`;
+    const localJest = join(project.path || '', 'node_modules', 'jest', 'bin', 'jest.js');
+    if (existsSync(localJest)) return localJest;
+    return join(project.getModulePath() || '', 'node_modules', 'jest', 'bin', 'jest.js');
 }
 
 /**
@@ -91,8 +93,9 @@ export function getJestConfigPath(project) {
     const path = project.path || '';
     const modulePath = project.getModulePath() || '';
     const userConfig = join(path, 'jest.config.mjs');
+    const userConfigCjs = join(path, 'jest.config.cjs');
     const moduleConfig = join(modulePath, 'src', 'jest', 'jest-global.config.mjs');
-    const files = [userConfig, moduleConfig];
+    const files = [userConfig, userConfigCjs, moduleConfig];
     const location = files.find(loc => fs.existsSync(loc));
     !location && log.info('No Jest configuration file found. Using default configuration from the module.');
     return location || '';

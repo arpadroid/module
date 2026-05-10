@@ -4,7 +4,7 @@ import { getStoryContextValue, getUsageCode } from '../usage-addon.util.js';
 import { API } from 'storybook/manager-api';
 import { ArpaElementType } from '../../../../types.js';
 import { StoryContext } from '@storybook/web-components-vite';
-import DefaultUsage from './defaultUsage.js';
+import Usage from './usage/usage.js';
 
 export type UsagePayloadType = {
     element: ArpaElementType;
@@ -22,7 +22,7 @@ export type UsageRenderPayload = UsagePayloadType & {
     code: string;
 };
 
-export default function Usage({ api, active }: UsagePropsType): JSX.Element | string {
+export default function UsageWrapper({ api, active }: UsagePropsType): JSX.Element | string {
     const story = api.getCurrentStoryData();
     const [payload, _setPayload] = useState<UsageRenderPayload | null>(null);
 
@@ -54,7 +54,7 @@ export default function Usage({ api, active }: UsagePropsType): JSX.Element | st
     }
     if (payload?.code) {
         return (
-            <DefaultUsage
+            <Usage
                 code={payload.code}
                 element={payload.element}
                 story={payload.story}

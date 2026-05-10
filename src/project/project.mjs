@@ -65,8 +65,10 @@ class Project {
 
     async initialize() {
         bind(this, 'handleCloseSignal');
-        process.on('SIGINT', this.handleCloseSignal);
-        process.on('SIGTERM', this.handleCloseSignal);
+        if (!this.config?.isDependency) {
+            process.on('SIGINT', this.handleCloseSignal);
+            process.on('SIGTERM', this.handleCloseSignal);
+        }
         const promises = [this.initializePackageJson()];
         return Promise.all(promises);
     }

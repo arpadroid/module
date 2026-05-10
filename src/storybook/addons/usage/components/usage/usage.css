@@ -1,0 +1,22 @@
+.usage-panel__code-block {
+    padding: 1rem;
+
+    summary {
+        cursor: pointer;
+        align- &::marker {
+            color: white;
+        }
+    }
+
+    .docblock-source {
+        padding: 0;
+        margin: 0.5rem 0;
+    }
+}
+
+.usage-panel__code-block__title {
+    margin: 0;
+    padding: 0;
+    padding-left: 0.5rem;
+    display: inline-block;
+}

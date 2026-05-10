@@ -49,17 +49,18 @@ export function canBuildManifest(project) {
 /**
  * Build and persist the Custom Elements Manifest for the given project.
  * @param {Project} project
- * @param {BuildConfigType} [_config]
+ * @param {BuildConfigType} config
  * @param {{ bypassCheck?: boolean, destinations?: string[] }} [options]
  * @returns {Promise<boolean>}
  */
 export async function buildCustomElementsManifest(
     project,
-    _config = project.buildConfig || {},
+    config = project.buildConfig || {},
     options = {}
 ) {
+    const { slim } = config;
     const { bypassCheck = false } = options;
-    if (!canBuildManifest(project) && !bypassCheck) return true;
+    if (!canBuildManifest(project) && !bypassCheck || slim) return true;
     log.task(project.name, 'Building Custom Elements manifest (CEM).');
     await runAnalyzer(project);
 

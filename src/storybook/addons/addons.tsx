@@ -1,6 +1,6 @@
 import React from 'react';
 import { addons, types } from 'storybook/manager-api';
-import UsageComponent from './usage/components/usageWrapper.js';
+import UsageWrapper from './usage/components/usageWrapper.js';
 
 export function usagePanelAddon() {
     addons.register('usage/panel', api => {
@@ -8,7 +8,7 @@ export function usagePanelAddon() {
             title: 'Usage',
             paramKey: 'usage',
             type: types.PANEL,
-            render: props => <UsageComponent api={api} active={props.active} />
+            render: props => <UsageWrapper api={api} active={props.active} />
         });
     });
 }

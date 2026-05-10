@@ -93,6 +93,7 @@ export type StorybookConfigType = {
     preview?: Preview;
     previewHead?: (head: string | undefined, options: Options, project: Project) => string;
     previewBody?: (body: string | undefined, options: Options, project: Project) => string;
+    managerCache?: boolean;
 };
 
 export type BuildInterface = {
