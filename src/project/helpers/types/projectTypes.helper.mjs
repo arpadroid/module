@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import("../../../types.js").BuildConfigType} BuildConfigType
  * @typedef {import("../../project.mjs").default} Project
@@ -5,7 +6,7 @@
  * @typedef {import('rollup').RollupOptions} RollupOptions
  */
 import { spawn, spawnSync } from 'child_process';
-import fs, { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs';
+import fs, { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { glob } from 'glob';
 import { NO_TYPES } from './../build/projectBuild.helper.mjs';
@@ -46,6 +47,7 @@ export async function shouldSkipTypesBuild(project, config) {
  * Returns the path to the TypeScript binary for the given project.
  * @param {Project} project
  * @returns {string}
+ * @throws {Error}
  */
 export function getTsBinary(project) {
     const binaryTail = join('node_modules', '.bin', 'tsc');
@@ -120,7 +122,7 @@ export function handleBuildProcess(project, config, opt) {
  */
 export async function runTsBuild(project, config, opt = {}) {
     const { watch } = config;
-    const { force = true, verbose = false } = opt;
+    const { force = true } = opt;
     return handleBuildProcess(project, config, {
         ...opt,
         args: {
@@ -140,7 +142,7 @@ export async function runTsBuild(project, config, opt = {}) {
  * @returns {Promise<boolean>}
  */
 export async function runFastTsBuild(project, config, opt = {}) {
-    const { watch, skipLibCheck } = config || {};
+    const { watch } = config || {};
     return handleBuildProcess(project, config, {
         ...opt,
         turbo: true,

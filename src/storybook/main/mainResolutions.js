@@ -13,6 +13,11 @@ export const addonDocsPath = join(modulesRoot, '@storybook', 'addon-docs', 'dist
 
 /** @type {ResolutionTypes} */
 const resolutions = {
+    react: join(modulesRoot, 'react', 'index.js'),
+    'react/jsx-runtime': join(modulesRoot, 'react', 'jsx-runtime.js'),
+    'react/jsx-dev-runtime': join(modulesRoot, 'react', 'jsx-dev-runtime.js'),
+    'react-dom/client': join(modulesRoot, 'react-dom', 'client.js'),
+    'react-dom': join(modulesRoot, 'react-dom', 'index.js'),
     'storybook/internal/preview/runtime': join(storybookPath, 'preview', 'runtime.js'),
     'storybook/internal/csf': join(storybookPath, 'csf', 'index.js'),
     '@storybook/addon-vitest/internal/test-utils': join(addonVitestPath, 'vitest-plugin', 'test-utils.js'),
