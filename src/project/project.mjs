@@ -357,16 +357,25 @@ class Project {
      */
     async buildDependencies(buildConfig) {
         if (!buildConfig.buildDeps) return;
-        log.task(this.name, 'Building dependencies.');
+        log.task(this.name, 'Building dependencies...');
         const { promise, projects } = await buildDependencies(this, buildConfig);
         this.dependencyProjects = projects;
         return promise;
     }
 
     logBuildComplete() {
+        const seconds = Number(this.getBuildSeconds());
+        let secondsText = String(seconds);
+        if (seconds < 5) {
+            secondsText = logStyle.success(secondsText);
+        } else if (seconds < 10) {
+            secondsText = logStyle.warning(secondsText);
+        } else {
+            secondsText = logStyle.error(secondsText);
+        }
         log.task(
             this.name,
-            logStyle.success(`Build complete in ${this.getBuildSeconds()} seconds, have a nice day ;)`)
+            logStyle.highlight(`Build complete in ${secondsText} seconds, have a nice day ;)`)
         );
     }
 
@@ -380,8 +389,6 @@ class Project {
         if (!config?.slim) {
             config.logHeading && log.arpadroid(config.logo);
             console.log(logStyle.heading(`Building project: ${logStyle.pkg(pkgName)} ...`));
-        } else {
-            log.task(config?.parent ?? this.name, `Building ${logStyle.dep(pkgName)}.`);
         }
     }
 

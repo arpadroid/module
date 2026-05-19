@@ -22,10 +22,10 @@ export const argv = yargs(hideBin(process.argv)).parseSync();
 
 export const NO_TYPES = Boolean(argv.noTypes);
 export const DEPENDENCY_SORT = [
+    'logger',
     'tools-node',
     'tools-iso',
     'signals',
-    'logger',
     'style-bun',
     'module',
     'tools',
@@ -307,7 +307,12 @@ export async function buildDependency(project, parentProject, parentConfig) {
     if (parentConfig.buildTypes === false) {
         config.buildTypes = false;
     }
-    return project.build(config);
+    const startTime = new Date().getTime();
+    const rv = await project.build(config);
+    const endTime = new Date().getTime();
+    const duration = ((endTime - startTime) / 1000).toFixed(2);
+    log.task(parentProject.name, `Built ${logStyle.info(project.name)} in ${logStyle.highlight(duration)}s.`);
+    return rv;
 }
 
 /**
@@ -323,16 +328,15 @@ export async function buildDependencies(project, config) {
     const deps = await getAllDependencies(project);
     const projects = deps.map(dep => dep.project).filter(proj => proj instanceof Project);
     process.env.arpadroid_slim = 'true';
-    const runPromises = async () => {
-        for (const proj of projects) {
-            await proj.promise;
-            await buildDependency(proj, project, config);
-        }
-    };
-    const promise = await runPromises().catch(err => {
-        log.error(`Failed to build ${logStyle.subject(project.name)} dependencies`, err);
-        return Promise.reject(err);
-    });
+
+    const promises = projects.map(proj =>
+        buildDependency(proj, project, config).catch(err => {
+            log.error(`Failed to build dependency ${logStyle.subject(proj.name)}`, err);
+            return Promise.reject(err);
+        })
+    );
+    const promise = await Promise.allSettled(promises).then(() => Promise.resolve());
+
     process.env.arpadroid_slim = '';
     return { promise, projects };
 }

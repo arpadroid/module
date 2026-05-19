@@ -8,11 +8,10 @@
 
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import chalk from 'chalk';
 
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { ThemesBundler } from '@arpadroid/style-bun';
-import { log } from '@arpadroid/logger';
+import { log, logStyle } from '@arpadroid/logger';
 
 import PROJECT_STORE, { getProject } from '../../projectStore.mjs';
 import Project from '../../project.mjs';
@@ -123,7 +122,7 @@ export async function deployTheme(project, themeName, options = {}) {
             await mkdirSync(destination, { recursive: true });
         }
         await writeFileSync(join(destination, fileName), css);
-        log.task(project.name, `Deployed ${chalk.magentaBright(themeName)} theme.`);
+        log.task(project.name, `Deployed ${logStyle.info(themeName)} theme.`);
     }
     return Promise.resolve();
 }
@@ -133,7 +132,7 @@ export async function deployTheme(project, themeName, options = {}) {
  * @param {Project} dep
  * @param {StyleUpdateCallbackPayloadType} payload - The payload containing information about the theme update.
  * @param {ThemeBundler} theme - The theme that was updated.
- * @return {Promise<boolean>} Returns true if the theme was successfully deployed, false otherwise.
+ * @returns {Promise<boolean>} Returns true if the theme was successfully deployed, false otherwise.
  */
 export async function onThemeBundled(dep, payload, theme) {
     const buildConfig = dep.buildConfig || {};
