@@ -25,8 +25,7 @@ const config = {
         }
     },
     optimizeDeps: {
-        include: ['storybook/internal/preview/runtime'],
-        exclude: ['storybook']
+        exclude: ['storybook', 'react/jsx-runtime']
     },
     plugins: [],
     define: {}

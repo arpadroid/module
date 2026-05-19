@@ -9,12 +9,31 @@ import { getProject } from '../project/projectStore.mjs';
 import { getStorybookCmd, getStorybookPort } from '../project/helpers/storybook/projectStorybook.helper.js';
 import { getStorybookConfigPath } from '../project/helpers/storybook/projectStorybook.helper.js';
 import { getBrowsersConfig } from './vitest.helper.js';
+import { getAlias } from './main/mainResolutions.js';
 
 const project = /** @type {import('../project/project.mjs').default} */ (getProject());
 
 const configDir = getStorybookConfigPath(project);
 const moduleRoot = project.getModulePath() || '';
 const port = await getStorybookPort(project);
+const aliases = /** @type {import('vite').Alias[]} */ ([
+    getAlias('react'),
+    getAlias('react/jsx-dev-runtime'),
+    getAlias('react-dom'),
+    getAlias('react-dom/client'),
+    {
+        find: '@vitest/coverage-v8',
+        replacement: join(moduleRoot, 'node_modules/@vitest/coverage-v8/dist')
+    },
+    {
+        find: '@storybook/addon-vitest/internal/setup-file',
+        replacement: join(moduleRoot, 'node_modules/@storybook/addon-vitest/dist/vitest-plugin/setup-file.js')
+    },
+    {
+        find: 'react/jsx-runtime',
+        replacement: join(moduleRoot, 'node_modules/react/jsx-runtime.js')
+    }
+]);
 
 /** @type {import('vitest/config').UserProjectConfigExport} */
 const config = {
@@ -48,12 +67,7 @@ const config = {
         ]
     },
     resolve: {
-        alias: [
-            {
-                find: '@vitest/coverage-v8',
-                replacement: join(moduleRoot, 'node_modules/@vitest/coverage-v8/dist')
-            }
-        ]
+        alias: aliases
     }
 };
 export default defineConfig(config);

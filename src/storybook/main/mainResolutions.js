@@ -27,7 +27,7 @@ const resolutions = {
         'global-setup.js'
     ),
     '@storybook/react-dom-shim': join(modulesRoot, '@storybook', 'react-dom-shim', 'dist', 'react-18.js'),
-    '@storybook/addon-vitest/internal/setup-file': join(addonVitestPath, 'vitest-plugin', 'setup-file.js'),
+    '@storybook/addon-vitest/dist/vitest-plugin/setup-file': join(addonVitestPath, 'vitest-plugin', 'setup-file.js'),
     '@storybook/web-components-vite': join(modulesRoot, '@storybook', 'web-components-vite'),
     '@storybook/builder-vite': join(modulesRoot, '@storybook', 'builder-vite'),
     'vitest/internal/browser': join(vitestPath, 'browser.js'),
