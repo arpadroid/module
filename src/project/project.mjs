@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('vitest/config').TestUserConfig['browser']} BrowserConfigOptions
  * @typedef {import('../rollup/builds/rollup-builds.types.js').BuildConfigType} BuildConfigType
@@ -244,9 +245,11 @@ class Project {
      */
     async clean(opt = {}) {
         const { reInstall = true, reBuild = false } = opt;
-        const config = await this.getBuildConfig();
-        log.arpadroid(config?.logo);
-        log.task(this.name, 'Cleaning up build files and caches...');
+        log.arpadroid(this.name);
+        console.log(
+            logStyle.heading('🧹 Cleaning-up build files and caches and re-installing packages ▰▰▰▱')
+        );
+
         await this?.promise;
         await cleanupFiles(this);
         if (reInstall || reBuild) {
@@ -270,7 +273,7 @@ class Project {
     }
 
     async install() {
-        log.task(this.name, 'Installing project...');
+        log.task(this.name, '📦 Installing project ▰▰▰▱');
         return spawnSync(this.getInstallCmd(), { shell: true, stdio: 'inherit' });
     }
 
@@ -357,7 +360,7 @@ class Project {
      */
     async buildDependencies(buildConfig) {
         if (!buildConfig.buildDeps) return;
-        log.task(this.name, 'Building dependencies...');
+        log.task(this.name, 'Building dependencies ▰▰▰▱');
         const { promise, projects } = await buildDependencies(this, buildConfig);
         this.dependencyProjects = projects;
         return promise;
@@ -375,7 +378,7 @@ class Project {
         }
         log.task(
             this.name,
-            logStyle.highlight(`Build complete in ${secondsText} seconds, have a nice day ;)`)
+            logStyle.highlight(`Build complete in ${secondsText} seconds, have a nice day! 👾`)
         );
     }
 
@@ -385,10 +388,9 @@ class Project {
      * @returns {void}
      */
     logBuild(config) {
-        const pkgName = '@arpadroid/' + this.name;
         if (!config?.slim) {
-            config.logHeading && log.arpadroid(config.logo);
-            console.log(logStyle.heading(`Building project: ${logStyle.pkg(pkgName)} ...`));
+            config.logHeading && log.arpadroid(config.logo || this.name);
+            console.log(logStyle.heading('🏗️  Building project ▰▰▰▱ \n'));
         }
     }
 
@@ -398,7 +400,7 @@ class Project {
      * @returns {Promise<boolean>}
      */
     async cleanBuild(config = {}) {
-        !config?.slim && log.task(this.name, 'Cleaning up.');
+        !config?.slim && log.task(this.name, 'Cleaning up ▰▰▰▱');
         if (existsSync(`${this.path}/dist`)) {
             rmSync(`${this.path}/dist`, { recursive: true, force: true });
         }
@@ -462,7 +464,7 @@ class Project {
      */
     async rollup(configs, config = {}) {
         if (config.buildJS !== true) return true;
-        !config.slim && log.task(this.name, 'Rolling up');
+        !config.slim && log.task(this.name, 'Rolling up ▰▰▰▱');
         await this.preprocessRollupConfigs(configs, config.aliases);
         await Promise.all(configs.map(conf => this.bundleConfig(conf)));
         return true;
@@ -504,7 +506,7 @@ class Project {
         if (!configs?.length) return Promise.resolve(true);
         verbose || (!slim && log.task(this.name, 'watching for file changes'));
         await this.preprocessRollupConfigs(configs, aliases);
-        !slim && log.task(this.name, 'Rolling up (watch mode)');
+        !slim && log.task(this.name, 'Rolling up (watch mode) ▰▰▰▱');
         this.watcher = rollupWatch(configs);
 
         return new Promise(resolve => {

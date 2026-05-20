@@ -8,10 +8,6 @@ const config = {
     style_patterns: ['storybook'],
     storybook_port: 6000,
     buildJS: true,
-    logo: `           ┓    • ┓        ┓  ┓  
-  ┏┓┏┓┏┓┏┓┏┫┏┓┏┓┓┏┫  ┏┳┓┏┓┏┫┓┏┃┏┓
-  ┗┻┛ ┣┛┗┻┗┻┛ ┗┛┗┗┻  ┛┗┗┗┛┗┻┗┻┗┗ 
-------┛----------------------------`,
     hooks: {
         onBuildEnd: async (project) => {
             return await install(project);

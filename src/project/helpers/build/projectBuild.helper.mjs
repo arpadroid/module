@@ -311,7 +311,10 @@ export async function buildDependency(project, parentProject, parentConfig) {
     const rv = await project.build(config);
     const endTime = new Date().getTime();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
-    log.task(parentProject.name, `Built ${logStyle.info(project.name)} in ${logStyle.highlight(duration)}s.`);
+    log.task(
+        parentProject.name,
+        logStyle.muted(`${logStyle.info(project.name)} done in `) + logStyle.highlight(`${duration}s. 🗸`)
+    );
     return rv;
 }
 

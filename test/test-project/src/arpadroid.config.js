@@ -11,9 +11,5 @@ export default {
     buildTypes: true,
     minify: true,
     watch: false,
-    storybook_port: 6101,
-    logo: `         ┓    • ┓               •    
-┏┓┏┓┏┓┏┓┏┫┏┓┏┓┓┏┫  ╋┏┓┏╋  ┏┓┏┓┏┓┓┏┓┏╋
-┗┻┛ ┣┛┗┻┗┻┛ ┗┛┗┗┻  ┗┗ ┛┗  ┣┛┛ ┗┛┃┗ ┗┗
-----┛---------------------┛-----┛-------   `
+    storybook_port: 6101
 };

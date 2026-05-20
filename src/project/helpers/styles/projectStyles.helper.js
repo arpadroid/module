@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 /**
  * @typedef {import('../../../rollup/builds/rollup-builds.mjs').BuildConfigType} BuildConfigType
  * @typedef {import('../build/projectBuilder.types.js').DependencyPointerType} DependencyPointerType
@@ -181,7 +182,7 @@ export async function createBundlerInstance(project, buildConfig, bundlerConfig 
 export async function bundleStyles(project, config, bundlerConfig = {}) {
     const { buildStyles, slim } = config;
     if (!buildStyles || !hasStyles(project)) return true;
-    !slim && log.task(project.name, 'Bundling CSS.');
+    !slim && log.task(project.name, 'Bundling CSS ▰▰▰▱');
     const bundler = await createBundlerInstance(project, config, bundlerConfig);
     await bundler.initialize();
     return bundler;
@@ -217,8 +218,9 @@ export async function compileStyles(project, config) {
     if (!hasStyles(project) || !buildStyles || slim) {
         return Promise.resolve(true);
     }
-    log.task(project.name, 'Compiling dependency styles.');
-    for (const theme of getThemes(project)) {
+    log.task(project.name, 'Compiling CSS stylesheets ▰▰▰▱');
+    const themes = getThemes(project);
+    for (const theme of themes) {
         await deployTheme(project, theme);
     }
     const deps = project.dependencyProjects;

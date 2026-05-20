@@ -303,7 +303,7 @@ export async function runStorybook(project, config, spawnConfig = {}) {
     const port = storybook_port || 6006;
     const isServerRunning = await isHTTPServerRunning(port, 'localhost');
     if (isServerRunning) {
-        log.task(project.name, `Stopping existing Storybook on port ${port}...`);
+        log.task(project.name, `Stopping existing Storybook on port ${port} ▰▰▰▱`);
         await stopHTTPServer({ port });
     }
     const cmd = getStorybookCmd(project, storybook_port);
@@ -338,7 +338,7 @@ export async function runStorybook(project, config, spawnConfig = {}) {
  */
 export function buildStorybook(project, { verbose } = {}) {
     try {
-        log.task(project.name, 'Building Storybook...');
+        log.task(project.name, 'Building Storybook ▰▰▰▱');
         rmSync(join(project.path || cwd, 'storybook-static'), { recursive: true, force: true });
         execSync(getStorybookBuildCmd(project), {
             shell: '/bin/sh',

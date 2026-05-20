@@ -291,7 +291,7 @@ export async function buildTypes(project, config) {
     }
 
     if (!config.isDependency) {
-        log.task(project.name, 'Building types.');
+        log.task(project.name, 'Building types ▰▰▰▱');
     }
 
     const run = async () => {

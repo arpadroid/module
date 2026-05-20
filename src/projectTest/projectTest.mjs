@@ -89,12 +89,10 @@ class ProjectTest {
      * @param {Project} [project]
      */
     logHeading(testConfig = {}, project = this.project) {
-        const { logo } = project.buildConfig || {};
         const { silent = false } = testConfig;
         if (silent) return;
-        log.arpadroid(logo);
-        const subjectLog = logStyle.subject(`@arpadroid ${project?.name}`);
-        console.log(logStyle.heading(`Testing: ${subjectLog}`));
+        log.arpadroid(`/${project.name}`);
+        console.log(logStyle.heading('🧪 Testing project  ▰▰▰▱'));
     }
 
     /**
@@ -168,7 +166,7 @@ class ProjectTest {
             await this.testStorybook(config);
         }
 
-        !silent && log.success('Testing completed, have a nice day! 😀');
+        !silent && log.success('Testing completed, have a nice day! 👽');
         return response;
     }
 
@@ -201,7 +199,8 @@ class ProjectTest {
      * @returns {Promise<Buffer | string | boolean>}
      */
     async testJest(testConfig = {}) {
-        log.task(this.project.name, 'Running jest tests.');
+        console.log('\n');
+        log.task(this.project.name, 'Running jest tests  ▰▰▰▱\n');
         return await runJestTests(this.project, testConfig);
     }
 
@@ -213,7 +212,7 @@ class ProjectTest {
     async testStorybook(_testConfig = this.config) {
         const proj = this.project;
         const port = await getStorybookPort(proj);
-        log.task(proj.name, 'Running storybook tests.');
+        log.task(proj.name, 'Running storybook tests  ▰▰▰▱');
         let started = false;
         try {
             await runStorybookCI(proj, { ...proj.buildConfig, storybook_port: port });
