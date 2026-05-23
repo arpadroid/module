@@ -2,11 +2,15 @@
 /// <reference path="../virtual-modules.d.ts" />
 import type { Preview } from '@storybook/web-components-vite';
 import { mergeObjects } from '@arpadroid/tools-iso';
+import {
+    enhanceArgTypesFromCem,
+    processCustomElementsManifest
+} from '../../cem/plugins/storybook/storybook-cem-adapter.js';
 import flexLayoutDecorator from '../layouts/flexLayout.jsx';
 import previewConfig from 'virtual:preview-config';
 import customElementsManifest from 'virtual:custom-elements-manifest';
 import { usagePanelDecorator } from '../addons/usage/usage-addon.util.js';
-import { processCustomElementsManifest, renderComponent, updateCSS, updateJS } from './preview.utils.js';
+import { renderComponent, updateCSS, updateJS } from './preview.utils.js';
 
 processCustomElementsManifest(customElementsManifest);
 
@@ -19,9 +23,11 @@ globalThis.litIssuedWarnings.add(
 const defaultConfig: Preview = {
     render: renderComponent,
     decorators: [usagePanelDecorator(), flexLayoutDecorator()],
+    argTypesEnhancers: [enhanceArgTypesFromCem],
     parameters: {
         layout: 'centered',
         controls: {
+            expanded: true,
             matchers: {
                 color: /(background|color)$/i,
                 date: /Date$/i

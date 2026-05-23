@@ -9,7 +9,7 @@ import { join } from 'path';
 export default {
     globs: [join('src', '**', '*.js')],
     exclude: ['**/*.stories.*', '**/*.test.*', '**/storybook/**'],
-    outdir: 'dist',
+    outdir: 'dist', // Must match CEM_OUTDIR in src/project/helpers/manifest/projectManifest.helper.mjs
     dev: false,
     watch: false,
     dependencies: false,

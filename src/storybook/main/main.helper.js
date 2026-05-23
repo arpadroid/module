@@ -96,7 +96,6 @@ export function customElementsPlugin() {
     const virtualModuleId = 'virtual:custom-elements-manifest';
     const resolvedVirtualModuleId = '\0' + virtualModuleId;
     const cemPath = join(cwd, 'custom-elements.json');
-    const hasCem = existsSync(cemPath);
 
     return {
         name: 'custom-elements-manifest',
@@ -104,10 +103,24 @@ export function customElementsPlugin() {
             if (id === virtualModuleId) return resolvedVirtualModuleId;
         },
         load(id) {
-            if (id !== resolvedVirtualModuleId) return;
-            if (!hasCem) return 'export default undefined;';
+            if (id !== resolvedVirtualModuleId) {
+                return;
+            }
+            if (!existsSync(cemPath)) {
+                return 'export default undefined;';
+            }
             const json = readFileSync(cemPath, 'utf-8');
             return `export default ${json};`;
+        },
+        configureServer(server) {
+            server.watcher.add(cemPath);
+            const reload = () => {
+                const mod = server.moduleGraph.getModuleById(resolvedVirtualModuleId);
+                if (mod) server.moduleGraph.invalidateModule(mod);
+                server.ws.send({ type: 'full-reload' });
+            };
+            server.watcher.on('change', filePath => filePath === cemPath && reload());
+            server.watcher.on('add', filePath => filePath === cemPath && reload());
         }
     };
 }

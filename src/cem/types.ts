@@ -9,6 +9,7 @@ export type TextType = { summary: string; serializedAs: string };
 
 export type DescriptorType = {
     name: string;
+    originalTypeText?: string;
     typeText: string;
     optional: boolean;
     jsDoc?: string;
@@ -16,7 +17,7 @@ export type DescriptorType = {
 
 export type AttributeDescriptorType = {
     name: string;
-    type: { text: string; summary: string };
+    type: { text: string; summary: string; detail?: string };
     serializedAs: string;
     description?: string;
     optional: boolean;

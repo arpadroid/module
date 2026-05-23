@@ -8,7 +8,7 @@
 import { cpSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
 import { glob } from 'glob';
-import { log } from '@arpadroid/logger';
+import { log, logStyle } from '@arpadroid/logger';
 import { getAllDependencies } from '../build/projectBuild.helper.mjs';
 import { prepareArgs, safeReadJson } from '@arpadroid/tools-node';
 import { mergeObjects } from '@arpadroid/tools-iso';
@@ -18,6 +18,8 @@ import { getProject } from '../../projectStore.mjs';
 
 export const USE_TYPES_CHECKER = argv.typesChecker;
 const CWD = process.cwd();
+/** CEM analyzer output directory. Must match the `outdir` field in custom-elements-manifest.config.js. */
+const CEM_OUTDIR = 'dist';
 /**
  * Determines whether to use the types checker based on command line arguments and project configuration.
  * @param {Project | undefined} project
@@ -29,6 +31,7 @@ export async function shouldUseTypesChecker(project = getProject()) {
     if (typeof USE_TYPES_CHECKER === 'undefined') {
         return manifest?.useTypesChecker || false;
     }
+
     return USE_TYPES_CHECKER;
 }
 
@@ -53,15 +56,12 @@ export function canBuildManifest(project) {
  * @param {{ bypassCheck?: boolean, destinations?: string[] }} [options]
  * @returns {Promise<boolean>}
  */
-export async function buildCustomElementsManifest(
-    project,
-    config = project.buildConfig || {},
-    options = {}
-) {
+export async function buildCustomElementsManifest(project, config = project.buildConfig || {}, options = {}) {
     const { slim } = config;
     const { bypassCheck = false } = options;
-    if (!canBuildManifest(project) && !bypassCheck || slim) return true;
-    log.task(project.name, 'Building Custom Elements manifest (CEM).');
+    if ((!canBuildManifest(project) && !bypassCheck) || slim) return true;
+    log.task(project.name, 'Building Custom Elements manifest (CEM) ▰▰▰▱');
+    const startTime = Date.now();
     await runAnalyzer(project);
 
     // Verify the analyzer created the manifest file; fail the build if not.
@@ -72,6 +72,8 @@ export async function buildCustomElementsManifest(
         cpSync(manifestFile, join(project.path || CWD, 'custom-elements.json'));
     }
 
+    const endTime = Date.now();
+    log.task(project.name, `Done in ${logStyle.highlight(String((endTime - startTime) / 1000))}s ▰▰▰▰`);
     return true;
 }
 
@@ -81,7 +83,7 @@ export async function buildCustomElementsManifest(
  * @returns {string | undefined}
  */
 export function getManifestFile(project) {
-    const manifestPath = resolve(join(project?.path || CWD, 'dist', 'custom-elements.json'));
+    const manifestPath = resolve(join(project?.path || CWD, CEM_OUTDIR, 'custom-elements.json'));
     if (!existsSync(manifestPath)) {
         log.warning(`No manifest file found for project ${project?.name} at expected path ${manifestPath}`);
         return undefined;

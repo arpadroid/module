@@ -1,7 +1,7 @@
 /**
  * @typedef {import('../../types.js').ArpaElementType} ArpaElementType
  */
-// import {attr} from ''
+import { normalizeArrayArgs } from '../../cem/plugins/storybook/storybook-cem-adapter.js';
 /**
  * Refreshes the stylesheets in the Storybook preview by appending a timestamp query parameter to the URL to bust the cache.
  * If a themeName is provided, only stylesheets with that theme name in their path will be refreshed.
@@ -44,29 +44,14 @@ export function updateJS(payload) {
 export function renderComponent(args, context) {
     const componentTagName = context.component || '';
     const componentClass = customElements.get(componentTagName);
+    const normalizedArgs = normalizeArrayArgs(args, context?.argTypes);
     /** @type {HTMLElement & Partial<ArpaElementType> | null} */
     let node = null;
     if (componentClass) {
-        node = new componentClass(args);
+        node = new componentClass(normalizedArgs);
     } else {
         node = document.createElement(componentTagName);
     }
     return node;
 }
 
-/**
- * Processes the custom elements manifest to keep only the necessary data for Storybook and reduce memory usage.
- * Specifically, it removes the members information from each declaration, which is not needed for Storybook's purposes.
- * @param {any} manifest
- * @returns {Promise<Record<string, unknown>>}
- */
-export async function processCustomElementsManifest(manifest) {
-    /** @type {Array<{declarations?: ({members?: unknown})[] }>} */
-    const modules = manifest?.modules;
-    modules?.forEach(mod => {
-        mod.declarations?.forEach(decl => delete decl.members);
-    });
-    // @ts-ignore
-    globalThis.__STORYBOOK_CUSTOM_ELEMENTS_MANIFEST__ = manifest;
-    return manifest;
-}

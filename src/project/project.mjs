@@ -508,6 +508,8 @@ class Project {
         await this.preprocessRollupConfigs(configs, aliases);
         !slim && log.task(this.name, 'Rolling up (watch mode) ▰▰▰▱');
         this.watcher = rollupWatch(configs);
+        const changedFiles = new Set();
+        this.watcher.on('change', id => { changedFiles.add(id); });
 
         return new Promise(resolve => {
             let initialized = false;
@@ -520,9 +522,21 @@ class Project {
                     log.task(this.name, 'Bundle started');
                 }
                 callback?.(event);
-                if (!initialized && event.code === 'END') {
-                    initialized = true;
-                    resolve(/** @type {import('rollup').RollupWatcher} */ (this.watcher));
+                if (event.code === 'END') {
+                    if (!initialized) {
+                        initialized = true;
+                        resolve(/** @type {import('rollup').RollupWatcher} */ (this.watcher));
+                    } else {
+                        const cemSrcDir = path.resolve(__dirname, '../cem');
+                        const hasTypesChange = [...changedFiles].some(file => file.endsWith('.types.d.ts'));
+                        const hasCemChange = [...changedFiles].some(file => file.startsWith(cemSrcDir));
+                        changedFiles.clear();
+                        if (hasTypesChange || hasCemChange) {
+                            buildCustomElementsManifest(this, config).catch(err => {
+                                log.error('Failed to rebuild manifest:', err);
+                            });
+                        }
+                    }
                 }
             });
         });
