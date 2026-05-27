@@ -247,7 +247,7 @@ class Project {
         const { reInstall = true, reBuild = false } = opt;
         log.arpadroid(this.name);
         console.log(
-            logStyle.heading('🧹 Cleaning-up build files and caches and re-installing packages ▰▰▰▱')
+            logStyle.heading('Cleaning-up build files and caches and re-installing packages 🧹 ▰▱▱▱')
         );
 
         await this?.promise;
@@ -273,7 +273,7 @@ class Project {
     }
 
     async install() {
-        log.task(this.name, '📦 Installing project ▰▰▰▱');
+        log.task(this.name, 'Installing project 📦 ▰▱▱▱');
         return spawnSync(this.getInstallCmd(), { shell: true, stdio: 'inherit' });
     }
 
@@ -330,11 +330,24 @@ class Project {
      * @returns {Promise<boolean | import('rollup').RollupWatcher>}
      */
     async runBuild(config) {
-        const rollupConfig = await this.getRollupConfig();
-        if (config.watch || WATCH) {
-            return await this.watch(rollupConfig, config, config.watchCallback);
+        const startTime = Date.now();
+        if (!config.slim) {
+            log.task(this.name, 'Rolling up 📜 ▰▱▱▱');
         }
-        return await this.rollup(rollupConfig, config);
+        const rollupConfig = await this.getRollupConfig();
+        let rv;
+        if (config.watch || WATCH) {
+            rv = await this.watch(rollupConfig, config, config.watchCallback);
+        } else {
+            rv = await this.rollup(rollupConfig, config);
+        }
+        if (!config.slim) {
+            const endTime = Date.now();
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+            log.task(this.name, `done rollup in ${duration}s 📜 ▰▰▰▰ 🗸`);
+        }
+
+        return rv;
     }
 
     async runDeferredOperations() {
@@ -360,9 +373,12 @@ class Project {
      */
     async buildDependencies(buildConfig) {
         if (!buildConfig.buildDeps) return;
-        log.task(this.name, 'Building dependencies ▰▰▰▱');
+        const startTime = Date.now();
+        log.task(this.name, 'Building dependencies 📦 ▰▱▱▱');
         const { promise, projects } = await buildDependencies(this, buildConfig);
         this.dependencyProjects = projects;
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+        log.task(this.name, `done dependencies in ${logStyle.highlight(duration)}s 📦 ▰▰▰▰ 🗸`);
         return promise;
     }
 
@@ -390,7 +406,7 @@ class Project {
     logBuild(config) {
         if (!config?.slim) {
             config.logHeading && log.arpadroid(config.logo || this.name);
-            console.log(logStyle.heading('🏗️  Building project ▰▰▰▱ \n'));
+            console.log(logStyle.heading('🏗️  Building project ▱▱▱▱ \n'));
         }
     }
 
@@ -400,7 +416,7 @@ class Project {
      * @returns {Promise<boolean>}
      */
     async cleanBuild(config = {}) {
-        !config?.slim && log.task(this.name, 'Cleaning up ▰▰▰▱');
+        !config?.slim && log.task(this.name, 'Cleaning up 🧹 ▰▱▱▱');
         if (existsSync(`${this.path}/dist`)) {
             rmSync(`${this.path}/dist`, { recursive: true, force: true });
         }
@@ -464,7 +480,6 @@ class Project {
      */
     async rollup(configs, config = {}) {
         if (config.buildJS !== true) return true;
-        !config.slim && log.task(this.name, 'Rolling up ▰▰▰▱');
         await this.preprocessRollupConfigs(configs, config.aliases);
         await Promise.all(configs.map(conf => this.bundleConfig(conf)));
         return true;
@@ -503,14 +518,18 @@ class Project {
      */
     async watch(configs, config, callback) {
         const { slim, verbose, aliases } = config;
-        if (!configs?.length) return Promise.resolve(true);
-        verbose || (!slim && log.task(this.name, 'watching for file changes'));
+        if (!configs?.length) {
+            return Promise.resolve(true);
+        }
         await this.preprocessRollupConfigs(configs, aliases);
-        !slim && log.task(this.name, 'Rolling up (watch mode) ▰▰▰▱');
+        if (!slim) {
+            log.task(this.name, 'Watch mode enabled 👁️');
+        }
         this.watcher = rollupWatch(configs);
         const changedFiles = new Set();
-        this.watcher.on('change', id => { changedFiles.add(id); });
-
+        this.watcher.on('change', id => {
+            changedFiles.add(id);
+        });
         return new Promise(resolve => {
             let initialized = false;
             this.watcher?.on('event', event => {

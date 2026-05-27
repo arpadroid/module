@@ -14,9 +14,9 @@ export type UsagePropsType = {
 };
 
 export default function Usage({ code, active }: UsagePropsType): JSX.Element | string {
-    useEffect(() => {
-        console.log('Usage component rendered with code:', code);
-    }, [code]);
+    // useEffect(() => {
+    //     console.log('Usage component rendered with code:', code);
+    // }, [code]);
     return (
         <AddonPanel active={Boolean(active)}>
             <div className="usage-panel">

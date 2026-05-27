@@ -123,7 +123,7 @@ export async function deployTheme(project, themeName, options = {}) {
             await mkdirSync(destination, { recursive: true });
         }
         await writeFileSync(join(destination, fileName), css);
-        log.task(project.name, `Deployed ${logStyle.info(themeName)} theme.`);
+        log.task(project.name, `Deployed ${logStyle.info(themeName)} theme 🖌️ ▰▰▰▰ 🗸`);
     }
     return Promise.resolve();
 }
@@ -182,7 +182,7 @@ export async function createBundlerInstance(project, buildConfig, bundlerConfig 
 export async function bundleStyles(project, config, bundlerConfig = {}) {
     const { buildStyles, slim } = config;
     if (!buildStyles || !hasStyles(project)) return true;
-    !slim && log.task(project.name, 'Bundling CSS ▰▰▰▱');
+    !slim && log.task(project.name, 'Bundling CSS 🎨 ▰▱▱▱');
     const bundler = await createBundlerInstance(project, config, bundlerConfig);
     await bundler.initialize();
     return bundler;
@@ -218,7 +218,7 @@ export async function compileStyles(project, config) {
     if (!hasStyles(project) || !buildStyles || slim) {
         return Promise.resolve(true);
     }
-    log.task(project.name, 'Compiling CSS stylesheets ▰▰▰▱');
+    log.task(project.name, 'Compiling CSS stylesheets ▰▱▱▱');
     const themes = getThemes(project);
     for (const theme of themes) {
         await deployTheme(project, theme);

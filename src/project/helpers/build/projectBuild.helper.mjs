@@ -313,7 +313,8 @@ export async function buildDependency(project, parentProject, parentConfig) {
     const duration = ((endTime - startTime) / 1000).toFixed(2);
     log.task(
         parentProject.name,
-        logStyle.muted(`${logStyle.info(project.name)} done in `) + logStyle.highlight(`${duration}s. 🗸`)
+        logStyle.muted(logStyle.info(`@arpadroid/${project.name}`) + ' done in ') +
+            logStyle.highlight(`${duration}s. 🗸`)
     );
     return rv;
 }

@@ -60,7 +60,7 @@ export async function buildCustomElementsManifest(project, config = project.buil
     const { slim } = config;
     const { bypassCheck = false } = options;
     if ((!canBuildManifest(project) && !bypassCheck) || slim) return true;
-    log.task(project.name, 'Building Custom Elements manifest (CEM) ▰▰▰▱');
+    log.task(project.name, 'Building Custom Elements manifest (CEM) 🧩 ▰▱▱▱');
     const startTime = Date.now();
     await runAnalyzer(project);
 
@@ -72,8 +72,10 @@ export async function buildCustomElementsManifest(project, config = project.buil
         cpSync(manifestFile, join(project.path || CWD, 'custom-elements.json'));
     }
 
-    const endTime = Date.now();
-    log.task(project.name, `Done in ${logStyle.highlight(String((endTime - startTime) / 1000))}s ▰▰▰▰`);
+    log.task(
+        project.name,
+        `done CEM in ${logStyle.highlight(String((Date.now() - startTime) / 1000))}s 🧩 ▰▰▰▰ 🗸`
+    );
     return true;
 }
 
