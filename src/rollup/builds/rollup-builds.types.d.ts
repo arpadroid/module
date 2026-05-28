@@ -16,6 +16,7 @@ import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import typescript from 'rollup-plugin-typescript2';
 import { Options } from 'storybook/internal/types';
+import { ManifestModeType } from '../../project/helpers/manifest/projectManifest.helper.types.js';
 
 type TestMatchContentType = string | string[];
 type TestMatchType = TestMatchContentType | (() => Promise<TestMatchContentType>);
@@ -80,6 +81,7 @@ export type BuildHooksType = {
 };
 
 export type BuildManifestType = {
+    mode?: ManifestModeType;
     useTypesChecker?: boolean;
 };
 

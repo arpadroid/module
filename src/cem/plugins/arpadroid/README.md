@@ -53,19 +53,14 @@ By default the plugin uses text-based TypeScript AST parsing. When `shouldUseTyp
 ```json
 {
     "name": "variant",
-    "type": {
-        "text": "MyVariantAlias",
-        "summary": "string",
-        "detail": "'primary' | 'secondary'"
-    },
+    "type": "MyVariantAlias",
     "serializedAs": "string",
-    "description": "JSDoc comment from the ConfigType property",
     "optional": true,
-    "inheritedFrom": { "name": "ParentClassName" }
+    "inheritedFrom": "ParentClassName"
 }
 ```
 
-`detail` is only present when a type alias was resolved to a more specific expansion. `inheritedFrom` is only present on attributes propagated from an ancestor class.
+`optional` is only emitted when `true`. `inheritedFrom` is only present on attributes propagated from an ancestor class.
 
 ## Serialization Strategy
 
@@ -82,3 +77,31 @@ The `serializedAs` field is inferred from the TypeScript type text and indicates
 ## Configuration
 
 The plugin is registered in `custom-elements-manifest.config.js` at the root of this package. No options are accepted — behavior is controlled by the project-level `shouldUseTypesChecker()` helper.
+
+## Manifest Modes
+
+The build supports two modes:
+
+| Mode | Purpose |
+|------|---------|
+| `generic` (default) | Preserves standard CEM metadata for IDE autocomplete, suggestions, and documentation tooling |
+| `storybook` | Applies aggressive pruning to keep manifest payload small for Storybook-focused usage |
+
+Mode selection priority is: CLI `--mode`, then project config `manifest.mode`, then default `generic`.
+
+## Filter Toggles
+
+For quick, intuitive control of what gets filtered, edit the `MANIFEST_FILTER_POLICY` presets in:
+
+- `src/cem/plugins/arpadroid/arpadroid-cem-plugin.js`
+
+Available toggles per mode:
+
+| Toggle | Effect |
+|--------|--------|
+| `omitUnregisteredModules` | Remove files where `defineCustomElement(...)` was not detected |
+| `omitInheritedMembers` | Remove inherited members from declarations |
+| `omitPrivateMembers` | Remove private members (`privacy: private`, `#name`) |
+| `omitUnderscoreMethods` | Remove underscore-prefixed methods (`_method`) |
+| `omitUnderscoreProperties` | Remove underscore-prefixed fields/properties (`_prop`) |
+| `pruneForStorybook` | Apply compact Storybook shaping (`pruneManifestModules`) |

@@ -460,7 +460,9 @@ function enhanceInheritedAttributeArgTypes(context) {
             const attribute = attributeMap.get(name);
             if (!attribute) return [name, argType];
 
-            const inheritedFrom = attribute?.inheritedFrom?.name;
+            const inheritedFrom = typeof attribute?.inheritedFrom === 'string'
+                ? attribute.inheritedFrom
+                : attribute?.inheritedFrom?.name;
             const existingTable = argType?.table || {};
             return [
                 name,

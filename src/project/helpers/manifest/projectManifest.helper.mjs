@@ -4,22 +4,48 @@
  * @typedef {import('../../../rollup/builds/rollup-builds.types.js').BuildConfigType} BuildConfigType
  * @typedef {import('../../project.mjs').default} Project
  * @typedef {import('./projectManifest.helper.types.js').CemSchemaType} CemSchemaType
+ * @typedef {import('./projectManifest.helper.types.js').ManifestModeType} ManifestModeType
+ * @typedef {import('./projectManifest.helper.types.js').BuildManifestConfigType} BuildManifestConfigType
  */
-import { cpSync, existsSync } from 'fs';
-import { join, resolve } from 'path';
+import { cpSync, existsSync, statSync, writeFileSync } from 'fs';
+import { join, resolve, sep } from 'path';
 import { glob } from 'glob';
 import { log, logStyle } from '@arpadroid/logger';
 import { getAllDependencies } from '../build/projectBuild.helper.mjs';
-import { prepareArgs, safeReadJson } from '@arpadroid/tools-node';
+import { prepareArgs, safeReadJson, argv } from '@arpadroid/tools-node';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { spawnSync } from 'child_process';
-import { argv } from '@arpadroid/tools-node';
+import { formatBytes } from '@arpadroid/tools-iso';
 import { getProject } from '../../projectStore.mjs';
 
 export const USE_TYPES_CHECKER = argv.typesChecker;
 const CWD = process.cwd();
 /** CEM analyzer output directory. Must match the `outdir` field in custom-elements-manifest.config.js. */
-const CEM_OUTDIR = 'dist';
+export const CEM_OUTDIR = '';
+
+/////////////////////
+// #region Manifest
+/////////////////////
+
+/**
+ * Return output filename for the selected manifest mode.
+ * @param {ManifestModeType} mode
+ * @returns {string}
+ */
+function getManifestOutputFilename(mode = 'standard') {
+    return mode !== 'standard' ? `custom-elements.${mode}.json` : 'custom-elements.json';
+}
+
+/**
+ * Determines if the manifest should be built for the given project and config.
+ * @param {Project | undefined} project
+ * @returns {boolean}
+ */
+export function canBuildManifest(project) {
+    const { buildManifest, buildType } = project?.buildConfig || {};
+    return Boolean(buildType === 'uiComponent' && buildManifest);
+}
+
 /**
  * Determines whether to use the types checker based on command line arguments and project configuration.
  * @param {Project | undefined} project
@@ -35,57 +61,15 @@ export async function shouldUseTypesChecker(project = getProject()) {
     return USE_TYPES_CHECKER;
 }
 
-/////////////////////
-// #region Manifest
-/////////////////////
-
-/**
- * Determines if the manifest should be built for the given project and config.
- * @param {Project | undefined} project
- * @returns {boolean}
- */
-export function canBuildManifest(project) {
-    const { buildManifest, buildType } = project?.buildConfig || {};
-    return Boolean(buildType === 'uiComponent' && buildManifest);
-}
-
-/**
- * Build and persist the Custom Elements Manifest for the given project.
- * @param {Project} project
- * @param {BuildConfigType} config
- * @param {{ bypassCheck?: boolean, destinations?: string[] }} [options]
- * @returns {Promise<boolean>}
- */
-export async function buildCustomElementsManifest(project, config = project.buildConfig || {}, options = {}) {
-    const { slim } = config;
-    const { bypassCheck = false } = options;
-    if ((!canBuildManifest(project) && !bypassCheck) || slim) return true;
-    log.task(project.name, 'Building Custom Elements manifest (CEM) 🧩 ▰▱▱▱');
-    const startTime = Date.now();
-    await runAnalyzer(project);
-
-    // Verify the analyzer created the manifest file; fail the build if not.
-    const manifestFile = getManifestFile(project);
-    if (!manifestFile) {
-        throw new Error(`Custom Elements Manifest not produced for project ${project.name}`);
-    } else {
-        cpSync(manifestFile, join(project.path || CWD, 'custom-elements.json'));
-    }
-
-    log.task(
-        project.name,
-        `done CEM in ${logStyle.highlight(String((Date.now() - startTime) / 1000))}s 🧩 ▰▰▰▰ 🗸`
-    );
-    return true;
-}
-
 /**
  * Returns the manifest file for a project, if it exists. Logs an error and returns undefined if the file cannot be read or parsed.
  * @param {Project | undefined} project
  * @returns {string | undefined}
  */
 export function getManifestFile(project) {
-    const manifestPath = resolve(join(project?.path || CWD, CEM_OUTDIR, 'custom-elements.json'));
+    const manifestPath = resolve(
+        join(project?.path || CWD, CEM_OUTDIR, 'custom-elements.json'),
+    );
     if (!existsSync(manifestPath)) {
         log.warning(`No manifest file found for project ${project?.name} at expected path ${manifestPath}`);
         return undefined;
@@ -102,6 +86,18 @@ export function getManifestContent(project) {
     const manifestFile = getManifestFile(project);
     if (!manifestFile) return undefined;
     return safeReadJson(manifestFile);
+}
+
+/**
+ * Minify a JSON manifest file in place.
+ * @param {string} filePath
+ * @returns {boolean}
+ */
+function minifyManifestFile(filePath) {
+    const json = safeReadJson(filePath);
+    if (!json) return false;
+    writeFileSync(filePath, JSON.stringify(json));
+    return true;
 }
 
 // #endregion Manifest
@@ -141,9 +137,11 @@ export function getAnalyzerConfigFile(project) {
  * Runs the analyzer CLI for the project. The CLI is expected to write `dist/custom-elements.json`.
  * @param {Project} project
  * @param {Partial<AnalyzerConfig>} opt
+ * @param {ManifestModeType} mode
+ * @param {boolean} debug
  * @returns {Promise<boolean|undefined>}
  */
-export async function runAnalyzer(project, opt = {}) {
+export async function runAnalyzer(project, opt = {}, mode = 'standard', debug = false) {
     const bin = getAnalyzerBinary(project);
     if (!bin) return undefined;
 
@@ -154,6 +152,11 @@ export async function runAnalyzer(project, opt = {}) {
     const result = spawnSync('node', [bin, 'analyze', ...args], {
         cwd: project.path || CWD,
         stdio: 'inherit',
+        env: {
+            ...process.env,
+            ARPADROID_CEM_MODE: mode,
+            ARPADROID_CEM_DEBUG_MODULES: debug ? '1' : '0'
+        },
         maxBuffer: 10 * 1024 * 1024
     });
 
@@ -167,6 +170,57 @@ export async function runAnalyzer(project, opt = {}) {
         return undefined;
     }
 
+    return true;
+}
+
+/**
+ * Logs the result of the manifest build.
+ * @param {number} startTime
+ * @param {string} file
+ * @param {Project} project
+ */
+function logBuildEnd(startTime, file, project) {
+    const seconds = String((Date.now() - startTime) / 1000);
+    const fileSize = existsSync(file) ? `${formatBytes(statSync(file).size)}` : 'unknown size';
+    const fileName = file.replace(CWD + sep, '');
+    log.task(
+        project.name,
+        `Created manifest at ${logStyle.heading(fileName)} [💾 ${fileSize}] [⏱️  ${logStyle.highlight(seconds)}s] 🧩 ▰▰▰▰ 🗸 `
+    );
+}
+
+/**
+ * Build and persist the Custom Elements Manifest for the given project.
+ * @param {Project} project
+ * @param {BuildManifestConfigType} [options]
+ * @param {BuildConfigType} config
+ * @returns {Promise<boolean>}
+ */
+export async function buildCustomElementsManifest(project, options = {}, config = project.buildConfig || {}) {
+    const { slim } = config;
+    const {
+        bypassCheck = false,
+        mode = config.manifest?.mode || 'standard',
+        minify = false,
+        debug = false
+    } = options;
+
+    const outputFilename = getManifestOutputFilename(mode);
+    if ((!canBuildManifest(project) && !bypassCheck) || slim) return true;
+
+    log.task(project.name, `Building Custom Elements Manifest (CEM) [mode=${mode}] 🧩 ▰▱▱▱`);
+    const startTime = Date.now();
+
+    await runAnalyzer(project, undefined, mode, debug);
+    const manifestFile = getManifestFile(project);
+    if (!manifestFile) {
+        throw new Error(`Custom Elements Manifest not produced for project ${project.name}`);
+    } else {
+        minify && minifyManifestFile(manifestFile);
+        const basePath = project.path || CWD;
+        cpSync(manifestFile, join(basePath, 'dist', outputFilename));
+    }
+    logBuildEnd(startTime,  manifestFile, project);
     return true;
 }
 

@@ -1,7 +1,7 @@
 /**
- * @typedef {import('../../../types.js').DescriptorType} DescriptorType
  * @typedef {import('@custom-elements-manifest/analyzer').AnalyzePhaseParams} AnalyzePhaseParams
- * @typedef {import('../../../types.js').NodeType} NodeType
+ * @typedef {import('./cem-utils.types.js').DescriptorType} DescriptorType
+ * @typedef {import('./cem-utils.types.js').NodeType} NodeType
  */
 
 /**

@@ -1,5 +1,5 @@
 /**
- * @typedef {import('../../../types.js').NodeType} NodeType
+ * @typedef {import('./cem-utils.types.js').NodeType} NodeType
  * @typedef {import('@custom-elements-manifest/analyzer').AnalyzePhaseParams} AnalyzePhaseParams
  */
 import { parseCustomElement } from './cem-parser.utils.js';

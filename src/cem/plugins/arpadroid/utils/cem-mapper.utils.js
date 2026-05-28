@@ -1,7 +1,7 @@
 /**
- * @typedef {import('../../../types.js').TextType} TextType
- * @typedef {import('../../../types.js').DescriptorType} DescriptorType
- * @typedef {import('../../../types.js').AttributeDescriptorType} AttributeDescriptorType
+ * @typedef {import('./cem-utils.types.js').TextType} TextType
+ * @typedef {import('./cem-utils.types.js').DescriptorType} DescriptorType
+ * @typedef {import('./cem-utils.types.js').AttributeDescriptorType} AttributeDescriptorType
  */
 
 /**

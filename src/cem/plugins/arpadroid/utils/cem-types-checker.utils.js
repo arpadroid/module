@@ -4,7 +4,7 @@
  * Kept in a separate module so `cem-utils.js` can optionally call into it.
  */
 /**
- * @typedef {import('../../../types.js').DescriptorType} DescriptorType
+ * @typedef {import('./cem-utils.types.js').DescriptorType} DescriptorType
  * @typedef {typeof import('typescript')} Ts
  * @typedef {import('typescript').Program} TsProgram
  * @typedef {import('typescript').TypeChecker} TsTypeChecker

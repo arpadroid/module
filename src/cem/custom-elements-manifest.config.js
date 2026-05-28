@@ -2,18 +2,19 @@
  * @typedef {import('@custom-elements-manifest/analyzer').Config} AnalyzerConfig
  * @typedef {import('./plugins/arpadroid/arpadroid-cem-plugin.js').Plugin} Plugin
  */
+import { CEM_OUTDIR } from '../project/helpers/manifest/projectManifest.helper.mjs';
 import ArpadroidCemPlugin from './plugins/arpadroid/arpadroid-cem-plugin.js';
 import { join } from 'path';
 
 /** @type {AnalyzerConfig} */
 export default {
-    globs: [join('src', '**', '*.js')],
-    exclude: ['**/*.stories.*', '**/*.test.*', '**/storybook/**'],
-    outdir: 'dist', // Must match CEM_OUTDIR in src/project/helpers/manifest/projectManifest.helper.mjs
+    globs: [join('src', 'components', '**', '*.js')],
+    exclude: ['**/*.stories.*', '**/stories/**', '**/*.test.*', '**/storybook/**', '**/helper/**'],
+    outdir: CEM_OUTDIR,
     dev: false,
     watch: false,
     dependencies: false,
-    packagejson: false, // Output CEM path to `package.json`, defaults to true
+    packagejson: false,
     catalyst: false,
     fast: false,
     stencil: false,

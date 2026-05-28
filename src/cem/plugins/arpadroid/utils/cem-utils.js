@@ -1,5 +1,5 @@
 /**
- * @typedef {import('../../../types.js').NodeType} NodeType
+ * @typedef {import('./cem-utils.types.js').NodeType} NodeType
  */
 
 export { inferType, sanitizeAttributeName, mapPropsToAttributes } from './cem-mapper.utils.js';

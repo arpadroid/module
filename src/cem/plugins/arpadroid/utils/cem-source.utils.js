@@ -1,7 +1,7 @@
 /* eslint-disable security/detect-non-literal-fs-filename, sonarjs/no-ignored-exceptions */
 
 /**
- * @typedef {import('../../../types.js').AttributeDescriptorType} AttributeDescriptorType
+ * @typedef {import('./cem-utils.types.js').AttributeDescriptorType} AttributeDescriptorType
  */
 import { existsSync, readFileSync } from 'fs';
 import { basename, dirname, extname, join } from 'path';

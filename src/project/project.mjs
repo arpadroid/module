@@ -298,7 +298,7 @@ class Project {
         process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
         await this.runBuild(config);
         await buildTypes(this, config);
-        await buildCustomElementsManifest(this, config);
+        await buildCustomElementsManifest(this, { minify: MINIFY === true }, config);
         await this.runDeferredOperations();
         STORYBOOK && runStorybook(this, config);
         this.buildEndTime = Date.now();
@@ -344,7 +344,7 @@ class Project {
         if (!config.slim) {
             const endTime = Date.now();
             const duration = ((endTime - startTime) / 1000).toFixed(2);
-            log.task(this.name, `done rollup in ${duration}s 📜 ▰▰▰▰ 🗸`);
+            log.task(this.name, `Rollup done [⏱️  ${logStyle.highlight(duration)}s] 📜 ▰▰▰▰ 🗸`);
         }
 
         return rv;
@@ -378,7 +378,7 @@ class Project {
         const { promise, projects } = await buildDependencies(this, buildConfig);
         this.dependencyProjects = projects;
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-        log.task(this.name, `done dependencies in ${logStyle.highlight(duration)}s 📦 ▰▰▰▰ 🗸`);
+        log.task(this.name, `Dependencies done [⏱️  ${logStyle.highlight(duration)}s] 📦 ▰▰▰▰ 🗸`);
         return promise;
     }
 
@@ -551,7 +551,7 @@ class Project {
                         const hasCemChange = [...changedFiles].some(file => file.startsWith(cemSrcDir));
                         changedFiles.clear();
                         if (hasTypesChange || hasCemChange) {
-                            buildCustomElementsManifest(this, config).catch(err => {
+                            buildCustomElementsManifest(this, undefined, config).catch(err => {
                                 log.error('Failed to rebuild manifest:', err);
                             });
                         }
