@@ -9,16 +9,16 @@
  */
 import { cpSync, existsSync, statSync, writeFileSync } from 'fs';
 import { join, resolve, sep } from 'path';
-import { glob } from 'glob';
 import { log, logStyle } from '@arpadroid/logger';
-import { getAllDependencies } from '../build/projectBuild.helper.mjs';
 import { prepareArgs, safeReadJson, argv } from '@arpadroid/tools-node';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { spawnSync } from 'child_process';
 import { formatBytes } from '@arpadroid/tools-iso';
 import { getProject } from '../../projectStore.mjs';
+import { getAllDependencies } from '../build/projectBuild.helper.mjs';
 
 export const USE_TYPES_CHECKER = argv.typesChecker;
+const FORCE_MANIFEST = argv.forceManifest || false;
 const CWD = process.cwd();
 /** CEM analyzer output directory. Must match the `outdir` field in custom-elements-manifest.config.js. */
 export const CEM_OUTDIR = '';
@@ -34,16 +34,6 @@ export const CEM_OUTDIR = '';
  */
 function getManifestOutputFilename(mode = 'standard') {
     return mode !== 'standard' ? `custom-elements.${mode}.json` : 'custom-elements.json';
-}
-
-/**
- * Determines if the manifest should be built for the given project and config.
- * @param {Project | undefined} project
- * @returns {boolean}
- */
-export function canBuildManifest(project) {
-    const { buildManifest, buildType } = project?.buildConfig || {};
-    return Boolean(buildType === 'uiComponent' && buildManifest);
 }
 
 /**
@@ -67,14 +57,7 @@ export async function shouldUseTypesChecker(project = getProject()) {
  * @returns {string | undefined}
  */
 export function getManifestFile(project) {
-    const manifestPath = resolve(
-        join(project?.path || CWD, CEM_OUTDIR, 'custom-elements.json'),
-    );
-    if (!existsSync(manifestPath)) {
-        log.warning(`No manifest file found for project ${project?.name} at expected path ${manifestPath}`);
-        return undefined;
-    }
-    return manifestPath;
+    return resolve(join(project?.path || CWD, CEM_OUTDIR, 'custom-elements.json'));
 }
 
 /**
@@ -174,19 +157,52 @@ export async function runAnalyzer(project, opt = {}, mode = 'standard', debug = 
 }
 
 /**
+ * Determines if the manifest should be built for the given project and config.
+ * @param {Project | undefined} project
+ * @param {BuildConfigType} config
+ * @returns {Promise<boolean>}
+ */
+export async function canBuildManifest(project, config = project?.buildConfig || {}) {
+    const { buildType, buildManifest, slim } = config;
+    if (buildType !== 'uiComponent' || !buildManifest) {
+        return false;
+    }
+    if (slim) {
+        const { manifest: parentManifest } = (await project?.getParentConfig()) || {};
+        const { buildDeps = false, skipIfExists } = parentManifest || {};
+        if (buildDeps === false || (!FORCE_MANIFEST && skipIfExists && getManifestFile(project))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
  * Logs the result of the manifest build.
  * @param {number} startTime
  * @param {string} file
  * @param {Project} project
+ * @param {string} mode
  */
-function logBuildEnd(startTime, file, project) {
+function logBuildEnd(startTime, file, project, mode = 'standard') {
     const seconds = String((Date.now() - startTime) / 1000);
     const fileSize = existsSync(file) ? `${formatBytes(statSync(file).size)}` : 'unknown size';
     const fileName = file.replace(CWD + sep, '');
+    log.task(project.name, `Created manifest at ${logStyle.heading(fileName)}`);
     log.task(
         project.name,
-        `Created manifest at ${logStyle.heading(fileName)} [💾 ${fileSize}] [⏱️  ${logStyle.highlight(seconds)}s] 🧩 ▰▰▰▰ 🗸 `
+        `[💾 ${fileSize}] [mode=${mode}]  [⏱️  ${logStyle.highlight(seconds)}s] 🧩 ▰▰▰▰ 🗸 `
     );
+}
+/**
+ * Bundle the manifest files of the project and its dependencies into a single file. This is used for the "slim" manifest mode, where each project builds a manifest with only its own components, and then they are bundled together to create a complete manifest for the entire project graph.
+ * @param {Project} project
+ * @returns {Promise<void>}
+ */
+export async function bundleManifests(project) {
+    const deps = await getAllDependencies(project);
+    const manifestFiles = deps.map(dep => getManifestFile(dep.project)).filter(Boolean);
+    console.log('manifestFiles', manifestFiles);
 }
 
 /**
@@ -197,7 +213,7 @@ function logBuildEnd(startTime, file, project) {
  * @returns {Promise<boolean>}
  */
 export async function buildCustomElementsManifest(project, options = {}, config = project.buildConfig || {}) {
-    const { slim } = config;
+    const { slim, manifest } = config;
     const {
         bypassCheck = false,
         mode = config.manifest?.mode || 'standard',
@@ -205,81 +221,40 @@ export async function buildCustomElementsManifest(project, options = {}, config 
         debug = false
     } = options;
 
-    const outputFilename = getManifestOutputFilename(mode);
-    if ((!canBuildManifest(project) && !bypassCheck) || slim) return true;
+    const { skipIfExists = false, buildDeps } = manifest || {};
+    if (bypassCheck !== true && !(await canBuildManifest(project))) {
+        return true;
+    }
 
-    log.task(project.name, `Building Custom Elements Manifest (CEM) [mode=${mode}] 🧩 ▰▱▱▱`);
+    const manifestFile = getManifestFile(project) || '';
+
+    if (!FORCE_MANIFEST && skipIfExists && existsSync(manifestFile)) {
+        log.task(
+            project.name,
+            'Skipping CEM build as "skipIfExists" option is enabled and file exists. 🧩 ▰▰▰▰ 🗸'
+        );
+        return true;
+    }
+    if (!slim) {
+        log.task(project.name, `Building Custom Elements Manifest (CEM) [mode=${mode}] 🧩 ▰▱▱▱`);
+    }
     const startTime = Date.now();
-
     await runAnalyzer(project, undefined, mode, debug);
-    const manifestFile = getManifestFile(project);
     if (!manifestFile) {
         throw new Error(`Custom Elements Manifest not produced for project ${project.name}`);
     } else {
+        if (!slim && buildDeps) {
+            await bundleManifests(project);
+        }
         minify && minifyManifestFile(manifestFile);
         const basePath = project.path || CWD;
+        const outputFilename = getManifestOutputFilename(mode);
         cpSync(manifestFile, join(basePath, 'dist', outputFilename));
     }
-    logBuildEnd(startTime,  manifestFile, project);
+    logBuildEnd(startTime, manifestFile, project, mode);
     return true;
 }
 
 // #endregion Analyzer
-
-///////////////////////////
-// #region Fragments
-///////////////////////////
-
-/**
- * Returns all manifest files in the project.
- * @param {Project | undefined} project
- * @returns {string[]}
- */
-export function getProjectFragments(project) {
-    const pattern = join(project?.path || '', 'src', '**', '*.manifest.json');
-    return glob.sync(pattern, { nodir: true }) || [];
-}
-
-/**
- * Returns all manifest files.
- * @param {Project} project
- * @param {BuildConfigType} config
- * @returns {Promise<string[]>}
- */
-export async function getFragments(project, config) {
-    const { slim } = config;
-    /**
-     * If slim is true (the project is being built as a dependency of another module),
-     * only load the project's own manifest files (no dependencies).
-     */
-    const files = getProjectFragments(project);
-    if (slim) return files;
-    const deps = (await getAllDependencies(project)) || [];
-    for (const dep of deps) {
-        if (!canBuildManifest(dep.project)) continue;
-        files.push(...getProjectFragments(dep.project));
-    }
-    return files;
-}
-
-/**
- * Load and parse fragment files. Logs errors for individual files but continues loading others.
- * @param {string[]} files
- * @returns {CemSchemaType[]}
- */
-export function loadFiles(files) {
-    return files.map(frag => safeReadJson(frag)).filter(Boolean);
-}
-
-/**
- * Load and parse all manifest fragments for the project and its dependencies (if not slim). Logs errors for individual files but continues loading others.
- * @param {Project} project
- * @param {BuildConfigType} config
- * @returns {Promise<CemSchemaType[]>}
- */
-export async function loadFragments(project, config) {
-    const files = await getFragments(project, config);
-    return loadFiles(files);
-}
 
 // #endregion

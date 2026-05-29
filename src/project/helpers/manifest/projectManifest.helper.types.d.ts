@@ -10,4 +10,5 @@ export type BuildManifestConfigType = {
     mode?: ManifestModeType;
     debug?: boolean;
     minify?: boolean;
+    force?: boolean;
 };

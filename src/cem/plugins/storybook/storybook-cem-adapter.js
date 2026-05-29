@@ -460,9 +460,10 @@ function enhanceInheritedAttributeArgTypes(context) {
             const attribute = attributeMap.get(name);
             if (!attribute) return [name, argType];
 
-            const inheritedFrom = typeof attribute?.inheritedFrom === 'string'
-                ? attribute.inheritedFrom
-                : attribute?.inheritedFrom?.name;
+            const inheritedFrom =
+                typeof attribute?.inheritedFrom === 'string'
+                    ? attribute.inheritedFrom
+                    : attribute?.inheritedFrom?.name;
             const existingTable = argType?.table || {};
             return [
                 name,
@@ -563,6 +564,15 @@ export function enhanceArgTypesFromCem(context) {
  * @returns {Record<string, unknown>}
  */
 export function processCustomElementsManifest(manifest) {
+    const hasValidTags = Array.isArray(manifest?.tags);
+    const hasValidModules = Array.isArray(manifest?.modules);
+    if (!hasValidTags && !hasValidModules) {
+        // @ts-ignore
+        globalThis.__STORYBOOK_CUSTOM_ELEMENTS_MANIFEST__ = undefined;
+        _declarationIndex = null;
+        return {};
+    }
+
     const processed = /** @type {any} */ ({
         ...manifest,
         modules: manifest?.modules?.map(

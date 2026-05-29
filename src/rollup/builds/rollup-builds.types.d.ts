@@ -83,6 +83,8 @@ export type BuildHooksType = {
 export type BuildManifestType = {
     mode?: ManifestModeType;
     useTypesChecker?: boolean;
+    skipIfExists?: boolean;
+    buildDeps?: boolean;
 };
 
 export type JestConfigType = {

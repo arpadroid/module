@@ -13,7 +13,7 @@ describe('arpadroid CEM types checker utils', () => {
     test('expands aliased literal unions for array properties', () => {
         const typesFilePath = resolve(
             dirname(fileURLToPath(import.meta.url)),
-            '../../../../../../ui/src/components/arpaElement/arpaElement.types.d.ts'
+            '../../../../../../ui/src/components/core/arpaElement/arpaElement.types.d.ts'
         );
         const sourceText = readFileSync(typesFilePath, 'utf8');
 

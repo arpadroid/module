@@ -1,10 +1,15 @@
+/**
+ * @typedef {import('@storybook/web-components-vite').Meta} Meta
+ * @typedef {import('@storybook/web-components-vite').StoryObj} Story
+ */
 
+/** @type {Meta} */
 export default {
     title: 'Components/TestComponent',
     component: 'test-component'
 };
 
-export const Default = () => {
-    const el = document.createElement('test-component');
-    return el;
+/** @type {Story} */
+export const Default = {
+    render: () => '<test-component>Test Component</test-component>'
 };

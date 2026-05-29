@@ -10,9 +10,8 @@ import fs, { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from '
 import { dirname, join } from 'path';
 import { glob } from 'glob';
 import { NO_TYPES } from './../build/projectBuild.helper.mjs';
-import { log } from '@arpadroid/logger';
+import { log, typescriptStamp, logStyle } from '@arpadroid/logger';
 import { prepareArgs, findLocation } from '@arpadroid/tools-node';
-import chalk from 'chalk';
 const CWD = process.cwd();
 
 ///////////////////////////
@@ -291,9 +290,8 @@ export async function buildTypes(project, config) {
         return Promise.resolve(true);
     }
 
-    const typescriptLogoLog = chalk.bgHex('#3178c6').bold('TS');
     if (!config.isDependency) {
-        log.task(project.name, `Building types ${typescriptLogoLog} ▰▱▱▱`);
+        log.task(project.name, `${typescriptStamp} Building types ▰▱▱▱`);
     }
     const startTime = Date.now();
 
@@ -318,7 +316,7 @@ export async function buildTypes(project, config) {
     await run();
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     if (!config.isDependency) {
-        log.task(project.name, `done types in ${duration}s ${typescriptLogoLog} ▰▰▰▰ 🗸`);
+        log.task(project.name, `${typescriptStamp} Types done. [⏱️  ${logStyle.highlight(duration)}s] ▰▰▰▰ 🗸`);
     }
     return Promise.resolve(true);
 }

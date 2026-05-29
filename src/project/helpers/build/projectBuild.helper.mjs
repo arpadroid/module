@@ -22,9 +22,9 @@ export const argv = yargs(hideBin(process.argv)).parseSync();
 
 export const NO_TYPES = Boolean(argv.noTypes);
 export const DEPENDENCY_SORT = [
-    'logger',
     'tools-node',
     'tools-iso',
+    'logger',
     'signals',
     'style-bun',
     'module',
@@ -92,15 +92,17 @@ export function getDefaultBuildConfig(project) {
         buildDeps: true,
         buildI18n: true,
         buildJS: true,
-        buildManifest: false,
         buildStyles: true,
         buildTypes: false,
+        buildManifest: false,
         jest: {
             testMatch: ['<rootDir>/src/**/*.test.js']
         },
         logHeading: true,
         manifest: {
-            useTypesChecker: true
+            useTypesChecker: true,
+            buildDeps: true,
+            skipIfExists: true,
         },
         minify: MINIFY,
         skipLibCheck: true,
@@ -311,11 +313,8 @@ export async function buildDependency(project, parentProject, parentConfig) {
     const rv = await project.build(config);
     const endTime = new Date().getTime();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
-    log.task(
-        parentProject.name,
-        logStyle.muted(logStyle.info(`@arpadroid/${project.name}`) + ' done in ') +
-            logStyle.highlight(`${duration}s. 🗸`)
-    );
+    const depText = logStyle.muted(logStyle.info(`@arpadroid/${project.name}`));
+    log.task(parentProject.name, `${depText} done. [⏱️  ${logStyle.highlight(duration)}s] 📦 ▰▰▰▰ 🗸`);
     return rv;
 }
 

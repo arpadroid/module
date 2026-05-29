@@ -260,7 +260,9 @@ export function manifestWatchPlugin(project) {
     return {
         name: 'manifest-watch',
         async buildStart() {
-            if (!canBuildManifest(project)) return;
+            if (!(await canBuildManifest(project))) {
+                return;
+            }
             const typesPattern = join(project.path || cwd, 'src', '**', '*.types.d.ts').replaceAll('\\', '/');
             for (const file of await glob(typesPattern)) {
                 this.addWatchFile(file);

@@ -15,7 +15,7 @@ import path, { basename, resolve } from 'path';
 import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 import { rollup, watch as rollupWatch } from 'rollup';
-import { log, logStyle } from '@arpadroid/logger';
+import { log, logStyle, rollupStamp } from '@arpadroid/logger';
 
 import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK } from './helpers/build/projectBuild.helper.mjs';
 import { buildDependencies, getPackageJson, getDependencies } from './helpers/build/projectBuild.helper.mjs';
@@ -200,6 +200,21 @@ class Project {
         return PROJECT_STORE[config.parent || this.name];
     }
 
+    async getParentConfig() {
+        const proj = await this.getParentProject();
+        return await proj?.getConfig();
+    }
+
+    /**
+     * Returns a specific value from the parent project configuration.
+     * @param {keyof BuildConfigType} key
+     * @returns {Promise<BuildConfigType[keyof BuildConfigType] | undefined>}
+     */
+    async getParentConfigValue(key) {
+        const parentConfig = await this.getParentConfig();
+        return parentConfig?.[key];
+    }
+
     // #endregion Get
 
     ////////////////////
@@ -298,7 +313,7 @@ class Project {
         process.env.ARPADROID_BUILD_CONFIG = JSON.stringify(config);
         await this.runBuild(config);
         await buildTypes(this, config);
-        await buildCustomElementsManifest(this, { minify: MINIFY === true }, config);
+        await buildCustomElementsManifest(this, { minify: true }, config);
         await this.runDeferredOperations();
         STORYBOOK && runStorybook(this, config);
         this.buildEndTime = Date.now();
@@ -332,7 +347,7 @@ class Project {
     async runBuild(config) {
         const startTime = Date.now();
         if (!config.slim) {
-            log.task(this.name, 'Rolling up 📜 ▰▱▱▱');
+            log.task(this.name, `${rollupStamp} Rolling up 📜 ▰▱▱▱`);
         }
         const rollupConfig = await this.getRollupConfig();
         let rv;
@@ -344,7 +359,7 @@ class Project {
         if (!config.slim) {
             const endTime = Date.now();
             const duration = ((endTime - startTime) / 1000).toFixed(2);
-            log.task(this.name, `Rollup done [⏱️  ${logStyle.highlight(duration)}s] 📜 ▰▰▰▰ 🗸`);
+            log.task(this.name, `${rollupStamp} Rollup done [⏱️  ${logStyle.highlight(duration)}s] 📜 ▰▰▰▰ 🗸`);
         }
 
         return rv;
@@ -551,9 +566,18 @@ class Project {
                         const hasCemChange = [...changedFiles].some(file => file.startsWith(cemSrcDir));
                         changedFiles.clear();
                         if (hasTypesChange || hasCemChange) {
-                            buildCustomElementsManifest(this, undefined, config).catch(err => {
-                                log.error('Failed to rebuild manifest:', err);
-                            });
+                            buildCustomElementsManifest(this, undefined, {
+                                ...config,
+                                manifest: { skipIfExists: false }
+                            })
+                                .then(() => {
+                                    log.success(
+                                        'Custom Elements Manifest rebuilt successfully after changes detected in types or CEM source files. 🧩 ▰▰▰▰ 🗸'
+                                    );
+                                })
+                                .catch(err => {
+                                    log.error('Failed to rebuild manifest:', err);
+                                });
                         }
                     }
                 }

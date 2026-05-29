@@ -12,7 +12,7 @@ import { join } from 'path';
 
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { ThemesBundler } from '@arpadroid/style-bun';
-import { log, logStyle } from '@arpadroid/logger';
+import { log, logStyle, cssStamp } from '@arpadroid/logger';
 
 import PROJECT_STORE, { getProject } from '../../projectStore.mjs';
 import Project from '../../project.mjs';
@@ -182,7 +182,7 @@ export async function createBundlerInstance(project, buildConfig, bundlerConfig 
 export async function bundleStyles(project, config, bundlerConfig = {}) {
     const { buildStyles, slim } = config;
     if (!buildStyles || !hasStyles(project)) return true;
-    !slim && log.task(project.name, 'Bundling CSS 🎨 ▰▱▱▱');
+    !slim && log.task(project.name, `${cssStamp} bundling app styles 🎨 ▰▱▱▱`);
     const bundler = await createBundlerInstance(project, config, bundlerConfig);
     await bundler.initialize();
     return bundler;
