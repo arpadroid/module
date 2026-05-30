@@ -15,7 +15,7 @@ import path, { basename, resolve } from 'path';
 import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 import { rollup, watch as rollupWatch } from 'rollup';
-import { log, logStyle, rollupStamp } from '@arpadroid/logger';
+import { log, logStyle, jsStamp } from '@arpadroid/logger';
 
 import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK } from './helpers/build/projectBuild.helper.mjs';
 import { buildDependencies, getPackageJson, getDependencies } from './helpers/build/projectBuild.helper.mjs';
@@ -40,6 +40,9 @@ class Project {
     ////////////////////////////////
     // #region Initialization
     ////////////////////////////////
+    /** @type {void |undefined | ((value?: unknown) => void)} */
+    buildLogResolve;
+
     /**
      * Initializes a new project instance.
      * @param {string} name
@@ -317,7 +320,7 @@ class Project {
         await this.runDeferredOperations();
         STORYBOOK && runStorybook(this, config);
         this.buildEndTime = Date.now();
-        !slim && this.logBuildComplete();
+        !slim && this.buildLogResolve?.();
         runHook(this, 'onBuildEnd', config);
         return true;
     }
@@ -345,24 +348,22 @@ class Project {
      * @returns {Promise<boolean | import('rollup').RollupWatcher>}
      */
     async runBuild(config) {
-        const startTime = Date.now();
-        if (!config.slim) {
-            log.task(this.name, `${rollupStamp} Rolling up 📜 ▰▱▱▱`);
-        }
         const rollupConfig = await this.getRollupConfig();
-        let rv;
+        let promise;
         if (config.watch || WATCH) {
-            rv = await this.watch(rollupConfig, config, config.watchCallback);
+            promise = this.watch(rollupConfig, config, config.watchCallback);
         } else {
-            rv = await this.rollup(rollupConfig, config);
+            promise = this.rollup(rollupConfig, config);
         }
         if (!config.slim) {
-            const endTime = Date.now();
-            const duration = ((endTime - startTime) / 1000).toFixed(2);
-            log.task(this.name, `${rollupStamp} Rollup done [⏱️  ${logStyle.highlight(duration)}s] 📜 ▰▰▰▰ 🗸`);
+            log.task(this.name, 'Rolling up.', {
+                icon: jsStamp,
+                doneMessage: 'Rollup done.',
+                promise
+            });
         }
-
-        return rv;
+        await promise;
+        return true;
     }
 
     async runDeferredOperations() {
@@ -388,29 +389,15 @@ class Project {
      */
     async buildDependencies(buildConfig) {
         if (!buildConfig.buildDeps) return;
-        const startTime = Date.now();
-        log.task(this.name, 'Building dependencies 📦 ▰▱▱▱');
         const { promise, projects } = await buildDependencies(this, buildConfig);
+        log.task(this.name, 'Building dependencies.', {
+            icon: '📦',
+            promise: promise || Promise.reject(),
+            doneMessage: 'Dependencies done.'
+        });
+        const response = await promise;
         this.dependencyProjects = projects;
-        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-        log.task(this.name, `Dependencies done [⏱️  ${logStyle.highlight(duration)}s] 📦 ▰▰▰▰ 🗸`);
-        return promise;
-    }
-
-    logBuildComplete() {
-        const seconds = Number(this.getBuildSeconds());
-        let secondsText = String(seconds);
-        if (seconds < 5) {
-            secondsText = logStyle.success(secondsText);
-        } else if (seconds < 10) {
-            secondsText = logStyle.warning(secondsText);
-        } else {
-            secondsText = logStyle.error(secondsText);
-        }
-        log.task(
-            this.name,
-            logStyle.highlight(`Build complete in ${secondsText} seconds, have a nice day! 👾`)
-        );
+        return response;
     }
 
     /**
@@ -421,7 +408,11 @@ class Project {
     logBuild(config) {
         if (!config?.slim) {
             config.logHeading && log.arpadroid(config.logo || this.name);
-            console.log(logStyle.heading('🏗️  Building project ▱▱▱▱ \n'));
+            const msg = ' Building ' + logStyle.dep(`@arpadroid/${this.name}`);
+            this.buildLogResolve = log.task(this.name, msg, {
+                icon: '🏗️ ',
+                doneMessage: ' Build complete, have a nice day! 👾'
+            });
         }
     }
 
@@ -431,7 +422,7 @@ class Project {
      * @returns {Promise<boolean>}
      */
     async cleanBuild(config = {}) {
-        !config?.slim && log.task(this.name, 'Cleaning up 🧹 ▰▱▱▱');
+        !config?.slim && log.task(this.name, 'Cleaning up.', { icon: '🧹' });
         if (existsSync(`${this.path}/dist`)) {
             rmSync(`${this.path}/dist`, { recursive: true, force: true });
         }

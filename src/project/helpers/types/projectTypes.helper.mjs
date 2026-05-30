@@ -290,11 +290,6 @@ export async function buildTypes(project, config) {
         return Promise.resolve(true);
     }
 
-    if (!config.isDependency) {
-        log.task(project.name, `${typescriptStamp} Building types ▰▱▱▱`);
-    }
-    const startTime = Date.now();
-
     const run = async () => {
         await compileTypes(project);
         await compileTypeDeclarations(project, config);
@@ -313,11 +308,15 @@ export async function buildTypes(project, config) {
         return Promise.resolve(true);
     }
 
-    await run();
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    const promise = run();
     if (!config.isDependency) {
-        log.task(project.name, `${typescriptStamp} Types done. [⏱️  ${logStyle.highlight(duration)}s] ▰▰▰▰ 🗸`);
+        log.task(project.name, 'Building types', {
+            icon: typescriptStamp,
+            promise,
+            doneMessage: 'Types done.'
+        });
     }
+    await promise;
     return Promise.resolve(true);
 }
 

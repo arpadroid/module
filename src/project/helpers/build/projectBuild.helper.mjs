@@ -102,7 +102,7 @@ export function getDefaultBuildConfig(project) {
         manifest: {
             useTypesChecker: true,
             buildDeps: true,
-            skipIfExists: true,
+            skipIfExists: true
         },
         minify: MINIFY,
         skipLibCheck: true,
@@ -311,10 +311,8 @@ export async function buildDependency(project, parentProject, parentConfig) {
     }
     const startTime = new Date().getTime();
     const rv = await project.build(config);
-    const endTime = new Date().getTime();
-    const duration = ((endTime - startTime) / 1000).toFixed(2);
     const depText = logStyle.muted(logStyle.info(`@arpadroid/${project.name}`));
-    log.task(parentProject.name, `${depText} done. [⏱️  ${logStyle.highlight(duration)}s] 📦 ▰▰▰▰ 🗸`);
+    log.task(parentProject.name, `${depText} done.`, { startTime });
     return rv;
 }
 
@@ -322,7 +320,7 @@ export async function buildDependency(project, parentProject, parentConfig) {
  * Builds the project dependencies.
  * @param {Project} project
  * @param {BuildConfigType} config
- * @returns {Promise<{promise: Promise<boolean>|void, projects?: Project[]}>}
+ * @returns {Promise<{promise: Promise<boolean | void>|void, projects?: Project[]}>}
  */
 export async function buildDependencies(project, config) {
     if (config.buildDeps !== true) {
@@ -338,8 +336,7 @@ export async function buildDependencies(project, config) {
             return Promise.reject(err);
         })
     );
-    const promise = await Promise.allSettled(promises).then(() => Promise.resolve());
-
+    const promise = Promise.allSettled(promises).then(() => Promise.resolve());
     process.env.arpadroid_slim = '';
     return { promise, projects };
 }

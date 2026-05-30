@@ -179,24 +179,6 @@ export async function canBuildManifest(project, config = project?.buildConfig ||
 }
 
 /**
- * Logs the result of the manifest build.
- * @param {number} startTime
- * @param {string} file
- * @param {Project} project
- * @param {string} mode
- */
-function logBuildEnd(startTime, file, project, mode = 'standard') {
-    const seconds = String((Date.now() - startTime) / 1000);
-    const fileSize = existsSync(file) ? `${formatBytes(statSync(file).size)}` : 'unknown size';
-    const fileName = file.replace(CWD + sep, '');
-    log.task(project.name, `Created manifest at ${logStyle.heading(fileName)}`);
-    log.task(
-        project.name,
-        `[💾 ${fileSize}] [mode=${mode}]  [⏱️  ${logStyle.highlight(seconds)}s] 🧩 ▰▰▰▰ 🗸 `
-    );
-}
-
-/**
  * Retrieves and parses the manifest payloads for the project and its dependencies.
  * Each dependency's manifest modules will have their paths adjusted to be relative to the project root.
  * Logs errors for individual files but continues loading others.
@@ -262,6 +244,25 @@ export async function bundleManifests(project, manifestFile) {
 }
 
 /**
+ * Logs the manifest build process for the project, including start and completion messages with file size information.
+ * @param {Project} project
+ * @param {ManifestModeType} mode
+ * @param {string} manifestFile
+ * @returns {void | undefined | ((value: unknown) => void)}
+ */
+export function logManifestBuild(project, mode, manifestFile) {
+    return log.task(project.name, `Building Custom Elements Manifest (CEM) [mode=${mode}]`, {
+        icon: '🧩',
+        doneMessage: () => {
+            const fileSize = existsSync(manifestFile)
+                ? `${formatBytes(statSync(manifestFile).size)}`
+                : 'unknown size';
+            const fileName = manifestFile.replace(CWD + sep, '');
+            return `Created manifest ${logStyle.heading(fileName)} [💾 ${fileSize}] `;
+        }
+    });
+}
+/**
  * Build and persist the Custom Elements Manifest for the given project.
  * @param {Project} project
  * @param {BuildManifestConfigType} [options]
@@ -285,29 +286,25 @@ export async function buildCustomElementsManifest(project, options = {}, config 
     const manifestFile = getManifestPath(project) || '';
 
     if (!FORCE_MANIFEST && skipIfExists && existsSync(manifestFile)) {
-        log.task(
-            project.name,
-            'Skipping CEM build as "skipIfExists" option is enabled and file exists. 🧩 ▰▰▰▰ 🗸'
-        );
+        const msg = 'Skipping manifest build as "skipIfExists" option is enabled and file exists.';
+        log.task(project.name, msg, { icon: '🧩' });
         return true;
     }
-    if (!slim) {
-        log.task(project.name, `Building Custom Elements Manifest (CEM) [mode=${mode}] 🧩 ▰▱▱▱`);
-    }
-    const startTime = Date.now();
+
+    const logResolve = !slim && logManifestBuild(project, mode, manifestFile);
     await runAnalyzer(project, undefined, mode, debug);
-    if (!manifestFile) {
-        throw new Error(`Custom Elements Manifest not produced for project ${project.name}`);
-    } else {
-        if (!slim && buildDeps) {
-            await bundleManifests(project, manifestFile);
-        }
-        minify && minifyManifestFile(manifestFile);
-        const basePath = project.path || CWD;
-        const outputFilename = getManifestOutputFilename(mode);
-        cpSync(manifestFile, join(basePath, 'dist', outputFilename));
+    if (!existsSync(manifestFile)) {
+        log.error(`Custom Elements Manifest not produced for project ${project.name}`);
+        return false;
     }
-    logBuildEnd(startTime, manifestFile, project, mode);
+    if (!slim && buildDeps) {
+        await bundleManifests(project, manifestFile);
+    }
+    minify && minifyManifestFile(manifestFile);
+    const basePath = project.path || CWD;
+    const outputFilename = getManifestOutputFilename(mode);
+    cpSync(manifestFile, join(basePath, 'dist', outputFilename));
+    logResolve && logResolve?.(true);
     return true;
 }
 
