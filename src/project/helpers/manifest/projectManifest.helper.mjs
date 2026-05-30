@@ -6,6 +6,8 @@
  * @typedef {import('./projectManifest.helper.types.js').CemSchemaType} CemSchemaType
  * @typedef {import('./projectManifest.helper.types.js').ManifestModeType} ManifestModeType
  * @typedef {import('./projectManifest.helper.types.js').BuildManifestConfigType} BuildManifestConfigType
+ * @typedef {import('custom-elements-manifest/schema').Module} ManifestModuleType
+ * @typedef {import('custom-elements-manifest/schema').Package} CustomElementsManifest
  */
 import { cpSync, existsSync, statSync, writeFileSync } from 'fs';
 import { join, resolve, sep } from 'path';
@@ -52,23 +54,22 @@ export async function shouldUseTypesChecker(project = getProject()) {
 }
 
 /**
- * Returns the manifest file for a project, if it exists. Logs an error and returns undefined if the file cannot be read or parsed.
+ * Returns the manifest path for a project, whether it exists or not.
  * @param {Project | undefined} project
  * @returns {string | undefined}
  */
-export function getManifestFile(project) {
+export function getManifestPath(project) {
     return resolve(join(project?.path || CWD, CEM_OUTDIR, 'custom-elements.json'));
 }
 
 /**
- * Returns the parsed manifest content for a project, if the manifest file exists and can be read. Logs errors and returns undefined if the file cannot be read or parsed.
+ * Returns the manifest file for a project if it exists.
  * @param {Project | undefined} project
- * @returns {CemSchemaType | undefined}
+ * @returns {string | undefined}
  */
-export function getManifestContent(project) {
-    const manifestFile = getManifestFile(project);
-    if (!manifestFile) return undefined;
-    return safeReadJson(manifestFile);
+export function getManifestFile(project) {
+    const manifestPath = getManifestPath(project) || '';
+    return existsSync(manifestPath) ? manifestPath : undefined;
 }
 
 /**
@@ -170,7 +171,7 @@ export async function canBuildManifest(project, config = project?.buildConfig ||
     if (slim) {
         const { manifest: parentManifest } = (await project?.getParentConfig()) || {};
         const { buildDeps = false, skipIfExists } = parentManifest || {};
-        if (buildDeps === false || (!FORCE_MANIFEST && skipIfExists && getManifestFile(project))) {
+        if (buildDeps === false || (!FORCE_MANIFEST && skipIfExists && getManifestPath(project))) {
             return false;
         }
     }
@@ -194,15 +195,70 @@ function logBuildEnd(startTime, file, project, mode = 'standard') {
         `[💾 ${fileSize}] [mode=${mode}]  [⏱️  ${logStyle.highlight(seconds)}s] 🧩 ▰▰▰▰ 🗸 `
     );
 }
+
+/**
+ * Retrieves and parses the manifest payloads for the project and its dependencies.
+ * Each dependency's manifest modules will have their paths adjusted to be relative to the project root.
+ * Logs errors for individual files but continues loading others.
+ * @param {Project} project
+ * @returns {Promise<CustomElementsManifest[]>}
+ */
+export async function getManifestPayloads(project) {
+    const deps = await getAllDependencies(project);
+    deps.push({ project, name: project.name, path: project.path || '' });
+    /** @type {CustomElementsManifest[]} */
+    const payloads = [];
+    deps.forEach(dep => {
+        const file = getManifestFile(dep.project) || '';
+        if (!file) return;
+        const payload = /** @type {CustomElementsManifest | undefined} */ (safeReadJson(file));
+        if (!payload) return;
+        if (dep.name !== project.name) {
+            /** @type {ManifestModuleType[]} */
+            const modules = payload.modules || [];
+            modules.forEach(module => {
+                module.path = dep.path.replace(CWD + sep, '') + sep + module.path;
+            });
+        }
+        payloads.push(payload);
+    });
+    return payloads;
+}
+
+/**
+ * Load and parse fragment files. Logs errors for individual files but continues loading others.
+ * @param {Project} project
+ * @returns {Promise<CustomElementsManifest>}
+ */
+export async function mergeManifests(project) {
+    /** @type {ManifestModuleType[]} */
+    const modules = [];
+    const payloads = await getManifestPayloads(project);
+    payloads.forEach(payload => {
+        payload?.modules && modules.push(...payload.modules);
+    });
+    const basePayload = payloads.pop();
+    const payload = {
+        ...basePayload,
+        schemaVersion: basePayload?.schemaVersion || 'experimental',
+        modules
+    };
+    return payload;
+}
+
 /**
  * Bundle the manifest files of the project and its dependencies into a single file. This is used for the "slim" manifest mode, where each project builds a manifest with only its own components, and then they are bundled together to create a complete manifest for the entire project graph.
  * @param {Project} project
- * @returns {Promise<void>}
+ * @param {string} manifestFile
+ * @returns {Promise<{ payload: CustomElementsManifest }>}
  */
-export async function bundleManifests(project) {
-    const deps = await getAllDependencies(project);
-    const manifestFiles = deps.map(dep => getManifestFile(dep.project)).filter(Boolean);
-    console.log('manifestFiles', manifestFiles);
+export async function bundleManifests(project, manifestFile) {
+    /** @type {CustomElementsManifest} */
+    const payload = await mergeManifests(project);
+    if (existsSync(manifestFile)) {
+        writeFileSync(manifestFile, JSON.stringify(payload, null, 2));
+    }
+    return { payload };
 }
 
 /**
@@ -226,7 +282,7 @@ export async function buildCustomElementsManifest(project, options = {}, config 
         return true;
     }
 
-    const manifestFile = getManifestFile(project) || '';
+    const manifestFile = getManifestPath(project) || '';
 
     if (!FORCE_MANIFEST && skipIfExists && existsSync(manifestFile)) {
         log.task(
@@ -244,7 +300,7 @@ export async function buildCustomElementsManifest(project, options = {}, config 
         throw new Error(`Custom Elements Manifest not produced for project ${project.name}`);
     } else {
         if (!slim && buildDeps) {
-            await bundleManifests(project);
+            await bundleManifests(project, manifestFile);
         }
         minify && minifyManifestFile(manifestFile);
         const basePath = project.path || CWD;
