@@ -10,20 +10,26 @@
  * @typedef {import('custom-elements-manifest/schema').Package} CustomElementsManifest
  */
 import { cpSync, existsSync, statSync, writeFileSync } from 'fs';
-import { join, resolve, sep } from 'path';
+import { join, resolve, sep, dirname } from 'path';
+import { spawnSync } from 'child_process';
+import { fileURLToPath } from 'url';
+
 import { log, logStyle } from '@arpadroid/logger';
 import { prepareArgs, safeReadJson, argv } from '@arpadroid/tools-node';
 import { mergeObjects } from '@arpadroid/tools-iso';
-import { spawnSync } from 'child_process';
 import { formatBytes } from '@arpadroid/tools-iso';
+
 import { getProject } from '../../projectStore.mjs';
 import { getAllDependencies } from '../build/projectBuild.helper.mjs';
 
-export const USE_TYPES_CHECKER = argv.typesChecker;
-const FORCE_MANIFEST = argv.forceManifest || false;
 const CWD = process.cwd();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 /** CEM analyzer output directory. Must match the `outdir` field in custom-elements-manifest.config.js. */
 export const CEM_OUTDIR = '';
+export const USE_TYPES_CHECKER = argv.typesChecker;
+const FORCE_MANIFEST = argv.forceManifest || false;
 
 /////////////////////
 // #region Manifest
@@ -309,5 +315,29 @@ export async function buildCustomElementsManifest(project, options = {}, config 
 }
 
 // #endregion Analyzer
+
+/**
+ * Updates the manifest after a watch event triggers.
+ * @param {Project} project
+ * @param {Set<string>} files
+ * @returns {Promise<boolean|undefined>}
+ */
+export async function updateManifest(project, files) {
+    const config = project.buildConfig || {};
+    const cemSrcDir = resolve(__dirname, '../cem');
+    const hasTypesChange = [...files].some(file => file.endsWith('.types.d.ts'));
+    const hasCemChange = [...files].some(file => file.startsWith(cemSrcDir));
+    files.clear();
+    if (!hasTypesChange && !hasCemChange) return;
+    !config.manifest && (config.manifest = {});
+    config.manifest.skipIfExists = false;
+    const options = {
+        minify: true
+    };
+    await buildCustomElementsManifest(project, options, config).catch(err =>
+        log.error('Failed to rebuild manifest:', err)
+    );
+    return true;
+}
 
 // #endregion

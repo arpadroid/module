@@ -311,7 +311,7 @@ export async function buildDependency(project, parentProject, parentConfig) {
     }
     const startTime = new Date().getTime();
     const rv = await project.build(config);
-    const depText = logStyle.muted(logStyle.info(`@arpadroid/${project.name}`));
+    const depText = logStyle.muted(logStyle.info(`${project.name}`));
     log.task(parentProject.name, `${depText} done.`, { startTime });
     return rv;
 }

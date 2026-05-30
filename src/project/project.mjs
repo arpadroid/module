@@ -23,7 +23,7 @@ import { getBuildConfig, cleanupFiles, runHook } from './helpers/build/projectBu
 
 import { runStorybook } from './helpers/storybook/projectStorybook.helper.js';
 import { buildTypes } from './helpers/types/projectTypes.helper.mjs';
-import { buildCustomElementsManifest } from './helpers/manifest/projectManifest.helper.mjs';
+import { buildCustomElementsManifest, updateManifest } from './helpers/manifest/projectManifest.helper.mjs';
 import { bundleStyles, compileStyles } from './helpers/styles/projectStyles.helper.js';
 
 import ProjectTest from '../projectTest/projectTest.mjs';
@@ -408,10 +408,10 @@ class Project {
     logBuild(config) {
         if (!config?.slim) {
             config.logHeading && log.arpadroid(config.logo || this.name);
-            const msg = ' Building ' + logStyle.dep(`@arpadroid/${this.name}`);
+            const msg = 'Building ' + logStyle.dep(`@arpadroid/${this.name}`) + '.';
             this.buildLogResolve = log.task(this.name, msg, {
-                icon: '🏗️ ',
-                doneMessage: ' Build complete, have a nice day! 👾'
+                icon: '👷',
+                doneMessage: 'Build complete, have a nice day! 👾'
             });
         }
     }
@@ -529,7 +529,7 @@ class Project {
         }
         await this.preprocessRollupConfigs(configs, aliases);
         if (!slim) {
-            log.task(this.name, 'Watch mode enabled 👁️');
+            log.task(this.name, 'Watch mode enabled.', { icon: '👁️  ' });
         }
         this.watcher = rollupWatch(configs);
         const changedFiles = new Set();
@@ -544,33 +544,16 @@ class Project {
                     resolve(false);
                 }
                 if (event.code === 'BUNDLE_START' && verbose) {
-                    log.task(this.name, 'Bundle started');
+                    log.task(this.name, 'Bundle started', { icon: '🚀' });
                 }
                 callback?.(event);
                 if (event.code === 'END') {
                     if (!initialized) {
                         initialized = true;
                         resolve(/** @type {import('rollup').RollupWatcher} */ (this.watcher));
-                    } else {
-                        const cemSrcDir = path.resolve(__dirname, '../cem');
-                        const hasTypesChange = [...changedFiles].some(file => file.endsWith('.types.d.ts'));
-                        const hasCemChange = [...changedFiles].some(file => file.startsWith(cemSrcDir));
-                        changedFiles.clear();
-                        if (hasTypesChange || hasCemChange) {
-                            buildCustomElementsManifest(this, undefined, {
-                                ...config,
-                                manifest: { skipIfExists: false }
-                            })
-                                .then(() => {
-                                    log.success(
-                                        'Custom Elements Manifest rebuilt successfully after changes detected in types or CEM source files. 🧩 ▰▰▰▰ 🗸'
-                                    );
-                                })
-                                .catch(err => {
-                                    log.error('Failed to rebuild manifest:', err);
-                                });
-                        }
+                        return;
                     }
+                    updateManifest(this, changedFiles);
                 }
             });
         });
