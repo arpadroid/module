@@ -5,6 +5,38 @@
  */
 
 /**
+ * Return true when a type expression is composed only of a primitive plus nullish markers.
+ * Examples that return true: `boolean`, `boolean | undefined`, `number | null | undefined`.
+ * @param {string} typeText
+ * @param {'boolean' | 'number'} primitive
+ * @returns {boolean}
+ */
+function isStrictPrimitiveUnion(typeText, primitive) {
+    const normalized = String(typeText || '').replace(/\s+/g, '');
+    if (!normalized) return false;
+
+    const unwrapped = normalized.replace(/^\((.*)\)$/, '$1');
+    const parts = unwrapped.split('|').filter(Boolean);
+    if (!parts.length) return false;
+
+    return parts.every(item => item === primitive || item === 'null' || item === 'undefined');
+}
+
+/**
+ * Some consumers infer boolean-attribute semantics from `type.text` alone.
+ * For unions that include `boolean` but are serialized as non-boolean attributes,
+ * emit a safe display text and preserve the authored type in `detail`.
+ * @param {string} typeText
+ * @param {string} serializedAs
+ * @returns {string}
+ */
+function getManifestTypeText(typeText, serializedAs) {
+    if (serializedAs === 'boolean-attr') return typeText;
+    if (/\bboolean\b/.test(typeText) && /\|/.test(typeText)) return 'string';
+    return typeText;
+}
+
+/**
  * Infer a simple type summary and serialization strategy from a TypeScript type string.
  * @param {string} typeText
  * @returns {TextType}
@@ -23,9 +55,9 @@ export function inferType(typeText) {
     let serializedAs = 'property-only';
     if (/\[\]|Array<|Record<|\{/.test(text)) {
         serializedAs = 'json';
-    } else if (/\bboolean\b/.test(text) && !/\bobject\b/.test(text)) {
+    } else if (isStrictPrimitiveUnion(text, 'boolean')) {
         serializedAs = 'boolean-attr';
-    } else if (/\bnumber\b/.test(text) && !/\bstring\b/.test(text)) {
+    } else if (isStrictPrimitiveUnion(text, 'number')) {
         serializedAs = 'number';
     } else if (/\bstring\b/.test(text) || /\bnull\b|\bundefined\b/.test(text) || /\|/.test(text)) {
         serializedAs = 'string';
@@ -58,14 +90,21 @@ export function mapPropsToAttributes(props) {
         const typeText = prop.typeText || 'any';
         const displayTypeText = prop.originalTypeText || typeText;
         const { summary, serializedAs } = inferType(typeText);
+        const manifestTypeText = getManifestTypeText(displayTypeText, serializedAs);
         const name = sanitizeAttributeName(prop.name);
+        let detailText;
+        if (manifestTypeText !== displayTypeText) {
+            detailText = displayTypeText;
+        } else if (displayTypeText !== typeText) {
+            detailText = typeText;
+        }
 
         byName.set(name, {
             name,
             type: {
-                text: displayTypeText,
+                text: manifestTypeText,
                 summary,
-                ...(displayTypeText !== typeText ? { detail: typeText } : {})
+                ...(detailText ? { detail: detailText } : {})
             },
             serializedAs,
             description: prop.jsDoc,
