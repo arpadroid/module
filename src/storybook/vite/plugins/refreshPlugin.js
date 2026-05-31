@@ -1,4 +1,4 @@
-import { logTask } from '@arpadroid/logger';
+import { cssStamp, jsStamp, logTask } from '@arpadroid/logger';
 import { isHTTPServerRunning } from '@arpadroid/tools-node';
 
 /**
@@ -58,7 +58,7 @@ export function refreshPlugin() {
  */
 export async function sendCssRefresh(projectName, themeName, port = 6006) {
     if (!(await isHTTPServerRunning(port))) return false;
-    logTask(projectName, `Refreshing CSS theme ${themeName}`);
+    logTask(projectName, `Refreshing CSS theme ${themeName}`, { icon: cssStamp });
 
     const searchParams = new URLSearchParams();
     themeName && searchParams.set('themeName', themeName);
@@ -81,7 +81,7 @@ export async function sendCssRefresh(projectName, themeName, port = 6006) {
  */
 export async function sendJsRefresh(projectName, port = 6006) {
     if (!(await isHTTPServerRunning(port))) return false;
-    logTask(projectName, 'Refreshing JavaScript bundle...');
+    logTask(projectName, 'Refreshing JavaScript bundle...', { icon: jsStamp });
     const searchParams = new URLSearchParams();
     projectName && searchParams.set('projectName', projectName);
     const endpoint = `http://127.0.0.1:${port}/__arpadroid/js-refresh?${searchParams.toString()}`;

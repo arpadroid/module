@@ -7,17 +7,18 @@
  * @typedef {import('./projectManifest.helper.types.js').ManifestModeType} ManifestModeType
  * @typedef {import('./projectManifest.helper.types.js').BuildManifestConfigType} BuildManifestConfigType
  * @typedef {import('custom-elements-manifest/schema').Module} ManifestModuleType
+ * @typedef {import('rollup').Plugin} RollupPlugin
  * @typedef {import('custom-elements-manifest/schema').Package} CustomElementsManifest
  */
-import { cpSync, existsSync, statSync, writeFileSync } from 'fs';
+import { cpSync, existsSync, writeFileSync } from 'fs';
 import { join, resolve, sep, dirname } from 'path';
 import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { glob } from 'glob';
 
-import { log, logStyle } from '@arpadroid/logger';
+import { log, fileSizeLog } from '@arpadroid/logger';
 import { prepareArgs, safeReadJson, argv } from '@arpadroid/tools-node';
 import { mergeObjects } from '@arpadroid/tools-iso';
-import { formatBytes } from '@arpadroid/tools-iso';
 
 import { getProject } from '../../projectStore.mjs';
 import { getAllDependencies } from '../build/projectBuild.helper.mjs';
@@ -167,9 +168,10 @@ export async function runAnalyzer(project, opt = {}, mode = 'standard', debug = 
  * Determines if the manifest should be built for the given project and config.
  * @param {Project | undefined} project
  * @param {BuildConfigType} config
+ * @param {boolean} strict
  * @returns {Promise<boolean>}
  */
-export async function canBuildManifest(project, config = project?.buildConfig || {}) {
+export async function canBuildManifest(project, config = project?.buildConfig || {}, strict = true) {
     const { buildType, buildManifest, slim } = config;
     if (buildType !== 'uiComponent' || !buildManifest) {
         return false;
@@ -177,7 +179,7 @@ export async function canBuildManifest(project, config = project?.buildConfig ||
     if (slim) {
         const { manifest: parentManifest } = (await project?.getParentConfig()) || {};
         const { buildDeps = false, skipIfExists } = parentManifest || {};
-        if (buildDeps === false || (!FORCE_MANIFEST && skipIfExists && getManifestPath(project))) {
+        if (buildDeps === false || (!FORCE_MANIFEST && strict && skipIfExists)) {
             return false;
         }
     }
@@ -257,14 +259,10 @@ export async function bundleManifests(project, manifestFile) {
  * @returns {void | undefined | ((value: unknown) => void)}
  */
 export function logManifestBuild(project, mode, manifestFile) {
-    return log.task(project.name, `Building Custom Elements Manifest (CEM) [mode=${mode}]`, {
+    return log.task(project.name, 'Building Custom Elements Manifest', {
         icon: '🧩',
         doneMessage: () => {
-            const fileSize = existsSync(manifestFile)
-                ? `${formatBytes(statSync(manifestFile).size)}`
-                : 'unknown size';
-            const fileName = manifestFile.replace(CWD + sep, '');
-            return `Created manifest ${logStyle.heading(fileName)} [💾 ${fileSize}] `;
+            return `Manifest done. ${fileSizeLog(manifestFile)} [mode=${mode}]`;
         }
     });
 }
@@ -291,13 +289,13 @@ export async function buildCustomElementsManifest(project, options = {}, config 
 
     const manifestFile = getManifestPath(project) || '';
 
-    if (!FORCE_MANIFEST && skipIfExists && existsSync(manifestFile)) {
-        const msg = 'Skipping manifest build as "skipIfExists" option is enabled and file exists.';
+    if (bypassCheck !== true && !FORCE_MANIFEST && skipIfExists && existsSync(manifestFile)) {
+        const msg = `Manifest already exists, skipping build. ${fileSizeLog(manifestFile)}`;
         log.task(project.name, msg, { icon: '🧩' });
         return true;
     }
 
-    const logResolve = !slim && logManifestBuild(project, mode, manifestFile);
+    const logResolve = logManifestBuild(project, mode, manifestFile);
     await runAnalyzer(project, undefined, mode, debug);
     if (!existsSync(manifestFile)) {
         log.error(`Custom Elements Manifest not produced for project ${project.name}`);
@@ -316,6 +314,48 @@ export async function buildCustomElementsManifest(project, options = {}, config 
 
 // #endregion Analyzer
 
+//////////////////////////
+// #region Watch & Update
+//////////////////////////
+
+/**
+ * Adds project files to the watcher so that changes to those files trigger a watch rebuild and are visible to the changedFiles tracking in project.mjs. Specifically, it adds all .types.d.ts files in src/ and all .js files in the cem/ directory.
+ * @param {Project} project
+ * @param {import('rollup').PluginContext} context
+ * @returns {Promise<void>}
+ */
+export async function addProjectFilesToWatcher(project, context) {
+    if (!project.path) return;
+    const typesPattern = join(project.path, 'src', '**', '*.types.d.ts').replaceAll('\\', '/');
+    for (const file of await glob(typesPattern)) {
+        context.addWatchFile(file);
+    }
+    const cemDir = resolve(import.meta.dirname, '../../cem');
+    const cemPattern = join(cemDir, '**', '*.js').replaceAll('\\', '/');
+    for (const file of await glob(cemPattern)) {
+        context.addWatchFile(file);
+    }
+}
+
+/**
+ * Returns a rollup plugin that registers all .types.d.ts files in src/ with rollup's file
+ * watcher so that changes to those files trigger a watch rebuild and are visible to the
+ * changedFiles tracking in project.mjs.
+ * @param {Project} project
+ * @returns {RollupPlugin}
+ */
+export function manifestWatchPlugin(project) {
+    return {
+        name: 'manifest-watch',
+        async buildStart() {
+            if (!(await canBuildManifest(project, project.buildConfig || {}, false))) {
+                return;
+            }
+            addProjectFilesToWatcher(project, this);
+        }
+    };
+}
+
 /**
  * Updates the manifest after a watch event triggers.
  * @param {Project} project
@@ -330,13 +370,16 @@ export async function updateManifest(project, files) {
     files.clear();
     if (!hasTypesChange && !hasCemChange) return;
     !config.manifest && (config.manifest = {});
-    config.manifest.skipIfExists = false;
-    const options = {
-        minify: true
-    };
+    const options = { minify: true, bypassCheck: true };
     await buildCustomElementsManifest(project, options, config).catch(err =>
         log.error('Failed to rebuild manifest:', err)
     );
+    const parent = await project.getParentProject();
+    if (parent) {
+        await buildCustomElementsManifest(parent, options, parent.buildConfig || {}).catch(err =>
+            log.error('Failed to rebuild parent manifest:', err)
+        );
+    }
     return true;
 }
 

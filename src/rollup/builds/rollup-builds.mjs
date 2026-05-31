@@ -35,8 +35,7 @@ import typescript from 'rollup-plugin-typescript2';
 import Project from '../../project/project.mjs';
 import { getProjectInstance } from '../../project/projectStore.mjs';
 import { sendJsRefresh } from '../../storybook/vite/plugins/refreshPlugin.js';
-import { canBuildManifest } from '../../project/helpers/manifest/projectManifest.helper.mjs';
-import { glob } from 'glob';
+import { manifestWatchPlugin } from '../../project/helpers/manifest/projectManifest.helper.mjs';
 
 /** @type {ProjectCliArgsType} */
 const argv = yargs(hideBin(process.argv)).parseSync() || {};
@@ -250,33 +249,6 @@ export function getCopyTargets(project, config = {}) {
 }
 
 /**
- * Returns a rollup plugin that registers all .types.d.ts files in src/ with rollup's file
- * watcher so that changes to those files trigger a watch rebuild and are visible to the
- * changedFiles tracking in project.mjs.
- * @param {Project} project
- * @returns {RollupPlugin}
- */
-export function manifestWatchPlugin(project) {
-    return {
-        name: 'manifest-watch',
-        async buildStart() {
-            if (!(await canBuildManifest(project))) {
-                return;
-            }
-            const typesPattern = join(project.path || cwd, 'src', '**', '*.types.d.ts').replaceAll('\\', '/');
-            for (const file of await glob(typesPattern)) {
-                this.addWatchFile(file);
-            }
-            const cemDir = path.resolve(import.meta.dirname, '../../cem');
-            const cemPattern = join(cemDir, '**', '*.js').replaceAll('\\', '/');
-            for (const file of await glob(cemPattern)) {
-                this.addWatchFile(file);
-            }
-        }
-    };
-}
-
-/**
  * Returns a plugin that logs the build end status.
  * @param {Project} project
  * @param {BuildConfigType} config
@@ -319,8 +291,7 @@ export function getFatPlugins(project, config) {
             emitFile: true,
             filename: 'stats.html'
         }),
-        buildEndPlugin(project, config),
-        manifestWatchPlugin(project)
+        buildEndPlugin(project, config)
     ];
     return plugins.filter(Boolean);
 }
@@ -344,6 +315,7 @@ export function getPlugins(project, config) {
         json(),
         ...(slim ? getSlimPlugins(project, config) : getFatPlugins(project, config)),
         gzipPlugin(),
+        manifestWatchPlugin(project),
         ...plugins
     ].filter(plugin => plugin !== false);
 }
