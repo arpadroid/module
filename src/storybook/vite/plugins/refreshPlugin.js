@@ -58,7 +58,7 @@ export function refreshPlugin() {
  */
 export async function sendCssRefresh(projectName, themeName, port = 6006) {
     if (!(await isHTTPServerRunning(port))) return false;
-    logTask(projectName, `Refreshing CSS theme ${themeName}`, { icon: cssStamp });
+    logTask(projectName, 'Refreshing browser', { icon: cssStamp });
 
     const searchParams = new URLSearchParams();
     themeName && searchParams.set('themeName', themeName);
