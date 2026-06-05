@@ -26,6 +26,9 @@ const defaultConfig: Preview = {
     argTypesEnhancers: [enhanceArgTypesFromCem],
     parameters: {
         layout: 'centered',
+        options: {
+            storySort: 'alphabetical-by-kind'
+        },
         controls: {
             expanded: true,
             matchers: {

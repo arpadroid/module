@@ -14,6 +14,10 @@
             "types": "./src/storybook/exports/test.d.ts",
             "import": "./src/storybook/exports/test.js"
         },
+        "./storybook/helper": {
+            "types": "./src/storybook/helpers/storybook.helper.d.ts",
+            "import": "./src/storybook/helpers/storybook.helper.js"
+        },
         "./storybook/addons": "./src/storybook/index.mjs",
         "./storybook/main": "./src/storybook/main/main.ui.tsx",
         "./storybook/preset": "./src/storybook/preset.js",

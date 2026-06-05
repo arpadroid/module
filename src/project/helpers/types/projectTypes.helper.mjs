@@ -10,7 +10,7 @@ import fs, { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from '
 import { dirname, join } from 'path';
 import { glob } from 'glob';
 import { NO_TYPES } from './../build/projectBuild.helper.mjs';
-import { log, typescriptStamp, logStyle } from '@arpadroid/logger';
+import { log, typescriptStamp } from '@arpadroid/logger';
 import { prepareArgs, findLocation } from '@arpadroid/tools-node';
 const CWD = process.cwd();
 
@@ -289,6 +289,12 @@ export async function buildTypes(project, config) {
     if (await shouldSkipTypesBuild(project, config)) {
         return Promise.resolve(true);
     }
+    const resolveLogPromise =
+        !config.isDependency &&
+        log.task(project.name, 'Building types', {
+            icon: typescriptStamp,
+            doneMessage: 'Types done.'
+        });
 
     const run = async () => {
         await compileTypes(project);
@@ -308,15 +314,8 @@ export async function buildTypes(project, config) {
         return Promise.resolve(true);
     }
 
-    const promise = run();
-    if (!config.isDependency) {
-        log.task(project.name, 'Building types', {
-            icon: typescriptStamp,
-            promise,
-            doneMessage: 'Types done.'
-        });
-    }
-    await promise;
+    await run();
+    typeof resolveLogPromise === 'function' && resolveLogPromise();
     return Promise.resolve(true);
 }
 

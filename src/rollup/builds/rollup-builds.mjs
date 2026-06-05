@@ -273,7 +273,7 @@ export function buildEndPlugin(project, { storybook_port } = {}) {
  * @returns {RollupPlugin[]}
  */
 export function getFatPlugins(project, config) {
-    const { deps, aliases } = config;
+    const { deps, aliases, hasPlugin } = config;
     /** @type {(RollupPlugin  | any)[]} */
     const plugins = [
         nodeResolve({ browser: true, preferBuiltins: false }),
@@ -282,7 +282,7 @@ export function getFatPlugins(project, config) {
         }),
         // @ts-ignore - multiEntry does accept options, types may be mismatched
         deps && deps?.length > 0 && multiEntry({ entryFileName: `arpadroid-${project.name}.js` }),
-        bundleStats(),
+        hasPlugin?.bundleStats && bundleStats(),
         getAliases(project.name, aliases),
         copy({
             targets: getCopyTargets(project, config)

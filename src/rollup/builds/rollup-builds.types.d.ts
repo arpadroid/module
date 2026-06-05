@@ -46,6 +46,9 @@ export type BuildConfigType = {
     parent?: string;
     path?: string;
     plugins?: Plugin[];
+    hasPlugin?: {
+        bundleStats?: boolean;
+    };
     processBuilds?: (builds: RollupOptions[]) => void;
     requireDeps?: boolean;
     skipTypesBuild?: string[];

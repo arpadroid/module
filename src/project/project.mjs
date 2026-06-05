@@ -15,7 +15,7 @@ import path, { basename, resolve } from 'path';
 import fs, { existsSync, rmSync, mkdirSync } from 'fs';
 import { spawnSync } from 'child_process';
 import { rollup, watch as rollupWatch } from 'rollup';
-import { log, logStyle, jsStamp } from '@arpadroid/logger';
+import { log, logStyle, jsStamp, fileSizeLog } from '@arpadroid/logger';
 
 import { DEPENDENCY_SORT, WATCH, MINIFY, SLIM, STORYBOOK } from './helpers/build/projectBuild.helper.mjs';
 import { buildDependencies, getPackageJson, getDependencies } from './helpers/build/projectBuild.helper.mjs';
@@ -355,7 +355,8 @@ class Project {
         } else {
             promise = this.rollup(rollupConfig, config);
         }
-        if (!config.slim) {
+
+        if (!config.slim && config.buildJS) {
             log.task(this.name, 'Rolling up.', {
                 icon: jsStamp,
                 doneMessage: 'Rollup done.',
@@ -411,7 +412,11 @@ class Project {
             const msg = 'Building ' + logStyle.dep(`@arpadroid/${this.name}`) + '.';
             this.buildLogResolve = log.task(this.name, msg, {
                 icon: '👷',
-                doneMessage: 'Build complete, have a nice day! 👾'
+                doneMessage: () => {
+                    const file = path.join(this.path || '', 'dist', `arpadroid-${this.name}.js`);
+                    const fileLog = existsSync(file) ? fileSizeLog(file) : '';
+                    return `Build complete, have a nice day! 👾 ${fileLog}`;
+                }
             });
         }
     }

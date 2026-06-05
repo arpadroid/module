@@ -290,7 +290,7 @@ export async function buildCustomElementsManifest(project, options = {}, config 
     const manifestFile = getManifestPath(project) || '';
 
     if (bypassCheck !== true && !FORCE_MANIFEST && skipIfExists && existsSync(manifestFile)) {
-        const msg = `Manifest already exists, skipping build. ${fileSizeLog(manifestFile)}`;
+        const msg = `Manifest exists, skipping build. ${fileSizeLog(manifestFile)}`;
         log.task(project.name, msg, { icon: '🧩' });
         return true;
     }

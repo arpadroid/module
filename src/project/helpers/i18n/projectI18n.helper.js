@@ -9,6 +9,7 @@ import { glob } from 'glob';
 import path from 'path';
 import { mergeObjects, sortKeys } from '@arpadroid/tools-iso';
 import { getAllDependencies } from '@arpadroid/module';
+import { log } from '@arpadroid/logger';
 
 const cwd = process.cwd();
 
@@ -83,6 +84,7 @@ export async function addCommonFiles(store) {
  * @returns {Promise<I18nFilePayloadType[]>}
  */
 export async function compileI18n(project) {
+    const startTime = Date.now();
     const deps = await getAllDependencies(project);
     /** @type {I18nFilePayloadType[]} */
     const files = [];
@@ -90,5 +92,9 @@ export async function compileI18n(project) {
     await addI18nFiles(`${cwd}/src`, project.name, files);
     await deps.forEach(async dep => await addI18nFiles(`${dep.path}/src`, dep.name, files));
     compileI18nFiles(files);
+    log.task(project.name, 'Compiled i18n files.', {
+        startTime,
+        icon: '🌏'
+    });
     return files;
 }
