@@ -81,7 +81,8 @@ export async function sendCssRefresh(projectName, themeName, port = 6006) {
  */
 export async function sendJsRefresh(projectName, port = 6006) {
     if (!(await isHTTPServerRunning(port))) return false;
-    logTask(projectName, 'Refreshing JavaScript bundle...', { icon: jsStamp });
+    const dateStr = new Date().toLocaleTimeString(); 
+    logTask(projectName, `Refreshing JavaScript bundle. (${dateStr})`, { icon: jsStamp });
     const searchParams = new URLSearchParams();
     projectName && searchParams.set('projectName', projectName);
     const endpoint = `http://127.0.0.1:${port}/__arpadroid/js-refresh?${searchParams.toString()}`;
