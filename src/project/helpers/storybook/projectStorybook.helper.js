@@ -5,7 +5,7 @@
  * @typedef {import('../../../rollup/builds/rollup-builds.types.js').TestMatchType} TestMatchType
  */
 import { spawn, execSync } from 'child_process';
-import { existsSync, cpSync, globSync, rmSync } from 'fs';
+import { existsSync, cpSync, globSync, rmSync, statSync } from 'fs';
 import { watch as chokidarWatch } from 'chokidar';
 import { log } from '@arpadroid/logger';
 import { isHTTPServerRunning, runServer, stopHTTPServer } from '@arpadroid/tools-node';
@@ -16,6 +16,25 @@ import { getProject } from '../../projectStore.mjs';
 
 const cwd = process.cwd();
 const argv = /** @type {{watch?: boolean, storybook?: number}} */ (yargs(hideBin(process.argv)).argv || {});
+
+const storyGlob = 'src/**/*.stories.{js,jsx,ts,tsx}';
+
+/**
+ * Converts a project root into a Storybook-compatible story glob.
+ * Existing glob patterns and explicit files are preserved as-is.
+ * @param {string} pattern
+ * @returns {string}
+ */
+function normalizeStoryPattern(pattern) {
+    const resolved = resolve(pattern);
+    if (/[*?{}\[\]]/.test(pattern)) {
+        return resolved;
+    }
+    if (existsSync(resolved) && statSync(resolved).isDirectory()) {
+        return join(resolved, storyGlob);
+    }
+    return resolved;
+}
 
 /**
  * Removes Snap-injected GTK/GIO environment variables that conflict with Playwright's WebKit.
@@ -65,12 +84,12 @@ export async function getStorybookPort(project) {
  */
 export function getStoryPatterns(project = getProject()) {
     let patterns = project?.buildConfig?.storybook?.stories;
-    if (!patterns) patterns = [`${project?.path}/src/**/*.stories.{js,jsx,ts,tsx}`];
+    if (!patterns) patterns = [join(project?.path || '', storyGlob)];
     if (patterns?.length && !Array.isArray(patterns)) {
         patterns = [String(patterns)];
     }
     if (Array.isArray(patterns)) {
-        patterns = patterns.map(pattern => resolve(pattern));
+        patterns = patterns.map(pattern => normalizeStoryPattern(String(pattern)));
     }
     return /** @type {string[]} */ (patterns);
 }
