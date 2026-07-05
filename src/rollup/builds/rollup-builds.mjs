@@ -44,7 +44,6 @@ const DEPS = process.env.deps ?? argv?.deps ?? '';
 const PROD = Boolean(process.env.production);
 const SLIM = argv?.slim;
 const WATCH = Boolean(!PROD && argv?.watch);
-const NO_TYPES = Boolean(argv?.noTypes);
 
 /**
  * Returns whether the build should be slim.
@@ -306,18 +305,12 @@ export function getPlugins(project, config) {
     const { slim, plugins = [] } = config;
     return [
         nodePolyfills(),
-        config.buildTypes === true &&
-            !NO_TYPES &&
-            typescript({
-                tsconfig: './tsconfig.json', // Use the config defined earlier
-                useTsconfigDeclarationDir: true
-            }),
         json(),
         ...(slim ? getSlimPlugins(project, config) : getFatPlugins(project, config)),
         gzipPlugin(),
         manifestWatchPlugin(project),
         ...plugins
-    ].filter(plugin => plugin !== false);
+    ].filter(Boolean);
 }
 
 // #endregion Plugins

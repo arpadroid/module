@@ -165,7 +165,10 @@ export async function runFastTsBuild(project, config, opt = {}) {
  */
 export async function checkTypes(project, opt = {}) {
     const { verbose = true } = opt;
-    verbose && log.task(project.name, 'Checking types...\n');
+    const logResolve = log.task(project.name, 'Checking types.', {
+        icon: typescriptStamp,
+        doneMessage: 'No type errors found.'
+    });
     await project.getBuildConfig();
     const args = {
         project: project.path + '/tsconfig.json',
@@ -180,7 +183,7 @@ export async function checkTypes(project, opt = {}) {
     if (result.status !== 0) {
         log.error(`Type check failed for ${project.name}`, result);
     } else if (verbose) {
-        log.success(`Types check passed with no errors for @arpadroid/${project.name}, well done! :) \n`);
+        logResolve?.();
     }
     return Promise.resolve(result.status === 0);
 }

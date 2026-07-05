@@ -2,7 +2,6 @@
     "compilerOptions": {
         "allowJs": true,
         "allowSyntheticDefaultImports": true,
-        "baseUrl": ".",
         "checkJs": true,
         "composite": true,
         "declaration": true,
@@ -12,7 +11,7 @@
         "incremental": true,
         "jsx": "react",
         "module": "ESNext",
-        "moduleResolution": "node",
+        // "moduleResolution": "node",
         "resolveJsonModule": true,
         "skipLibCheck": false,
         "strict": true,
@@ -26,24 +25,24 @@
             "../../../node_modules/@arpadroid/module/node_modules/@types"
         ],
         "paths": {
-            "rollup-plugin-copy": ["./node_modules/@arpadroid/module/node_modules/rollup-plugin-copy"],
+            "rollup-plugin-copy": ["../../../node_modules/rollup-plugin-copy"],
             "@storybook/web-components-vite": [
-                "./node_modules/@arpadroid/module/node_modules/@storybook/web-components-vite/dist/index.d.ts"
+                "../../../node_modules/@storybook/web-components-vite/dist/index.d.ts"
             ],
             "@storybook/web-components": [
-                "./node_modules/@arpadroid/module/node_modules/@storybook/web-components/dist/index.d.ts"
+                "../../../node_modules/@storybook/web-components/dist/index.d.ts"
             ],
             "@storybook/addon-vitest": [
-                "./node_modules/@arpadroid/module/node_modules/@storybook/addon-vitest/dist/index.d.ts"
+                "../../../node_modules/@storybook/addon-vitest/dist/index.d.ts"
             ],
             "@storybook/builder-vite": [
-                "./node_modules/@arpadroid/module/node_modules/@storybook/builder-vite/dist/index.d.ts"
+                "../../../node_modules/@storybook/builder-vite/dist/index.d.ts"
             ],
             "storybook/test": [
-                "./node_modules/@arpadroid/module/node_modules/storybook/dist/test/index.d.ts"
+                "../../../node_modules/storybook/dist/test/index.d.ts"
             ],
             "storybook/actions": [
-                "./node_modules/@arpadroid/module/node_modules/storybook/dist/actions/index.d.ts"
+                "../../../node_modules/storybook/dist/actions/index.d.ts"
             ]
         }
         /**

@@ -1,0 +1,30 @@
+--- a/node_modules/@storybook/web-components/dist/index.d.ts
++++ b/node_modules/@storybook/web-components/dist/index.d.ts
+@@ -1089,16 +1089,12 @@
+         component?: C;
+         args?: TMetaArgs;
+         decorators?: Decorators | Decorators[];
+-    } & Omit<ComponentAnnotations<WebComponentsTypes & T, InferArgsFromComponent<C> & T['args']>, 'decorators' | 'component' | 'args'>): WebComponentsMeta<InferWebComponentsTypes<T, InferArgsFromComponent<C>, Decorators>, Omit<ComponentAnnotations<InferWebComponentsTypes<T, InferArgsFromComponent<C>, Decorators>>, 'args'> & {
+-        args: {} extends TMetaArgs ? {} : TMetaArgs;
+-    }>;
++    } & Omit<ComponentAnnotations<WebComponentsTypes & T, InferArgsFromComponent<C> & T['args']>, 'decorators' | 'component' | 'args'>): WebComponentsMeta<InferWebComponentsTypes<T, InferArgsFromComponent<C>, Decorators>, any>;
+     meta<TArgs, Decorators extends DecoratorFunction<WebComponentsTypes & T, any>, TMetaArgs extends Partial<TArgs>>(meta: {
+         render?: ArgsStoryFn<WebComponentsTypes & T, TArgs>;
+         args?: TMetaArgs;
+         decorators?: Decorators | Decorators[];
+-    } & Omit<ComponentAnnotations<WebComponentsTypes & T, TArgs & T['args']>, 'decorators' | 'component' | 'args' | 'render'>): WebComponentsMeta<InferWebComponentsTypes<T, TArgs, Decorators>, Omit<ComponentAnnotations<InferWebComponentsTypes<T, TArgs, Decorators>>, 'args'> & {
+-        args: {} extends TMetaArgs ? {} : TMetaArgs;
+-    }>;
++    } & Omit<ComponentAnnotations<WebComponentsTypes & T, TArgs & T['args']>, 'decorators' | 'component' | 'args' | 'render'>): WebComponentsMeta<InferWebComponentsTypes<T, TArgs, Decorators>, any>;
+ }
+ /** Extracts and unions all args types from an array of decorators. */
+ type DecoratorsArgs<TRenderer extends Renderer, Decorators> = UnionToIntersection<Decorators extends DecoratorFunction<TRenderer, infer TArgs> ? TArgs : unknown>;
+@@ -1109,7 +1105,7 @@
+  * provided in meta become optional in stories, while missing required args must be provided at the
+  * story level.
+  */
+-interface WebComponentsMeta<T extends WebComponentsTypes, MetaInput extends ComponentAnnotations<T>> extends Meta$1<T, MetaInput> {
++interface WebComponentsMeta<T extends WebComponentsTypes, MetaInput extends ComponentAnnotations<T, any>> extends Meta$1<T, MetaInput> {
+     /**
+      * Creates a story with a custom render function that takes no args.
+      *
