@@ -451,7 +451,16 @@ class Project {
         }
         if (aliases.length && Array.isArray(configs[0]?.plugins)) {
             const { default: alias } = await import('@rollup/plugin-alias');
-            configs[0].plugins.push(alias({ entries: aliases }));
+            const entries = aliases.map(aliasEntry => {
+                if (typeof aliasEntry === 'string') {
+                    return {
+                        find: `@arpadroid/${aliasEntry}`,
+                        replacement: path.join(cwd, 'node_modules', '@arpadroid', aliasEntry, 'src', 'index.js')
+                    };
+                }
+                return aliasEntry;
+            });
+            configs[0].plugins.push(alias({ entries }));
         }
     }
 

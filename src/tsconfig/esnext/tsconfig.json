@@ -53,5 +53,5 @@
          */
     },
     "include": ["src/index.js", "src/**/*", "src/mockData/**/*.json"],
-    "exclude": ["node_modules", "dist", "**/*.test.ts", "*.mjs"]
+    "exclude": ["node_modules", "dist",  "*.mjs"]
 }
