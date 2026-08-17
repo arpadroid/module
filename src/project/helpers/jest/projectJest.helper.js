@@ -59,7 +59,14 @@ export async function getTestMatch(project) {
     let testMatch = project.buildConfig?.jest?.testMatch;
     if (testMatch instanceof Promise) testMatch = await testMatch;
 
-    const patterns = /** @type {string[]} */ (testMatch || ['<rootDir>/src/**/*.test.js']);
+    const patterns = /** @type {string[]} */ (
+        testMatch || [
+            '<rootDir>/src/**/*.test.js',
+            '<rootDir>/src/**/*.test.mjs',
+            '<rootDir>/src/**/*.spec.js',
+            '<rootDir>/src/**/*.spec.mjs'
+        ]
+    );
     return patterns.map(pattern => {
         pattern = pattern.replace(project.path || cwd, '<rootDir>');
         return pattern;

@@ -21,17 +21,10 @@ const aliases = /** @type {import('vite').Alias[]} */ ([
     getAlias('react/jsx-dev-runtime'),
     getAlias('react-dom'),
     getAlias('react-dom/client'),
+    getAlias('react/jsx-runtime'),
     {
         find: '@vitest/coverage-v8',
         replacement: join(moduleRoot, 'node_modules/@vitest/coverage-v8/dist')
-    },
-    {
-        find: '@storybook/addon-vitest/internal/setup-file',
-        replacement: join(moduleRoot, 'node_modules/@storybook/addon-vitest/dist/vitest-plugin/setup-file.js')
-    },
-    {
-        find: 'react/jsx-runtime',
-        replacement: join(moduleRoot, 'node_modules/react/jsx-runtime.js')
     }
 ]);
 

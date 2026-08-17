@@ -5,7 +5,7 @@ import { basename } from 'path';
 import { existsSync } from 'fs';
 import { spyOn } from 'jest-mock';
 import { getAllDependencies, getDependencies } from '../helpers/build/projectBuild.helper.mjs';
-
+import { describe, it, expect, beforeAll, afterAll, test } from '@jest/globals';
 const cwd = process.cwd();
 
 describe('@arpadroid/module Project Instance', () => {
@@ -62,7 +62,7 @@ describe('@arpadroid/module Project Instance', () => {
         expect(deps?.length).toBeGreaterThan(0);
         // Each dependency should appear only once (deduplication via visited set)
         const names = deps?.map(dep => dep.name) ?? [];
-        expect(names.length).toBe(new Set(names).size);
+        expect(names).toHaveLength(new Set(names).size);
     });
 
     test('_getFileConfig returns empty object when no config file exists', async () => {
@@ -93,7 +93,7 @@ describe('@arpadroid/module Project Instance', () => {
         const config = await Project._getFileConfig(project?.path);
         expect(config.buildType).toBe('library');
     });
-    test('_getFileConfig returns empty object when no config file exists', async () => {
+    test('getFileConfig returns empty object when no config file exists', async () => {
         const config = await Project._getFileConfig('/non/existent/path');
         expect(config).toEqual({});
     });

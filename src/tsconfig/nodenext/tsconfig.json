@@ -8,16 +8,20 @@
         "esModuleInterop": true,
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
-        "outDir": "./.tmp/.types",
         "resolveJsonModule": true,
-        "rootDir": "./src",
         "skipLibCheck": false,
         "strict": true,
         "target": "ESNext",
-        "typeRoots": ["./node_modules/@types", "./node_modules/@arpadroid/module/node_modules/@types"],
+        "types": ["node"],
         "useDefineForClassFields": false,
         "strictPropertyInitialization": false,
-        "preserveSymlinks": true
+        "preserveSymlinks": true,
+        "jsx": "react",
+        "paths": {
+            "@jest/globals": ["../../../node_modules/@jest/globals/build/index.d.ts"],
+            "yargs": ["../../../node_modules/@types/yargs/index.d.ts"],
+            "yargs/helpers": ["../../../node_modules/@types/yargs/helpers.d.ts"]
+        }
     },
     "include": ["src/index.js", "src/**/*"],
     "exclude": ["node_modules", "dist", "**/*.test.ts"]

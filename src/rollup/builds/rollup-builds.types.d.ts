@@ -1,7 +1,6 @@
 import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup';
 import type Project from '../../project/project.mjs';
 import { ThemesBundlerConfigType } from '@arpadroid/style-bun';
-import { Preview } from '@storybook/web-components-vite';
 import { bundleStats } from 'rollup-plugin-bundle-stats';
 import gzipPlugin from 'rollup-plugin-gzip';
 import { dts } from 'rollup-plugin-dts';
@@ -15,11 +14,12 @@ import terser from '@rollup/plugin-terser';
 import copy from 'rollup-plugin-copy';
 import { visualizer } from 'rollup-plugin-visualizer';
 import typescript from 'rollup-plugin-typescript2';
-import { Options } from 'storybook/internal/types';
 import { ManifestModeType } from '../../project/helpers/manifest/projectManifest.helper.types.js';
 
 type TestMatchContentType = string | string[];
 type TestMatchType = TestMatchContentType | (() => Promise<TestMatchContentType>);
+type StorybookPreviewType = Record<string, unknown>;
+type StorybookOptionsType = object;
 
 export type BuildConfigType = {
     aliases?: string[] | AliasType[];
@@ -97,9 +97,9 @@ export type JestConfigType = {
 
 export type StorybookConfigType = {
     stories?: TestMatchType;
-    preview?: Preview;
-    previewHead?: (head: string | undefined, options: Options, project: Project) => string;
-    previewBody?: (body: string | undefined, options: Options, project: Project) => string;
+    preview?: StorybookPreviewType;
+    previewHead?: (head: string | undefined, options: StorybookOptionsType, project: Project) => string;
+    previewBody?: (body: string | undefined, options: StorybookOptionsType, project: Project) => string;
     managerCache?: boolean;
 };
 

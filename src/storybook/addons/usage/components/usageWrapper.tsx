@@ -27,7 +27,7 @@ export default function UsageWrapper({ api, active }: UsagePropsType): JSX.Eleme
     const [payload, _setPayload] = useState<UsageRenderPayload | null>(null);
 
     useEffect(() => {
-        const usagePayload = story.id && (getStoryContextValue(story.id, 'usage') as UsagePayloadType | null);
+        const usagePayload = story?.id && (getStoryContextValue(story.id, 'usage') as UsagePayloadType | null);
         if (!usagePayload) return;
         const { element, story: config } = usagePayload;
 

@@ -96,7 +96,12 @@ export function getDefaultBuildConfig(project) {
         buildTypes: false,
         buildManifest: false,
         jest: {
-            testMatch: ['<rootDir>/src/**/*.test.js']
+            testMatch: [
+                '<rootDir>/src/**/*.test.js',
+                '<rootDir>/src/**/*.test.mjs',
+                '<rootDir>/src/**/*.spec.js',
+                '<rootDir>/src/**/*.spec.mjs'
+            ]
         },
         logHeading: true,
         manifest: {
@@ -328,6 +333,9 @@ export async function buildDependencies(project, config) {
     }
     const deps = await getAllDependencies(project);
     const projects = deps.map(dep => dep.project).filter(proj => proj instanceof Project);
+    if (!projects.length) {
+        return { promise: undefined };
+    }
     process.env.arpadroid_slim = 'true';
 
     const promises = projects.map(proj =>
@@ -372,7 +380,7 @@ export async function cleanupFiles(project) {
     files.forEach(async _file => {
         const file = join(project?.path || cwd, _file);
         if (!file || !cwd || cwd === '' || !existsSync(file)) return;
-        filesRemoved.push(file.replace(project.path || cwd, '.') + '  ✔️');
+        filesRemoved.push(file.replace(project.path || cwd, '.') + '  ✅');
         await rmSync(file, { recursive: true, force: true });
     });
 

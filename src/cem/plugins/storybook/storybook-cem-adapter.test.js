@@ -3,6 +3,7 @@ import {
     normalizeArrayArgs,
     normalizeCommaSeparatedArrayValue
 } from './storybook-cem-adapter.js';
+import { describe, it, expect, afterEach } from '@jest/globals';
 
 const globalStorybookManifest = /** @type {any} */ (globalThis);
 

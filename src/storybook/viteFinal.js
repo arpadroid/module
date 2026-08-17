@@ -1,5 +1,6 @@
-import { join } from 'path';
+import { join, resolve } from 'path';
 
+export const MODULE_ROOT = resolve(import.meta.dirname, '../..');
 const cwd = process.cwd();
 /** @type {import('vite').UserConfig} */
 const config = {
@@ -24,8 +25,10 @@ const config = {
             ]
         }
     },
+
     optimizeDeps: {
-        exclude: ['storybook', 'react/jsx-runtime']
+        exclude: ['storybook'],
+        include: ['@testing-library/dom', 'aria-query', 'chai']
     },
     plugins: [],
     define: {}

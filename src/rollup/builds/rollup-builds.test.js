@@ -9,6 +9,7 @@ import {
 } from './rollup-builds.mjs';
 import Project from '../../project/project.mjs';
 import path from 'path';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
 
 const TEST_PROJECT_PATH = path.join(process.cwd(), 'src/test/test-project');
 

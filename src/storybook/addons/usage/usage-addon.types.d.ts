@@ -1,7 +1,5 @@
 import { Plugin } from 'prettier';
 import { ArpaElementType } from '../../../types.js';
-import { StoryContext } from '@storybook/web-components-vite';
-import { Renderer } from 'storybook/internal/csf';
 
 export type StorybookToolConfigType = {
     storybook?: {
@@ -18,6 +16,6 @@ export type PrettyPrintOptions = {
 
 export type UsagePayloadType = {
     element: ArpaElementType;
-    story: StoryContext<Renderer>;
+    story: StoryContextType;
     code: string;
 };

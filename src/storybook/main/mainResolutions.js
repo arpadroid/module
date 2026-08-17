@@ -27,7 +27,17 @@ const resolutions = {
         'global-setup.js'
     ),
     '@storybook/react-dom-shim': join(modulesRoot, '@storybook', 'react-dom-shim', 'dist', 'react-18.js'),
-    '@storybook/addon-vitest/dist/vitest-plugin/setup-file': join(addonVitestPath, 'vitest-plugin', 'setup-file.js'),
+    '@storybook/addon-vitest/internal/setup-file': join(addonVitestPath, 'vitest-plugin', 'setup-file.js'),
+    '@storybook/addon-vitest/internal/setup-file.browser.3': join(
+        addonVitestPath,
+        'vitest-plugin',
+        'setup-file.browser.3.js'
+    ),
+    '@storybook/addon-vitest/internal/setup-file.browser.4': join(
+        addonVitestPath,
+        'vitest-plugin',
+        'setup-file.browser.4.js'
+    ),
     '@storybook/web-components-vite': join(modulesRoot, '@storybook', 'web-components-vite'),
     '@storybook/builder-vite': join(modulesRoot, '@storybook', 'builder-vite'),
     'vitest/internal/browser': join(vitestPath, 'browser.js'),
@@ -50,7 +60,16 @@ const resolutions = {
     '@storybook/addon-docs': addonDocsPath,
     '@storybook/addon-docs/blocks': join(addonDocsPath, 'blocks.js'),
     '@mdx-js/react': join(modulesRoot, '@mdx-js', 'react', 'index.js'),
-    'storybook/preview-api': join(storybookPath, 'preview-api', 'index.js')
+    'storybook/preview-api': join(storybookPath, 'preview-api', 'index.js'),
+    '@testing-library/dom': join(
+        modulesRoot,
+        '@testing-library',
+        'dom',
+        'dist',
+        '@testing-library',
+        'dom.esm.js'
+    ),
+    'aria-query': join(modulesRoot, 'aria-query', 'lib', 'index.js')
 };
 
 /**

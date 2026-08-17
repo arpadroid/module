@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import ts from 'typescript';
-
+import { describe, test, expect, afterEach } from '@jest/globals';
 import { parseConfigTypeWithChecker, clearProgramCache } from './cem-types-checker.utils.js';
 
 describe('arpadroid CEM types checker utils', () => {

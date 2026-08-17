@@ -1,0 +1,36 @@
+diff --git a/node_modules/@storybook/react/dist/chunk-ojHmM-yX.d.ts b/node_modules/@storybook/react/dist/chunk-ojHmM-yX.d.ts
+index 4956053..3c2c9c6 100644
+--- a/node_modules/@storybook/react/dist/chunk-ojHmM-yX.d.ts
++++ b/node_modules/@storybook/react/dist/chunk-ojHmM-yX.d.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ComponentProps, ComponentType, JSX } from "react";
+ import { AnnotatedStoryFn, ArgTypes, Args, Args as Args$1, ArgsFromMeta, ArgsStoryFn, Canvas, ComponentAnnotations, DecoratorFunction, LoaderFunction, Parameters as Parameters$1, ProjectAnnotations, Renderer, StoryAnnotations, StoryContext, StrictArgs, StrictArgs as StrictArgs$1, WebRenderer } from "storybook/internal/types";
+ import { RootOptions } from "react-dom/client";
+@@ -1012,7 +1013,7 @@ interface ReactPreview<T extends AddonTypes> extends Preview<ReactTypes & T> {
+     component?: ComponentType<TArgs>;
+     decorators?: Decorators | Decorators[];
+     args?: TMetaArgs;
+-  } & Omit<ComponentAnnotations<ReactTypes & T, TArgs>, 'decorators' | 'component' | 'args' | 'render'>): ReactMeta<InferReactTypes<T, TArgs, Decorators>, Omit<ComponentAnnotations<InferReactTypes<T, TArgs, Decorators>>, 'args'> & {
++	} & Omit<ComponentAnnotations<ReactTypes & T, TArgs>, 'decorators' | 'component' | 'args' | 'render'>): ReactMeta<InferReactTypes<T, TArgs, Decorators>, Omit<ComponentAnnotations<InferReactTypes<T, TArgs, Decorators>, InferReactTypes<T, TArgs, Decorators>['args']>, 'args'> & {
+     args: Partial<TArgs> extends TMetaArgs ? {} : TMetaArgs;
+   }>;
+ }
+@@ -1023,7 +1024,7 @@ interface ReactPreview<T extends AddonTypes> extends Preview<ReactTypes & T> {
+  * provided in meta become optional in stories, while missing required args must be provided at the
+  * story level.
+  */
+-interface ReactMeta<T extends ReactTypes, MetaInput extends ComponentAnnotations<T>> /** @ts-expect-error ReactMeta requires two type parameters, but Meta's constraints differ */ extends Meta<T, MetaInput> {
++interface ReactMeta<T extends ReactTypes, MetaInput extends ComponentAnnotations<T, T['args']>> extends Meta<T, MetaInput> {
+   /**
+    * Creates a story with a custom render function that takes no args.
+    *
+@@ -1069,7 +1070,7 @@ interface ReactMeta<T extends ReactTypes, MetaInput extends ComponentAnnotations
+    * });
+    * ```
+    */
+-  story<TInput extends Simplify<StoryAnnotations<T, AddMocks<T['args'], MetaInput['args']>, SetOptional<T['args'], keyof T['args'] & keyof MetaInput['args']>>>>(story: TInput /** @ts-expect-error hard */): ReactStory<T, TInput>;
++	story<TInput extends Simplify<StoryAnnotations<T, AddMocks<T['args'], MetaInput['args']>, SetOptional<T['args'], keyof T['args'] & keyof MetaInput['args']>>>>(story: TInput): ReactStory<T, TInput>;
+   /**
+    * Creates a story with no additional configuration.
+    *

@@ -1,6 +1,7 @@
 /**
  * @typedef {import('./rollup-builds.types.js').BuildConfigType} BuildConfigType
  * @typedef {import('./rollup-builds.types.js').BuildInterface} BuildInterface
+ * @typedef {import('./rollup-builds.types.js').AliasType} AliasType
  * @typedef {import('rollup').RollupOptions} RollupOptions
  * @typedef {import('rollup').Plugin} RollupPlugin
  * @typedef {import('../../project/project.types.js').CompileTypesType} CompileTypesType
@@ -169,23 +170,19 @@ export function getAliases(projectName, projects = []) {
     if (!Array.isArray(projects)) {
         logError('Invalid projects configuration, expecting an array instead got: ', projects);
     }
+    const projectAlias = {
+        find: `@arpadroid/${projectName}`,
+        replacement: path.resolve(path.join('src', 'index.js'))
+    };
+    const copyAlias = {
+        find: 'rollup-plugin-copy',
+        replacement: path.join('node_modules', '@arpadroid', 'module', 'node_modules', 'rollup-plugin-copy')
+    };
+    /** @type {AliasType[]} */
     const aliases = [
-        projectName && {
-            find: `@arpadroid/${projectName}`,
-            replacement: path.resolve(path.join('src', 'index.js'))
-        },
-        (projectName !== 'module' && {
-            find: 'rollup-plugin-copy',
-            replacement: path.join(
-                'node_modules',
-                '@arpadroid',
-                'module',
-                'node_modules',
-                'rollup-plugin-copy'
-            )
-        }) ||
-            undefined,
-        projects?.map(dep => {
+        ...(projectName ? [projectAlias] : []),
+        ...(projectName !== 'module' ? [copyAlias] : []),
+        ...projects.map(dep => {
             if (typeof dep === 'string') {
                 return {
                     find: `@arpadroid/${dep}`,
@@ -194,7 +191,7 @@ export function getAliases(projectName, projects = []) {
             }
             return dep;
         })
-    ].filter(item => typeof item !== 'undefined');
+    ];
     return aliases?.length ? rollupAlias({ entries: aliases }) : undefined;
 }
 
@@ -368,16 +365,34 @@ export function getBuildDefaults(project, config) {
 }
 
 /**
+ * A build type definition.
+ * - `config`: build config defaults merged into the project's BuildConfigType. These defaults are
+ *   applied before the project file config and client config, so both can still override them.
+ * - `rollup`: returns the rollup input options for the build.
+ * @typedef {object} RollupBuildType
+ * @property {BuildConfigType} [config]
+ * @property {(project: Project, config: BuildConfigType) => RollupOptions} [rollup]
+ */
+
+/**
  * Rollup builds.
  * The different builds that can be created for different applications.
- * @type {Record<string, (project: Project, config: BuildConfigType) => RollupOptions>}
+ * @type {Record<string, RollupBuildType>}
  */
 const rollupBuilds = {
-    uiComponent(project, config = {}) {
-        return { ...getBuildDefaults(project, config) };
+    uiComponent: {
+        config: {},
+        rollup: (project, config = {}) => ({ ...getBuildDefaults(project, config) })
     },
-    library(project, config = {}) {
-        return { ...getBuildDefaults(project, config) };
+    library: {
+        config: {
+            buildStyles: false,
+            buildManifest: false,
+            buildI18n: false,
+            buildTypes: true,
+            buildJS: false
+        },
+        rollup: (project, config = {}) => ({ ...getBuildDefaults(project, config) })
     }
 };
 
@@ -389,14 +404,14 @@ const rollupBuilds = {
  */
 export function getBuild(projectName, config = {}) {
     const { buildType = 'library' } = config;
-    const buildFn = rollupBuilds[buildType];
-    if (typeof buildFn !== 'function') {
+    const buildTypeConfig = rollupBuilds[buildType];
+    if (typeof buildTypeConfig?.rollup !== 'function') {
         logError(`Invalid build name: ${buildType}`);
         return {};
     }
-    const buildConfig = getBuildConfig(config);
+    const buildConfig = getBuildConfig(mergeObjects(buildTypeConfig.config || {}, config));
     const project = getProjectInstance(projectName, buildConfig);
-    const appBuild = buildFn(project, buildConfig);
+    const appBuild = buildTypeConfig.rollup(project, buildConfig);
     const typesBuild = getTypesBuild();
     const build = [appBuild].filter(Boolean);
     if (!isSlim() && typeof buildConfig.processBuilds === 'function') {

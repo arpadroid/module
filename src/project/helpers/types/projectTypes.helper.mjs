@@ -296,7 +296,7 @@ export async function buildTypes(project, config) {
         !config.isDependency &&
         log.task(project.name, 'Building types', {
             icon: typescriptStamp,
-            doneMessage: 'Types done.'
+            doneMessage: 'Types deployed to dist/@types'
         });
 
     const run = async () => {
