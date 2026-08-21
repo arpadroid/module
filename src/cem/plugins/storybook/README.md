@@ -60,5 +60,3 @@ args = normalizeArrayArgs(args, argTypes);
 |--------|-------------|
 | `enhanceArgTypesFromCem(context)` | Main argTypes enhancer. Register as a Storybook `argTypesEnhancer`. |
 | `processCustomElementsManifest(manifest)` | Strips `members` from declarations and stores the manifest in `globalThis`. Call once at startup. |
-| `normalizeArrayArgs(args, argTypes)` | Converts comma-separated text values back to arrays for argTypes that use the text array control. |
-| `normalizeCommaSeparatedArrayValue(value)` | Low-level normalizer for a single value — splits on commas and trims each part. |

@@ -1,8 +1,4 @@
-import {
-    enhanceArgTypesFromCem,
-    normalizeArrayArgs,
-    normalizeCommaSeparatedArrayValue
-} from './storybook-cem-adapter.js';
+import { enhanceArgTypesFromCem } from './storybook-cem-adapter.js';
 import { describe, it, expect, afterEach } from '@jest/globals';
 
 const globalStorybookManifest = /** @type {any} */ (globalThis);
@@ -234,50 +230,6 @@ describe('storybook cem adapter', () => {
             const enhanced = enhanceArgTypesFromCem(createEnhancerContext(argTypes));
 
             expect(enhanced.tags).toEqual(argTypes.tags);
-        });
-    });
-
-    describe('normalizeCommaSeparatedArrayValue', () => {
-        it('splits text input into a trimmed string array', () => {
-            expect(normalizeCommaSeparatedArrayValue(' alpha, beta ,, gamma ')).toEqual([
-                'alpha',
-                'beta',
-                'gamma'
-            ]);
-        });
-
-        it('preserves non-string and array values', () => {
-            expect(normalizeCommaSeparatedArrayValue(['alpha'])).toEqual(['alpha']);
-            expect(normalizeCommaSeparatedArrayValue(undefined)).toBeUndefined();
-            expect(normalizeCommaSeparatedArrayValue(null)).toBeNull();
-            expect(normalizeCommaSeparatedArrayValue(12)).toBe(12);
-        });
-
-        it('turns blank strings into empty arrays', () => {
-            expect(normalizeCommaSeparatedArrayValue('   ')).toEqual([]);
-        });
-    });
-
-    describe('normalizeArrayArgs', () => {
-        it('normalizes only args marked as text-backed arrays', () => {
-            const args = {
-                classNames: 'alpha, beta',
-                label: 'Button',
-                variants: ['primary']
-            };
-            const argTypes = {
-                classNames: { __arpadroidArrayControl: 'text' },
-                label: { control: { type: 'text' } },
-                variants: { __arpadroidArrayControl: 'options' }
-            };
-
-            const normalized = normalizeArrayArgs(args, argTypes);
-
-            expect(normalized).toEqual({
-                classNames: ['alpha', 'beta'],
-                label: 'Button',
-                variants: ['primary']
-            });
         });
     });
 

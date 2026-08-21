@@ -1,7 +1,23 @@
 /**
  * @typedef {import('../../types.js').ArpaElementType} ArpaElementType
  */
-import { normalizeArrayArgs } from '../../cem/plugins/storybook/storybook-cem-adapter.js';
+import { $attr } from '@arpadroid/tools-iso';
+
+/**
+ * Renders a web component for the Storybook preview by creating an instance of the specified component and applying the provided arguments as configuration.
+ * @param {Record<string, unknown> & { children?: string }} _args - The arguments to apply to the component instance.
+ * @param {import('@storybook/web-components-vite').StoryContext} context - The Storybook story context, which contains information about the current story and component.
+ * @returns {HTMLElement | string} The rendered component instance.
+ */
+export function renderComponent(_args, context) {
+    const componentTagName = context.component || '';
+    const args = { ...context.args };
+    const { content } = args;
+    delete args.content;
+    const html = String.raw;
+    return html`<${componentTagName} ${$attr(args)}>${content || ''}</${componentTagName}>`;
+}
+
 /**
  * Refreshes the stylesheets in the Storybook preview by appending a timestamp query parameter to the URL to bust the cache.
  * If a themeName is provided, only stylesheets with that theme name in their path will be refreshed.
@@ -34,24 +50,3 @@ export function updateJS(payload) {
         window.location.reload();
     }
 }
-
-/**
- * Renders a web component for the Storybook preview by creating an instance of the specified component and applying the provided arguments as configuration.
- * @param {Record<string, unknown> & { children?: string }} args - The arguments to apply to the component instance.
- * @param {import('@storybook/web-components-vite').StoryContext} context - The Storybook story context, which contains information about the current story and component.
- * @returns {HTMLElement} The rendered component instance.
- */
-export function renderComponent(args, context) {
-    const componentTagName = context.component || '';
-    const componentClass = customElements.get(componentTagName);
-    const normalizedArgs = normalizeArrayArgs(args, context?.argTypes);
-    /** @type {HTMLElement & Partial<ArpaElementType> | null} */
-    let node = null;
-    if (componentClass) {
-        node = new componentClass(normalizedArgs);
-    } else {
-        node = document.createElement(componentTagName);
-    }
-    return node;
-}
-
