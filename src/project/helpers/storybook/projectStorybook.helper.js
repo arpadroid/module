@@ -239,7 +239,7 @@ export function getStorybookTestCmd(project) {
     const vitestConfig = getStorybookVitestConfigPath(project);
     const run = !argv.watch ? '--run' : '';
     const watch = argv.watch ? '--watch' : '';
-    return `${script} --project=storybook --config "${vitestConfig}" ${watch} ${run} `;
+    return `${script} --project=storybook --config "${vitestConfig}" ${watch} ${run}`;
 }
 
 /**
