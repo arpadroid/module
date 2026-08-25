@@ -10,7 +10,7 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { existsSync, readFileSync, rmSync } from 'fs';
 import { mergeObjects } from '@arpadroid/tools-iso';
-import { log, logStyle } from '@arpadroid/logger';
+import { fileSizeLog, log, logStyle } from '@arpadroid/logger';
 import Project from '../../project.mjs';
 import { getProject } from '../../projectStore.mjs';
 import { join } from 'path';
@@ -317,7 +317,8 @@ export async function buildDependency(project, parentProject, parentConfig) {
     const startTime = new Date().getTime();
     const rv = await project.build(config);
     const depText = logStyle.muted(logStyle.info(`${project.name}`));
-    log.task(parentProject.name, `${depText} done.`, { startTime });
+    const fileSize = fileSizeLog(project.path + '/dist/arpadroid-' + project.name + '.js');
+    log.task(parentProject.name, `${depText} done. ${fileSize}`, { startTime });
     return rv;
 }
 
