@@ -455,7 +455,14 @@ class Project {
                 if (typeof aliasEntry === 'string') {
                     return {
                         find: `@arpadroid/${aliasEntry}`,
-                        replacement: path.join(cwd, 'node_modules', '@arpadroid', aliasEntry, 'src', 'index.js')
+                        replacement: path.join(
+                            cwd,
+                            'node_modules',
+                            '@arpadroid',
+                            aliasEntry,
+                            'src',
+                            'index.js'
+                        )
                     };
                 }
                 return aliasEntry;
@@ -551,7 +558,7 @@ class Project {
         });
         return new Promise(resolve => {
             let initialized = false;
-            this.watcher?.on('event', event => {
+            this.watcher?.on('event', async event => {
                 if (event.code === 'ERROR') {
                     log.error('Error', event.error);
                     resolve(false);
@@ -565,6 +572,9 @@ class Project {
                         initialized = true;
                         resolve(/** @type {import('rollup').RollupWatcher} */ (this.watcher));
                         return;
+                    }
+                    if (!slim) {
+                        await buildTypes(this, config);
                     }
                     updateManifest(this, changedFiles);
                 }

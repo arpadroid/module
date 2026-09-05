@@ -12,7 +12,6 @@ import { getBrowsersConfig } from './vitest.helper.js';
 import { getAlias } from './main/mainResolutions.js';
 
 const project = /** @type {import('../project/project.mjs').default} */ (getProject());
-
 const configDir = getStorybookConfigPath(project);
 const moduleRoot = project.getModulePath() || '';
 const port = await getStorybookPort(project);
@@ -52,7 +51,6 @@ const config = {
                         enabled: true,
                         headless: true,
                         provider: playwright({}),
-                        // @ts-ignore
                         instances: getBrowsersConfig(project)
                     }
                 }
