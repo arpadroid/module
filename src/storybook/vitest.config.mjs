@@ -51,6 +51,7 @@ const config = {
                         enabled: true,
                         headless: true,
                         provider: playwright({}),
+                        /** @ts-ignore */
                         instances: getBrowsersConfig(project)
                     }
                 }
