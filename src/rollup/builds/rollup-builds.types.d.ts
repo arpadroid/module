@@ -1,7 +1,6 @@
 import { InputPluginOption, OutputOptions, Plugin, RollupOptions } from 'rollup';
 import type Project from '../../project/project.mjs';
 import { ThemesBundlerConfigType } from '@arpadroid/style-bun';
-import { bundleStats } from 'rollup-plugin-bundle-stats';
 import gzipPlugin from 'rollup-plugin-gzip';
 import { dts } from 'rollup-plugin-dts';
 import multiEntry from '@rollup/plugin-multi-entry';
@@ -47,7 +46,7 @@ export type BuildConfigType = {
     path?: string;
     plugins?: Plugin[];
     hasPlugin?: {
-        bundleStats?: boolean;
+        somePlugin?: boolean;
     };
     processBuilds?: (builds: RollupOptions[]) => void;
     requireDeps?: boolean;
@@ -116,7 +115,6 @@ export type BuildInterface = {
         STORYBOOK?: number;
     };
     Plugins?: {
-        bundleStats: typeof bundleStats;
         gzipPlugin: typeof gzipPlugin;
         dts: typeof dts;
         multiEntry: typeof multiEntry;

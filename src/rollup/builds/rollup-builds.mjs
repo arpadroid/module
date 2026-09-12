@@ -18,7 +18,6 @@ import { hideBin } from 'yargs/helpers';
 /**
  * Rollup plugins.
  */
-import { bundleStats } from 'rollup-plugin-bundle-stats';
 import { dts } from 'rollup-plugin-dts';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { visualizer } from 'rollup-plugin-visualizer';
@@ -269,7 +268,7 @@ export function buildEndPlugin(project, { storybook_port } = {}) {
  * @returns {RollupPlugin[]}
  */
 export function getFatPlugins(project, config) {
-    const { deps, aliases, hasPlugin } = config;
+    const { deps, aliases } = config;
     /** @type {(RollupPlugin  | any)[]} */
     const plugins = [
         nodeResolve({ browser: true, preferBuiltins: false }),
@@ -278,7 +277,6 @@ export function getFatPlugins(project, config) {
         }),
         // @ts-ignore - multiEntry does accept options, types may be mismatched
         deps && deps?.length > 0 && multiEntry({ entryFileName: `arpadroid-${project.name}.js` }),
-        hasPlugin?.bundleStats && bundleStats(),
         getAliases(project.name, aliases),
         copy({
             targets: getCopyTargets(project, config)
@@ -428,7 +426,6 @@ export function getBuild(projectName, config = {}) {
         output: appBuild.output,
         constants: project.getBuildConstants(),
         Plugins: {
-            bundleStats,
             gzipPlugin,
             dts,
             multiEntry,
