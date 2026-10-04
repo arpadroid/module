@@ -18,6 +18,9 @@ const defaultConfig: StorybookConfig = {
         name: '@storybook/web-components-vite',
         options: {}
     },
+    features: {
+        highlight: false // This is a rendering performance bottleneck if enabled, not worth the pain.
+    },
     previewBody,
     previewHead,
     staticDirs: getStaticDirs(),

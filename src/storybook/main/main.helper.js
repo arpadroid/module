@@ -169,6 +169,44 @@ export function getAddons() {
 }
 
 /**
+ * Escapes special RegExp characters in a string.
+ * @param {string} value
+ * @returns {string}
+ */
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Vitest resolves `test.setupFiles` on the Node side (via mlly) and falls back to `resolve(root, specifier)`
+ * when the package is not installed in the consuming project — Storybook is served from the module project.
+ * This produces fake absolute paths like `<projectRoot>/@storybook/addon-vitest/internal/setup-file`,
+ * which the browser then imports through the Vite dev server. These aliases map those fake paths back to
+ * the real files in the module project's node_modules.
+ * @returns {import('vite').Alias[]}
+ */
+export function getSetupFilePathAliases() {
+    const projectRoot = getProject()?.getPath?.() || cwd;
+    const addonDist = join(modulesRoot, '@storybook', 'addon-vitest', 'dist', 'vitest-plugin');
+    const setupFiles = {
+        'setup-file': 'setup-file.js',
+        'setup-file.browser.3': 'setup-file.browser.3.js',
+        'setup-file.browser.4': 'setup-file.browser.4.js',
+        'setup-file-with-project-annotations': 'setup-file-with-project-annotations.js'
+    };
+    return Object.entries(setupFiles).map(([name, file]) => {
+        const fakePath = join(projectRoot, '@storybook', 'addon-vitest', 'internal', name);
+        /**
+         * The Vitest browser client appends a query string (?browserv=...) to the import id,
+         * so the alias must tolerate a trailing query.
+         */
+        // eslint-disable-next-line security/detect-non-literal-regexp
+        const find = new RegExp(`^${escapeRegExp(fakePath)}(\\?.*)?$`);
+        return { find, replacement: join(addonDist, file) };
+    });
+}
+
+/**
  * Sets aliases to Vite configuration for Storybook. This is used to ensure that Storybook and Vitest resolve the same modules, which is important for features like the Storybook Vitest addon.
  * @param {ViteConfig} config
  *@param {import('./mainResolutions.js').ResolutionType[]} aliases
@@ -180,7 +218,7 @@ export function injectAliases(config = {}, aliases = getAliasResolutions()) {
     if (!Array.isArray(alias)) {
         alias = [];
     }
-    config.resolve.alias = [...alias, ...aliases];
+    config.resolve.alias = [...alias, ...aliases, ...getSetupFilePathAliases()];
 }
 
 /**

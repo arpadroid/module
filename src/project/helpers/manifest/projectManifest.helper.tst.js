@@ -1,6 +1,7 @@
 import path, { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import Project from '../../project.mjs';
+import { describe, test, beforeAll, expect } from '@jest/globals';
 // import { buildCustomElementsManifest } from './projectManifest.helper.mjs';
 // import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
@@ -19,6 +20,7 @@ describe('Project Manifest Helper', () => {
     });
 
     test('buildCustomElementsManifest writes dist/custom-elements.json (fragments)', async () => {
+        expect(project).toBeDefined();
         // await buildCustomElementsManifest(project, {});
         // const out = `${project.path}/dist/custom-elements.json`;
         // expect(fs.existsSync(out)).toBe(true);

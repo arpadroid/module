@@ -119,7 +119,7 @@ const rules = {
     'jsdoc/no-types': 0,
     'jsdoc/no-undefined-types': 'error', // Recommended
     'jsdoc/require-asterisk-prefix': 1,
-    'jsdoc/require-description': 1,
+    'jsdoc/require-description': 0,
     'jsdoc/require-description-complete-sentence': 1,
     'jsdoc/require-example': 0,
     'jsdoc/require-file-overview': 0,

@@ -264,19 +264,18 @@ class Project {
     async clean(opt = {}) {
         const { reInstall = true, reBuild = false } = opt;
         log.arpadroid(this.name);
-        console.log(
-            logStyle.heading('Cleaning-up build files and caches and re-installing packages 🧹 ▰▱▱▱')
-        );
+        const logResolve = await log.task(this.name, 'Cleaning up project build files and caches.', {
+            icon: '🧹',
+            doneMessage: 'Clean-up complete.'
+        });
 
         await this?.promise;
         await cleanupFiles(this);
         if (reInstall || reBuild) {
             await this.install();
         }
-        if (reBuild) {
-            await this.build();
-        }
-        log.success('Clean-up complete.');
+        reBuild && (await this.build());
+        logResolve?.();
         return true;
     }
 
@@ -391,11 +390,12 @@ class Project {
     async buildDependencies(buildConfig) {
         if (!buildConfig.buildDeps) return;
         const { promise, projects } = await buildDependencies(this, buildConfig);
-        log.task(this.name, 'Building dependencies.', {
-            icon: '📦',
-            promise: promise || Promise.reject(),
-            doneMessage: 'Dependencies done.'
-        });
+        promise &&
+            log.task(this.name, 'Building dependencies.', {
+                icon: '📦',
+                promise: promise || Promise.reject(),
+                doneMessage: 'Dependencies done.'
+            });
         const response = await promise;
         this.dependencyProjects = projects;
         return response;
@@ -415,7 +415,7 @@ class Project {
                 doneMessage: () => {
                     const file = path.join(this.path || '', 'dist', `arpadroid-${this.name}.js`);
                     const fileLog = existsSync(file) ? fileSizeLog(file) : '';
-                    return `Build complete, have a nice day! 👾 ${fileLog}`;
+                    return `Build complete! 👾 ${fileLog}`;
                 }
             });
         }
@@ -450,9 +450,24 @@ class Project {
             this.preprocessRollupConfig(conf);
         }
         if (aliases.length && Array.isArray(configs[0]?.plugins)) {
-            // Dynamic import to avoid loading ESM-only package at module initialization
             const { default: alias } = await import('@rollup/plugin-alias');
-            configs[0].plugins.push(alias({ entries: aliases }));
+            const entries = aliases.map(aliasEntry => {
+                if (typeof aliasEntry === 'string') {
+                    return {
+                        find: `@arpadroid/${aliasEntry}`,
+                        replacement: path.join(
+                            cwd,
+                            'node_modules',
+                            '@arpadroid',
+                            aliasEntry,
+                            'src',
+                            'index.js'
+                        )
+                    };
+                }
+                return aliasEntry;
+            });
+            configs[0].plugins.push(alias({ entries }));
         }
     }
 
@@ -543,7 +558,7 @@ class Project {
         });
         return new Promise(resolve => {
             let initialized = false;
-            this.watcher?.on('event', event => {
+            this.watcher?.on('event', async event => {
                 if (event.code === 'ERROR') {
                     log.error('Error', event.error);
                     resolve(false);
@@ -557,6 +572,9 @@ class Project {
                         initialized = true;
                         resolve(/** @type {import('rollup').RollupWatcher} */ (this.watcher));
                         return;
+                    }
+                    if (!slim) {
+                        await buildTypes(this, config);
                     }
                     updateManifest(this, changedFiles);
                 }

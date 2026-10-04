@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from 'fs';
 import { getFileConfig, getPackageJson } from '../helpers/build/projectBuild.helper.mjs';
 import { getBuildConfig, getDependencies } from '../helpers/build/projectBuild.helper.mjs';
 import { getThemes, getThemesPath, hasStyles } from '../helpers/styles/projectStyles.helper.js';
-
+import { describe, it, expect, beforeAll, test, afterAll, jest } from '@jest/globals';
 describe('Test Project Instance', () => {
     let originalCwd = '';
     /** @type {Project}*/
@@ -145,7 +145,7 @@ describe('Test Project Instance', () => {
             const payload = /** @type {{ code?: string | undefined }} */ (event);
             console.log('CODE:', payload?.code);
         });
-        /** @type {jest.SpyInstance} */
+        /** @type {ReturnType<typeof jest.spyOn>} */
         let consoleSpy;
         beforeAll(async () => {
             consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});

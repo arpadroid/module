@@ -2,10 +2,11 @@ import { getFileConfig } from '../helpers/build/projectBuild.helper.mjs';
 import { getStorybookConfigPath } from '../helpers/storybook/projectStorybook.helper.js';
 import Project from '../project.mjs';
 import { spyOn } from 'jest-mock';
+import { describe, expect, beforeEach, afterEach, test } from '@jest/globals';
 describe('Bad Project Instance', () => {
     /** @type {Project}*/
     let project;
-    /** @type {jest.SpyInstance} */
+    /** @type {ReturnType<typeof spyOn>} */
     let errSpy;
     beforeEach(() => {
         errSpy = spyOn(console, 'error').mockImplementation(() => {});

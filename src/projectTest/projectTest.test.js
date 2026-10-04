@@ -4,6 +4,7 @@ import { TEST_PROJECT_PATH } from '../project/tests/projectTest.util.mjs';
 import { dirname, join, resolve } from 'path';
 import { getJestConfigPath } from '../project/helpers/jest/projectJest.helper.js';
 import { fileURLToPath } from 'url';
+import { describe, it, expect, beforeAll, test } from '@jest/globals';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 

@@ -1,0 +1,11 @@
+diff --git a/node_modules/@storybook/web-components-vite/dist/index.d.ts b/node_modules/@storybook/web-components-vite/dist/index.d.ts
+index 36a425a..d1b79c9 100644
+--- a/node_modules/@storybook/web-components-vite/dist/index.d.ts
++++ b/node_modules/@storybook/web-components-vite/dist/index.d.ts
+@@ -1,4 +1,5 @@
+ import { n as StorybookConfig, t as FrameworkOptions } from "./chunk-Wy2jl0mm.js";
+ import { __definePreview as definePreview } from "@storybook/web-components";
+ export * from "@storybook/web-components";
++export type { Meta, StoryObj, StoryContext } from "@storybook/web-components";
+ export { FrameworkOptions, StorybookConfig, definePreview };
+\ No newline at end of file

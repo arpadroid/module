@@ -1,4 +1,5 @@
 import { inferType, mapPropsToAttributes } from './cem-mapper.utils.js';
+import { describe, test, expect } from '@jest/globals';
 
 describe('arpadroid CEM mapper utils', () => {
     test('keeps boolean as a boolean attribute', () => {

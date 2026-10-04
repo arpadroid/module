@@ -4,7 +4,6 @@ import tsRules from './eslint-ts.rules.js';
 
 import ts from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
-import eslintPluginFunctional from 'eslint-plugin-functional';
 import eslintPluginImport from 'eslint-plugin-import';
 import jsdoc from 'eslint-plugin-jsdoc';
 
@@ -36,7 +35,6 @@ const config = [
             }
         },
         plugins: {
-            functional: eslintPluginFunctional,
             import: eslintPluginImport,
             jsdoc,
             security,
@@ -63,7 +61,6 @@ const config = [
             }
         },
         plugins: {
-            functional: eslintPluginFunctional,
             import: eslintPluginImport,
             '@typescript-eslint': ts,
             ts,

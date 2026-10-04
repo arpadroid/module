@@ -30,6 +30,7 @@ export type ArpaElementType = HTMLElement & {
     _childNodes: Node[];
     getDefaultConfig: () => Record<string, unknown>;
     addConfig: (config: Record<string, unknown>) => void;
+    setConfig: (config: Record<string, unknown>) => void;
     renderAttributes: (attributes?: Record<string, unknown>) => void;
     isArpaElement: true;
 };

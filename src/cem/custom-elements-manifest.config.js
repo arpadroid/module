@@ -8,8 +8,19 @@ import { join } from 'path';
 
 /** @type {AnalyzerConfig} */
 export default {
-    globs: [join('src', 'components', '**', '*.js')],
-    exclude: ['**/*.stories.*', '**/stories/**', '**/*.test.*', '**/storybook/**', '**/helper/**'],
+    globs: [join('src', '**', '*.js')],
+    exclude: [
+        '**/*.stories.*',
+        '**/stories/**',
+        '**/*.test.*',
+        '**/storybook/**',
+        '**/helper/**',
+        'src/test/**',
+        'src/demo/**',
+        'src/themes/**',
+        'src/i18n/**',
+        'src/*.config.*'
+    ],
     outdir: CEM_OUTDIR,
     dev: false,
     watch: false,

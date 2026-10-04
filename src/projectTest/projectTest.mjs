@@ -6,7 +6,7 @@
 import { execSync } from 'child_process';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
-import { log, logStyle } from '@arpadroid/logger';
+import { log } from '@arpadroid/logger';
 import { mergeObjects } from '@arpadroid/tools-iso';
 import { stopHTTPServer } from '@arpadroid/tools-node';
 import { runStorybookCI, runStorybookTests } from '../project/helpers/storybook/projectStorybook.helper.js';
@@ -87,12 +87,17 @@ class ProjectTest {
      * Runs the tests.
      * @param {ProjectTestConfigType} [testConfig]
      * @param {Project} [project]
+     * @returns {Promise<(() => void) | unknown> }
      */
-    logHeading(testConfig = {}, project = this.project) {
+    async logHeading(testConfig = {}, project = this.project) {
         const { silent = false } = testConfig;
         if (silent) return;
         log.arpadroid(`/${project.name}`);
-        console.log(logStyle.heading('🧪 Testing project  ▰▰▰▱'));
+
+        return log.task(project.name, 'Testing project', {
+            icon: '🧪',
+            doneMessage: 'Testing completed, have a nice day! 👽'
+        });
     }
 
     /**
@@ -129,7 +134,7 @@ class ProjectTest {
         const config = mergeObjects(this.config, testConfig);
         const buildConfig = (await proj.getBuildConfig()) || {};
 
-        this.logHeading(testConfig, proj);
+        const testLogResolve = await this.logHeading(testConfig, proj);
 
         this.testInfo = getTests(proj);
         const { totalTests, stories, jest: jestTests } = this.testInfo;
@@ -140,12 +145,9 @@ class ProjectTest {
         const { hooks } = buildConfig;
         const hasHook = typeof hooks?.test === 'function';
         if (!totalTests && !hasHook) {
-            !silent && log.info('Nothing to test');
-            return true;
+            !silent && log.info('Nothing to test, running build and exiting...');
         }
-
         !isSlim && (await this.runTestBuild(testConfig));
-
         if (hasHook) {
             const hookRv = await runHook(proj, 'test', {
                 testConfig: this.config,
@@ -165,8 +167,8 @@ class ProjectTest {
         if (hasStorybook && stories.length) {
             await this.testStorybook(config);
         }
+        if (typeof testLogResolve === 'function') testLogResolve();
 
-        !silent && log.success('Testing completed, have a nice day! 👽');
         return response;
     }
 
@@ -200,7 +202,9 @@ class ProjectTest {
      */
     async testJest(testConfig = {}) {
         console.log('\n');
-        log.task(this.project.name, 'Running jest tests  ▰▰▰▱\n');
+        log.task(this.project.name, 'Running jest tests  ▰▰▰▱\n', {
+            icon: '🧪',
+        });
         return await runJestTests(this.project, testConfig);
     }
 

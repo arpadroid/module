@@ -10,7 +10,7 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 import { existsSync, readFileSync, rmSync } from 'fs';
 import { mergeObjects } from '@arpadroid/tools-iso';
-import { log, logStyle } from '@arpadroid/logger';
+import { fileSizeLog, log, logStyle } from '@arpadroid/logger';
 import Project from '../../project.mjs';
 import { getProject } from '../../projectStore.mjs';
 import { join } from 'path';
@@ -96,7 +96,12 @@ export function getDefaultBuildConfig(project) {
         buildTypes: false,
         buildManifest: false,
         jest: {
-            testMatch: ['<rootDir>/src/**/*.test.js']
+            testMatch: [
+                '<rootDir>/src/**/*.test.js',
+                '<rootDir>/src/**/*.test.mjs',
+                '<rootDir>/src/**/*.spec.js',
+                '<rootDir>/src/**/*.spec.mjs'
+            ]
         },
         logHeading: true,
         manifest: {
@@ -312,7 +317,8 @@ export async function buildDependency(project, parentProject, parentConfig) {
     const startTime = new Date().getTime();
     const rv = await project.build(config);
     const depText = logStyle.muted(logStyle.info(`${project.name}`));
-    log.task(parentProject.name, `${depText} done.`, { startTime });
+    const fileSize = fileSizeLog(project.path + '/dist/arpadroid-' + project.name + '.js');
+    log.task(parentProject.name, `${depText} done. ${fileSize}`, { startTime });
     return rv;
 }
 
@@ -328,6 +334,9 @@ export async function buildDependencies(project, config) {
     }
     const deps = await getAllDependencies(project);
     const projects = deps.map(dep => dep.project).filter(proj => proj instanceof Project);
+    if (!projects.length) {
+        return { promise: undefined };
+    }
     process.env.arpadroid_slim = 'true';
 
     const promises = projects.map(proj =>
@@ -372,7 +381,7 @@ export async function cleanupFiles(project) {
     files.forEach(async _file => {
         const file = join(project?.path || cwd, _file);
         if (!file || !cwd || cwd === '' || !existsSync(file)) return;
-        filesRemoved.push(file.replace(project.path || cwd, '.') + '  ✔️');
+        filesRemoved.push(file.replace(project.path || cwd, '.') + '  ✅');
         await rmSync(file, { recursive: true, force: true });
     });
 

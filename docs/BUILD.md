@@ -222,4 +222,4 @@ export default build;
   Rollup output configuration
 
 - **`Plugins`** — `object`  
-  Object with references to all available plugins: `bundleStats`, `gzipPlugin`, `dts`, `multiEntry`, `nodeResolve`, `json`, `peerDepsExternal`, `alias`, `watch`, `terser`, `copy`, `visualizer`, `typescript`, `debugPlugin`
+  Object with references to all available plugins: `gzipPlugin`, `dts`, `multiEntry`, `nodeResolve`, `json`, `peerDepsExternal`, `alias`, `watch`, `terser`, `copy`, `visualizer`, `typescript`, `debugPlugin`

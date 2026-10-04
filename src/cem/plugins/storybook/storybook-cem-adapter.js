@@ -279,44 +279,6 @@ function getCommaSeparatedArrayDescription(description, typeName) {
 }
 
 /**
- * Normalizes a comma-separated array control value into a string array.
- * @param {unknown} value
- * @returns {unknown}
- */
-export function normalizeCommaSeparatedArrayValue(value) {
-    if (value == null || Array.isArray(value)) return value;
-    if (typeof value !== 'string') return value;
-
-    const text = value.trim();
-    if (!text) return [];
-
-    return text
-        .split(',')
-        .map(item => item.trim())
-        .filter(Boolean);
-}
-
-/**
- * Normalizes Storybook control args for array-backed controls before rendering.
- * @param {Record<string, unknown> | undefined} args
- * @param {Record<string, any> | undefined} argTypes
- * @returns {Record<string, unknown>}
- */
-export function normalizeArrayArgs(args, argTypes) {
-    const sourceArgs = args || {};
-    const sourceArgTypes = argTypes || {};
-
-    return Object.fromEntries(
-        Object.entries(sourceArgs).map(([name, value]) => {
-            if (sourceArgTypes[name]?.__arpadroidArrayControl !== 'text') {
-                return [name, value];
-            }
-            return [name, normalizeCommaSeparatedArrayValue(value)];
-        })
-    );
-}
-
-/**
  * Promotes CEM string-literal unions into Storybook select controls.
  * @param {ArgTypesEnhancerContext} context
  * @returns {Record<string, any>}
