@@ -6,7 +6,7 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        padding: 1rem;
+        padding: 0 1rem;
     }
 }
 
@@ -25,7 +25,7 @@
     }
 
     > arpa-form:not:has(group-field) {
-        max-width: 600px;
+        max-width: 37.5rem;
     }
 }
 
@@ -34,7 +34,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        border: 2px solid var(--grey-300);
+        border: 0.125rem solid var(--grey-300);
         border-radius: 0.75rem;
     }
 
@@ -47,22 +47,22 @@
 
     > fieldset > * {
         padding: 1rem;
-        border: 2px solid var(--color-primary);
+        border: 0.125rem solid var(--color-primary);
         border-radius: 0.75rem;
-        box-shadow: 0 2px 4px rgb(0 0 0 / 30%);
+        box-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 30%);
     }
 
     .testComponent__header {
-        border: 2px solid var(--red-orange);
+        border: 0.125rem solid var(--red-orange);
     }
 
     .testComponent__body {
         padding: 1rem;
-        border: 2px solid var(--color-highlight);
+        border: 0.125rem solid var(--color-highlight);
     }
 
     .testComponent__footer {
         padding: 1rem;
-        border: 2px solid var(--color-tertiary);
+        border: 0.125rem solid var(--color-tertiary);
     }
 }
