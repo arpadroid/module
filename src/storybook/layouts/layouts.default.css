@@ -1,13 +1,20 @@
 #storybook-root {
-    max-width: 100%;
-
     &.storybook__layout--flexColumn {
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
         height: 100%;
-        padding: 0 1rem;
+        padding: 0;
     }
+}
+
+#storybook-root:has(> list-manager, > arpa-list) {
+    max-width: 55.625rem;
+    margin: 0 auto;
+}
+
+#storybook-root arpa-list {
+    padding: 1rem 1rem 0;
 }
 
 #storybook-root:has(> .arpaForm) {
