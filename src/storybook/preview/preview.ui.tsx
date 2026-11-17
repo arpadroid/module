@@ -35,6 +35,15 @@ const defaultConfig: Preview = {
                 color: /(background|color)$/i,
                 date: /Date$/i
             }
+        },
+        viewport: {
+            options: {
+                mobileXs: { name: 'Mobile XS', styles: { width: '280px', height: '667px' } },
+                mobileSm: { name: 'Mobile Small', styles: { width: '320px', height: '667px' } },
+                mobile: { name: 'Mobile', styles: { width: '440px', height: '667px' } },
+                tablet: { name: 'Tablet', styles: { width: '768px', height: '1024px' } },
+                desktop: { name: 'Desktop', styles: { width: '1280px', height: '800px' } }
+            }
         }
     }
 };
