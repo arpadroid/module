@@ -6,7 +6,6 @@
  * @typedef {import('rollup').InputOption} InputOption
  * @typedef {import('./project.types.js').CompileTypesType} CompileTypesType
  * @typedef {import('./project.types.js').ProjectCliArgsType} ProjectCliArgsType
- * @typedef {import('../rollup/builds/rollup-builds.types.js').AliasType} AliasType
  * @typedef {import('./helpers/i18n/projectI18n.types.js').I18nFilePayloadType} I18nFilePayloadType
  */
 import { fileURLToPath } from 'url';
@@ -441,33 +440,12 @@ class Project {
     /////////////////////////////
 
     /**
-     * Preprocesses rollup configs with resolved paths and aliases.
+     * Preprocesses rollup configs with resolved paths.
      * @param {RollupOptions[]} configs
-     * @param {AliasType[] | string[]} [aliases]
      */
-    async preprocessRollupConfigs(configs, aliases = []) {
+    preprocessRollupConfigs(configs) {
         for (const conf of configs) {
             this.preprocessRollupConfig(conf);
-        }
-        if (aliases.length && Array.isArray(configs[0]?.plugins)) {
-            const { default: alias } = await import('@rollup/plugin-alias');
-            const entries = aliases.map(aliasEntry => {
-                if (typeof aliasEntry === 'string') {
-                    return {
-                        find: `@arpadroid/${aliasEntry}`,
-                        replacement: path.join(
-                            cwd,
-                            'node_modules',
-                            '@arpadroid',
-                            aliasEntry,
-                            'src',
-                            'index.js'
-                        )
-                    };
-                }
-                return aliasEntry;
-            });
-            configs[0].plugins.push(alias({ entries }));
         }
     }
 
@@ -506,7 +484,7 @@ class Project {
      */
     async rollup(configs, config = {}) {
         if (config.buildJS !== true) return true;
-        await this.preprocessRollupConfigs(configs, config.aliases);
+        this.preprocessRollupConfigs(configs);
         await Promise.all(configs.map(conf => this.bundleConfig(conf)));
         return true;
     }
@@ -543,11 +521,11 @@ class Project {
      * @returns {Promise<boolean | import('rollup').RollupWatcher>}
      */
     async watch(configs, config, callback) {
-        const { slim, verbose, aliases } = config;
+        const { slim, verbose } = config;
         if (!configs?.length) {
             return Promise.resolve(true);
         }
-        await this.preprocessRollupConfigs(configs, aliases);
+        this.preprocessRollupConfigs(configs);
         if (!slim) {
             log.task(this.name, 'Watch mode enabled.', { icon: '👁️  ' });
         }

@@ -161,8 +161,9 @@ export function getInput(project, config = {}) {
 
 /**
  * Returns the aliases for the project dependencies.
+ * Bare `@arpadroid/<dep>` imports are mapped to the dependency source; sub-paths are left untouched.
  * @param {string} [projectName]
- * @param {string[] | import('./rollup-builds.types.js').AliasType[]} projects
+ * @param {(string | AliasType)[]} projects
  * @returns {RollupPlugin | undefined}
  */
 export function getAliases(projectName, projects = []) {
@@ -184,7 +185,8 @@ export function getAliases(projectName, projects = []) {
         ...projects.map(dep => {
             if (typeof dep === 'string') {
                 return {
-                    find: `@arpadroid/${dep}`,
+                    // eslint-disable-next-line security/detect-non-literal-regexp
+                    find: new RegExp(`^@arpadroid/${dep}$`),
                     replacement: path.join(cwd, 'node_modules', '@arpadroid', dep, 'src', 'index.js')
                 };
             }
@@ -206,14 +208,17 @@ export function getAliases(projectName, projects = []) {
  */
 export function getSlimPlugins(project, config = {}) {
     const { parent, aliases = [], deps } = config;
-    const plugins = [peerDepsExternal(), nodeResolve({ browser: true, preferBuiltins: false })];
-    const _aliases = getAliases(parent, aliases);
-    _aliases && plugins.push(_aliases);
+    /** @type {(RollupPlugin | undefined)[]} */
+    const plugins = [
+        peerDepsExternal(),
+        getAliases(parent, aliases),
+        nodeResolve({ browser: true, preferBuiltins: false })
+    ];
     if (deps && deps.length > 0 && config.requireDeps) {
         // @ts-ignore - multiEntry does accept options, types may be mismatched
         plugins.push(multiEntry({ entryFileName: `arpadroid-${project.name}.js` }));
     }
-    return plugins.filter(Boolean);
+    return /** @type {RollupPlugin[]} */ (plugins.filter(Boolean));
 }
 
 /**
@@ -268,16 +273,17 @@ export function buildEndPlugin(project, { storybook_port } = {}) {
  * @returns {RollupPlugin[]}
  */
 export function getFatPlugins(project, config) {
-    const { deps, aliases } = config;
+    const { deps = [], aliases = [] } = config;
     /** @type {(RollupPlugin  | any)[]} */
     const plugins = [
+        // Must precede nodeResolve, otherwise deps resolve to their dist and get bundled and watched.
+        getAliases(project.name, [...new Set([...aliases, ...deps])]),
         nodeResolve({ browser: true, preferBuiltins: false }),
         terser({
             keep_classnames: false
         }),
         // @ts-ignore - multiEntry does accept options, types may be mismatched
-        deps && deps?.length > 0 && multiEntry({ entryFileName: `arpadroid-${project.name}.js` }),
-        getAliases(project.name, aliases),
+        deps.length > 0 && multiEntry({ entryFileName: `arpadroid-${project.name}.js` }),
         copy({
             targets: getCopyTargets(project, config)
         }),
