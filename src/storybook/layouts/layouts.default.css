@@ -36,7 +36,7 @@
     }
 }
 
-.testComponent {
+.testElement {
     fieldset {
         display: flex;
         flex-direction: column;
@@ -59,17 +59,31 @@
         box-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 30%);
     }
 
-    .testComponent__header {
+    .testElement__header {
         border: 0.125rem solid var(--red-orange);
     }
 
-    .testComponent__body {
+    .testElement__body {
         padding: 1rem;
         border: 0.125rem solid var(--color-highlight);
     }
 
-    .testComponent__footer {
+    .testElement__footer {
         padding: 1rem;
         border: 0.125rem solid var(--color-tertiary);
+    }
+
+    .testElement__ctas {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem 0 0;
+    }
+
+    > .testElement__ctas {
+        border: 0.125rem solid var(--purple);
+    }
+
+    .testElement__externalWrapper {
+        padding: 0.5rem;
     }
 }
